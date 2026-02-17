@@ -3,74 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nebulo Mobile</title>
+    <title>Nebulo.io - Ultimate</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
+    <div class="bg-animation"></div>
+
     <div id="uiLayer">
         
-        <div class="top-panel">
-            <div id="radioWidget">
-                <span>🎵 Lofi Radio</span>
-                <button id="btnRadioToggle">▶️</button>
+        <div class="hud-panel top-left">
+            <div class="widget">
+                <i class="fa-solid fa-music"></i>
                 <div id="youtube-container"></div>
+                <button id="btnRadioToggle">OFF</button>
             </div>
-            
-            <div class="zoom-control">
-                <span>🔍 Zoom</span>
+            <div class="widget zoom-widget">
+                <i class="fa-solid fa-magnifying-glass"></i>
                 <input type="range" id="zoomSlider" min="10" max="200" value="100">
             </div>
         </div>
 
+        <div class="hud-panel top-right">
+            <div id="leaderboard">
+                <h3>🏆 TOP 5</h3>
+                <div id="lb-list"></div>
+            </div>
+        </div>
+
         <div id="mainMenu">
-            <h1>NEBULO<span style="color:#00d2ff">.IO</span></h1>
+            <div class="menu-header">
+                <div class="logo-glitch" data-text="NEBULO">NEBULO</div>
+                <span class="version">v3.0</span>
+            </div>
             
-            <div id="profileSection" style="display:none;">
-                <img id="userAvatar" src="" alt="">
-                <span id="userName">Jogador</span>
-                <div class="coins">💰 <span id="coinDisplay">0</span></div>
+            <div id="profileCard" style="display:none;">
+                <div class="avatar-container">
+                    <img id="userAvatar" src="" alt="">
+                    <div class="level-badge" id="levelBadge">1</div>
+                </div>
+                <div class="profile-info">
+                    <span id="userName">Carregando...</span>
+                    <div class="xp-container">
+                        <div class="xp-bar-bg"><div class="xp-bar-fill" id="menuXpBar" style="width: 0%"></div></div>
+                        <span class="xp-text" id="menuXpText">0 / 100 XP</span>
+                    </div>
+                    <div class="coin-pill">💰 <span id="coinDisplay">0</span></div>
+                </div>
             </div>
 
             <div id="loginSection">
-                <input type="text" id="nickInput" placeholder="Seu Nick" maxlength="10">
-                <button class="btn google-btn" id="btnLogin">G - Entrar com Google</button>
+                <input type="text" id="nickInput" placeholder="Digite seu Nick..." maxlength="12">
+                <button class="btn btn-google" id="btnLogin"><i class="fa-brands fa-google"></i> Entrar com Google</button>
             </div>
 
-            <div class="menu-grid">
-                <button class="btn play-btn" id="btnPlay">JOGAR AGORA</button>
-                <button class="btn shop-btn" id="btnShop">🛒 LOJA</button>
+            <div class="menu-actions">
+                <button class="btn btn-play" id="btnPlay">JOGAR <i class="fa-solid fa-play"></i></button>
+                <button class="btn btn-shop" id="btnShop">LOJA <i class="fa-solid fa-cart-shopping"></i></button>
             </div>
         </div>
 
         <div id="shopModal" class="modal">
             <div class="modal-content">
-                <h2>LOJA DE ITENS</h2>
-                <p>Moedas: <span id="shopCoins">0</span></p>
-                <div class="item" onclick="window.game.buyItem('startMass', 100)">
-                    <span>💪 Começar Grande (+Mass)</span>
-                    <button>100 💰</button>
+                <h2>🛒 LOJA VIP</h2>
+                <div class="shop-grid">
+                    <div class="shop-item" onclick="window.game.buyItem('startMass', 100)">
+                        <div class="icon">💪</div>
+                        <span>Start Mass</span>
+                        <button>100 💰</button>
+                    </div>
+                    <div class="shop-item" onclick="window.game.buyItem('neonSkin', 500)">
+                        <div class="icon">🎨</div>
+                        <span>Neon Skin</span>
+                        <button>500 💰</button>
+                    </div>
                 </div>
-                <div class="item" onclick="window.game.buyItem('neonSkin', 500)">
-                    <span>🎨 Skin Neon (Brilha)</span>
-                    <button>500 💰</button>
-                </div>
-                <button class="btn close-btn" onclick="document.getElementById('shopModal').style.display='none'">FECHAR</button>
+                <button class="btn btn-close" onclick="document.getElementById('shopModal').style.display='none'">FECHAR</button>
             </div>
         </div>
 
         <div id="gameHUD" style="display:none;">
-            <div id="leaderboard">
-                <div class="lb-title">TOP JOGADORES</div>
-                <div id="lb-list"></div>
+            <div class="bottom-stats">
+                <div class="stat-box">
+                    <span>Massa:</span> <b id="massVal">0</b>
+                </div>
+                <div class="xp-hud">
+                    <div class="xp-bar-bg"><div class="xp-bar-fill" id="gameXpBar" style="width: 0%"></div></div>
+                    <span class="level-hud">Lvl <span id="gameLevelVal">1</span></span>
+                </div>
             </div>
-            
-            <div id="score">Massa: <span id="massVal">0</span></div>
 
-            <div id="joystickZone">
-                <div id="joystickStick"></div>
-            </div>
-
+            <div id="joystickZone"><div id="joystickStick"></div></div>
             <div class="action-buttons">
                 <button id="btnEject" class="action-btn eject-btn">W</button>
                 <button id="btnSplit" class="action-btn split-btn">⚡</button>
@@ -82,10 +106,7 @@
 
     <script type="module">
         import { Game } from './js/game.js';
-        // Inicializa o jogo quando a página carrega
-        window.onload = () => {
-            window.game = new Game();
-        };
+        window.onload = () => window.game = new Game();
     </script>
 </body>
 </html>
