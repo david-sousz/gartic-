@@ -1,5 +1,5 @@
-import { db, auth } from './firebase-config.js';
-import { doc, setDoc, onSnapshot, collection, deleteDoc, serverTimestamp, query } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+import { db } from './firebase-config.js';
+import { doc, setDoc, onSnapshot, collection, serverTimestamp, query } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
 export class Game {
     constructor() {
@@ -9,19 +9,25 @@ export class Game {
         window.addEventListener('resize', () => this.resize());
 
         // Configurações
-        this.MAP_SIZE = 6000;
+        this.MAP_SIZE = 4000;
+        this.BOT_COUNT = 25; // Quantidade de bots
+        
+        // Entidades
         this.myCells = [];
         this.foods = [];
+        this.bots = []; // Array para bots
         this.otherPlayers = {};
+        
+        // Câmera e Estado
         this.cam = { x: 0, y: 0, zoom: 1, targetZoom: 1 };
         this.gameRunning = false;
         
         // Inputs
-        this.mouse = { x: 0, y: 0 };
         this.joystickVector = { x: 0, y: 0 };
         
         this.bindEvents();
-        this.loop();
+        // Inicia o loop visual, mas o jogo só roda lógica quando gameRunning = true
+        this.loop(); 
     }
 
     resize() {
@@ -30,55 +36,66 @@ export class Game {
     }
 
     bindEvents() {
-        // Play Button
-        document.getElementById('btnPlay').onclick = () => this.start();
-        
-        // Mouse Move
+        // Botão Jogar
+        document.getElementById('btnPlay').onclick = () => {
+            // Tenta desbloquear áudio ao clicar em jogar
+            if(window.audioManager) window.audioManager.unlockAudio();
+            this.start();
+        };
+
+        // Mouse Move (PC)
         window.addEventListener('mousemove', e => {
+            if(!this.gameRunning) return;
             const cx = window.innerWidth/2;
             const cy = window.innerHeight/2;
-            this.joystickVector.x = (e.clientX - cx) / Math.min(cx, cy);
-            this.joystickVector.y = (e.clientY - cy) / Math.min(cx, cy);
+            // Vetor normalizado
+            const dx = e.clientX - cx;
+            const dy = e.clientY - cy;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            const maxDist = Math.min(cx, cy);
+            
+            // Joystick virtual baseado na distância do mouse ao centro
+            const force = Math.min(dist / 100, 1); 
+            this.joystickVector.x = (dx / dist) * force;
+            this.joystickVector.y = (dy / dist) * force;
+            
+            // Evita NaN se o mouse estiver exatamente no centro
+            if(dist < 1) this.joystickVector = {x:0, y:0};
         });
 
-        // ZOOM MANUAL (Roda do Mouse)
-        window.addEventListener('wheel', e => {
-            if(!this.gameRunning) return;
-            const direction = e.deltaY > 0 ? 0.9 : 1.1;
-            this.cam.targetZoom *= direction;
-            // Limites do Zoom (0.1x a 2.0x)
-            this.cam.targetZoom = Math.max(0.1, Math.min(2.0, this.cam.targetZoom));
-        });
-
-        // Teclado
+        // Inputs Teclado
         window.addEventListener('keydown', e => {
             if(e.code === 'Space') this.split();
-            if(e.code === 'KeyW') this.eject();
         });
-
-        // Joystick Mobile
-        // (Adicione a lógica de toque aqui se necessário, igual ao código original)
-        // Botões Mobile
-        document.getElementById('btnSplit').addEventListener('touchstart', (e)=>{e.preventDefault(); this.split()});
-        document.getElementById('btnEject').addEventListener('touchstart', (e)=>{e.preventDefault(); this.eject()});
+        
+        // Zoom
+        window.addEventListener('wheel', e => {
+            const dir = e.deltaY > 0 ? 0.9 : 1.1;
+            this.cam.targetZoom = Math.max(0.1, Math.min(1.5, this.cam.targetZoom * dir));
+        });
     }
 
     start() {
-        const nickname = document.getElementById('nicknameInput').value || window.authManager?.user?.displayName || "Player";
+        const nickname = document.getElementById('nicknameInput').value || "Player";
         this.myName = nickname;
         
-        // Reseta jogo
+        // Reset
         this.myCells = [];
         this.foods = [];
-        for(let i=0; i<800; i++) this.spawnFood();
+        this.bots = [];
         
-        // Verifica itens comprados
+        // Spawns Iniciais
+        for(let i=0; i<500; i++) this.spawnFood();
+        for(let i=0; i<this.BOT_COUNT; i++) this.spawnBot();
+        
+        // Verifica itens comprados (com safe check)
         let initialMass = 30;
-        const hasStartMass = window.authManager.userData.items.includes('startMass');
-        if(hasStartMass) initialMass = 80;
-
-        const hasNeon = window.authManager.userData.items.includes('neonSkin');
-        const color = hasNeon ? '#00ff00' : this.getRandomColor();
+        let color = this.getRandomColor();
+        
+        if (window.authManager && window.authManager.userData) {
+            if(window.authManager.userData.items.includes('startMass')) initialMass = 80;
+            if(window.authManager.userData.items.includes('neonSkin')) color = '#00ff00';
+        }
 
         this.myCells.push({
             x: Math.random() * this.MAP_SIZE,
@@ -89,11 +106,11 @@ export class Game {
             id: Math.random()
         });
 
+        // UI
         document.getElementById('uiLayer').querySelector('#mainMenu').style.display = 'none';
         document.getElementById('hud').style.display = 'block';
+        
         this.gameRunning = true;
-
-        // Inicia Sync Rede
         this.startNetworkSync();
     }
 
@@ -106,113 +123,189 @@ export class Game {
         });
     }
 
-    getRandomColor() {
-        const colors = ['#ff0055', '#00d2ff', '#ffcc00', '#00ff77', '#aa00ff'];
-        return colors[Math.floor(Math.random() * colors.length)];
+    spawnBot() {
+        this.bots.push({
+            x: Math.random() * this.MAP_SIZE,
+            y: Math.random() * this.MAP_SIZE,
+            r: Math.random() * 20 + 20, // Tamanho variado
+            c: this.getRandomColor(),
+            target: {x: Math.random()*this.MAP_SIZE, y: Math.random()*this.MAP_SIZE},
+            id: Math.random()
+        });
     }
 
-    // --- LÓGICA DE FÍSICA ---
+    getRandomColor() {
+        return `hsl(${Math.random() * 360}, 100%, 50%)`;
+    }
+
+    // --- GAME LOOP ---
+    loop() {
+        if(this.gameRunning) {
+            this.update();
+            this.updateBots(); // IA dos Bots
+        }
+        this.draw();
+        requestAnimationFrame(() => this.loop());
+    }
+
     update() {
-        if(!this.gameRunning) return;
-
         let totalMass = 0;
-
-        // Suavização do Zoom
+        
+        // Câmera Zoom Suave
         this.cam.zoom += (this.cam.targetZoom - this.cam.zoom) * 0.1;
 
-        this.myCells.forEach((cell, index) => {
-            // FÓRMULA DE VELOCIDADE: QUANTO MAIOR, MAIS LENTO
-            // r = raio. pow(r, -0.4) faz decair suavemente
-            let speed = 8 * Math.pow(cell.r, -0.45) * 6;
-            
-            // Limite mínimo de velocidade para não ficar imóvel
-            speed = Math.max(speed, 1.5);
+        // Física das Minhas Células
+        this.myCells.forEach((cell, i) => {
+            // Velocidade baseada na massa (Quanto maior, mais lento)
+            let speed = 15 * Math.pow(cell.r, -0.4); 
+            speed = Math.max(speed, 2); // Mínimo de velocidade
 
+            // Aplica Joystick
             cell.x += this.joystickVector.x * speed;
             cell.y += this.joystickVector.y * speed;
-
-            // Inércia de Split (vx, vy)
-            if(cell.vx) { cell.x += cell.vx; cell.vx *= 0.9; if(Math.abs(cell.vx)<0.1) cell.vx=0; }
-            if(cell.vy) { cell.y += cell.vy; cell.vy *= 0.9; if(Math.abs(cell.vy)<0.1) cell.vy=0; }
+            
+            // Aplica Inércia (Split/Eject)
+            if(Math.abs(cell.vx) > 0.1) { cell.x += cell.vx; cell.vx *= 0.9; }
+            if(Math.abs(cell.vy) > 0.1) { cell.y += cell.vy; cell.vy *= 0.9; }
 
             // Limites do Mapa
             cell.x = Math.max(cell.r, Math.min(this.MAP_SIZE-cell.r, cell.x));
             cell.y = Math.max(cell.r, Math.min(this.MAP_SIZE-cell.r, cell.y));
-
+            
             totalMass += Math.floor(cell.r);
 
             // Comer Comida
-            for(let i=this.foods.length-1; i>=0; i--) {
-                let f = this.foods[i];
-                let dist = Math.hypot(cell.x - f.x, cell.y - f.y);
-                if(dist < cell.r) {
-                    // Crescer (Area based)
-                    let area = Math.PI * cell.r * cell.r;
-                    area += 50; // Ganho por comida
-                    cell.r = Math.sqrt(area / Math.PI);
-                    
-                    this.foods.splice(i, 1);
+            for (let f = this.foods.length - 1; f >= 0; f--) {
+                const food = this.foods[f];
+                if (Math.hypot(cell.x - food.x, cell.y - food.y) < cell.r) {
+                    cell.r = Math.sqrt((Math.PI * cell.r * cell.r + 100) / Math.PI); // Cresce
+                    this.foods.splice(f, 1);
                     this.spawnFood();
-                    window.audioManager.play('eat'); // TOCA SOM
-                    
-                    // Chance de ganhar moeda
-                    if(Math.random() < 0.1) {
-                        window.authManager.userData.coins++;
-                        window.authManager.updateCoinDisplay();
-                    }
+                    // Som (com limitação para não estourar o áudio)
+                    if(Math.random() > 0.5 && window.audioManager) window.audioManager.play('eat');
+                }
+            }
+
+            // Comer Bots
+            for (let b = this.bots.length - 1; b >= 0; b--) {
+                const bot = this.bots[b];
+                const dist = Math.hypot(cell.x - bot.x, cell.y - bot.y);
+                
+                // Regra: precisa ser 10% maior para comer
+                if (dist < cell.r && cell.r > bot.r * 1.1) {
+                    // Comeu Bot
+                    let areaGain = Math.PI * bot.r * bot.r;
+                    cell.r = Math.sqrt((Math.PI * cell.r * cell.r + areaGain) / Math.PI);
+                    this.bots.splice(b, 1);
+                    this.spawnBot();
+                    if(window.audioManager) window.audioManager.play('explode');
+                } else if (dist < bot.r && bot.r > cell.r * 1.1) {
+                    // Morreu para Bot
+                    this.myCells.splice(i, 1);
+                    if(window.audioManager) window.audioManager.play('explode');
+                    this.checkGameOver();
                 }
             }
         });
 
-        // Game Over Check
-        if(this.myCells.length === 0 && this.gameRunning) {
-            this.gameOver();
-        }
+        // Atualiza HUD de massa
+        const massEl = document.getElementById('massDisplay');
+        if(massEl) massEl.innerText = totalMass;
 
-        // Camera Follow (Centróide)
-        if(this.myCells.length > 0) {
-            let cx=0, cy=0;
-            this.myCells.forEach(c => { cx+=c.x; cy+=c.y; });
-            this.cam.x = (cx / this.myCells.length) - (this.canvas.width/2)/this.cam.zoom;
-            this.cam.y = (cy / this.myCells.length) - (this.canvas.width/2)/this.cam.zoom;
+        // Atualiza Câmera
+        if (this.myCells.length > 0) {
+            let cx = 0, cy = 0;
+            this.myCells.forEach(c => { cx += c.x; cy += c.y; });
+            cx /= this.myCells.length;
+            cy /= this.myCells.length;
             
-            document.getElementById('massDisplay').innerText = totalMass;
+            this.cam.x = cx - (this.canvas.width / 2) / this.cam.zoom;
+            this.cam.y = cy - (this.canvas.height / 2) / this.cam.zoom;
         }
+    }
 
-        // Salvar moedas no DB a cada tanto tempo se mudou
-        if(window.authManager.user && Math.random() < 0.01) {
-            window.authManager.saveCoins(window.authManager.userData.coins);
+    updateBots() {
+        this.bots.forEach(bot => {
+            // IA Simples: Se tem alguem maior perto, foge. Se menor, persegue. Se não, anda aleatorio.
+            let targetX = bot.target.x;
+            let targetY = bot.target.y;
+            let speed = 10 * Math.pow(bot.r, -0.4);
+
+            // Verifica proximidade com jogador
+            this.myCells.forEach(player => {
+                let d = Math.hypot(bot.x - player.x, bot.y - player.y);
+                if(d < 400) { // Campo de visão do bot
+                    if(player.r > bot.r * 1.1) {
+                        // FOGE: Inverte o vetor de direção
+                        let angle = Math.atan2(bot.y - player.y, bot.x - player.x);
+                        targetX = bot.x + Math.cos(angle) * 500;
+                        targetY = bot.y + Math.sin(angle) * 500;
+                    } else if (bot.r > player.r * 1.1) {
+                        // ATACA
+                        targetX = player.x;
+                        targetY = player.y;
+                    }
+                }
+            });
+
+            // Move Bot
+            let dx = targetX - bot.x;
+            let dy = targetY - bot.y;
+            let dist = Math.hypot(dx, dy);
+            
+            if(dist > 10) {
+                bot.x += (dx/dist) * speed;
+                bot.y += (dy/dist) * speed;
+            } else {
+                // Chegou no destino aleatorio, escolhe outro
+                bot.target = {x: Math.random()*this.MAP_SIZE, y: Math.random()*this.MAP_SIZE};
+            }
+
+            // Limites
+            bot.x = Math.max(bot.r, Math.min(this.MAP_SIZE-bot.r, bot.x));
+            bot.y = Math.max(bot.r, Math.min(this.MAP_SIZE-bot.r, bot.y));
+        });
+    }
+
+    checkGameOver() {
+        if (this.myCells.length === 0) {
+            this.gameRunning = false;
+            alert("Game Over!");
+            document.getElementById('hud').style.display = 'none';
+            document.getElementById('uiLayer').querySelector('#mainMenu').style.display = 'flex';
         }
     }
 
     split() {
         if(this.myCells.length >= 16) return;
-        window.audioManager.play('split');
+        if(window.audioManager) window.audioManager.play('split');
+        
         let newCells = [];
         this.myCells.forEach(cell => {
-            if(cell.r < 35) return;
-            cell.r /= 1.414;
+            if(cell.r < 30) return; // Mínimo para split
+            
+            let newR = cell.r / 1.414;
+            cell.r = newR;
+            
+            // Direção do split
+            let angle = Math.atan2(this.joystickVector.y, this.joystickVector.x);
+            if(this.joystickVector.x === 0 && this.joystickVector.y === 0) angle = 0;
+
             newCells.push({
-                x: cell.x, y: cell.y, r: cell.r, c: cell.c,
-                vx: this.joystickVector.x * 20, vy: this.joystickVector.y * 20,
+                x: cell.x + Math.cos(angle)*cell.r*2,
+                y: cell.y + Math.sin(angle)*cell.r*2,
+                r: newR,
+                c: cell.c,
+                vx: Math.cos(angle) * 30, // Força do pulo
+                vy: Math.sin(angle) * 30,
                 id: Math.random()
             });
         });
         this.myCells = this.myCells.concat(newCells);
     }
 
-    eject() {
-        // Lógica de ejetar massa (simplificada)
-        this.myCells.forEach(c => {
-            if(c.r > 30) {
-                c.r -= 2;
-                // Criar particula ejetada (implementar array ejected se quiser visual)
-            }
-        });
-    }
-
     draw() {
-        // Limpa
+        // Fundo
         this.ctx.fillStyle = '#050510';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -220,15 +313,19 @@ export class Game {
         this.ctx.scale(this.cam.zoom, this.cam.zoom);
         this.ctx.translate(-this.cam.x, -this.cam.y);
 
-        // Grid (Parallax simples)
+        // Grid
         this.ctx.strokeStyle = '#1a1a2e';
-        this.ctx.lineWidth = 2;
+        this.ctx.lineWidth = 5;
+        this.ctx.strokeRect(0,0, this.MAP_SIZE, this.MAP_SIZE); // Borda do mapa
+        this.ctx.lineWidth = 1;
+        this.ctx.globalAlpha = 0.5;
         this.ctx.beginPath();
         for(let x=0; x<this.MAP_SIZE; x+=200) { this.ctx.moveTo(x,0); this.ctx.lineTo(x,this.MAP_SIZE); }
         for(let y=0; y<this.MAP_SIZE; y+=200) { this.ctx.moveTo(0,y); this.ctx.lineTo(this.MAP_SIZE,y); }
         this.ctx.stroke();
+        this.ctx.globalAlpha = 1;
 
-        // Comidas
+        // Desenha Comida
         this.foods.forEach(f => {
             this.ctx.beginPath();
             this.ctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
@@ -236,117 +333,55 @@ export class Game {
             this.ctx.fill();
         });
 
-        // Jogadores (Simplificado, desenha todos)
-        // ...Adicionar renderização de otherPlayers aqui...
+        // Desenha Bots e Players (Ordenados por tamanho para Z-index correto)
+        let allEntities = [
+            ...this.bots.map(b => ({...b, type: 'bot'})),
+            ...this.myCells.map(c => ({...c, type: 'me', name: this.myName})),
+            // Adicionar outros players online aqui se houver
+        ];
+        allEntities.sort((a,b) => a.r - b.r);
 
-        // Minhas Células
-        this.myCells.forEach(c => {
+        allEntities.forEach(e => {
             this.ctx.beginPath();
-            this.ctx.arc(c.x, c.y, c.r, 0, Math.PI*2);
-            this.ctx.fillStyle = c.c;
-            
-            // Efeito de brilho (Neon Skin)
-            if(c.c === '#00ff00') {
-                this.ctx.shadowBlur = 20;
-                this.ctx.shadowColor = '#00ff00';
-            } else {
-                this.ctx.shadowBlur = 0;
-            }
-            
+            this.ctx.arc(e.x, e.y, e.r, 0, Math.PI*2);
+            this.ctx.fillStyle = e.c;
+            // Borda do player
+            this.ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+            this.ctx.lineWidth = 3;
+            this.ctx.stroke();
             this.ctx.fill();
-            this.ctx.shadowBlur = 0; // Reset
 
             // Nome
-            this.ctx.fillStyle = 'white';
-            this.ctx.font = `bold ${Math.max(10, c.r/2)}px Arial`;
-            this.ctx.textAlign = 'center';
-            this.ctx.textBaseline = 'middle';
-            this.ctx.fillText(this.myName, c.x, c.y);
+            if(e.r > 15) {
+                this.ctx.fillStyle = 'white';
+                this.ctx.font = `bold ${e.r/2.5}px Arial`;
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                this.ctx.fillText(e.type === 'bot' ? 'Bot' : e.name, e.x, e.y);
+            }
         });
 
         this.ctx.restore();
     }
 
-    loop() {
-        this.update();
-        this.draw();
-        requestAnimationFrame(() => this.loop());
-    }
-
-    gameOver() {
-        this.gameRunning = false;
-        alert("Game Over!");
-        document.getElementById('hud').style.display = 'none';
-        document.getElementById('uiLayer').querySelector('#mainMenu').style.display = 'flex';
-        // Salva moedas finais
-        if(window.authManager.user) {
-            window.authManager.saveCoins(window.authManager.userData.coins);
-        }
-    }
-
-    // --- LOJA ---
-    openStore() { document.getElementById('storeModal').style.display = 'flex'; }
-    closeStore() { document.getElementById('storeModal').style.display = 'none'; }
-    
-    buyItem(item, price) {
-        if(window.authManager.userData.coins >= price) {
-            if(window.authManager.userData.items.includes(item)) {
-                alert("Você já possui este item!");
-                return;
-            }
-            window.authManager.userData.coins -= price;
-            window.authManager.addItem(item);
-            window.authManager.saveCoins(window.authManager.userData.coins);
-            alert("Item comprado com sucesso!");
-        } else {
-            alert("Moedas insuficientes!");
-        }
-    }
-
-    // --- REDE ---
     startNetworkSync() {
-        // Enviar dados do player para Firebase periodicamente
-        if(window.authManager.user) {
-            setInterval(() => {
+        if(window.authManager && window.authManager.user) {
+            // Lógica simples de envio para Firestore
+            // (Para evitar travar se não tiver autenticado, checamos antes)
+             setInterval(() => {
                 if(!this.gameRunning) return;
-                const simpleCells = this.myCells.map(c => ({x:Math.round(c.x), y:Math.round(c.y), r:Math.round(c.r), c:c.c}));
-                setDoc(doc(db, "players", window.authManager.user.uid), {
-                    n: this.myName,
-                    cells: simpleCells,
-                    t: serverTimestamp()
-                }, {merge:true});
-            }, 100);
+                const simpleCells = this.myCells.map(c => ({
+                    x: Math.round(c.x), y: Math.round(c.y), r: Math.round(c.r), c: c.c
+                }));
+                // Salva no Firestore (Exige regras de segurança abertas ou login)
+                try {
+                    setDoc(doc(db, "players", window.authManager.user.uid), {
+                        n: this.myName,
+                        cells: simpleCells,
+                        t: serverTimestamp()
+                    }, {merge:true});
+                } catch(e) { console.log("Erro sync", e); }
+            }, 200);
         }
-        
-        // Receber outros players
-        const q = query(collection(db, "players"));
-        onSnapshot(q, (snapshot) => {
-            snapshot.docChanges().forEach((change) => {
-                if(window.authManager.user && change.doc.id === window.authManager.user.uid) return;
-                if(change.type === "removed") {
-                    delete this.otherPlayers[change.doc.id];
-                } else {
-                    this.otherPlayers[change.doc.id] = change.doc.data();
-                }
-            });
-            this.updateLeaderboard();
-        });
-    }
-
-    updateLeaderboard() {
-        let list = [{n: this.myName, m: this.myCells.reduce((a,b)=>a+b.r,0)}];
-        for(let id in this.otherPlayers) {
-            let p = this.otherPlayers[id];
-            let mass = p.cells ? p.cells.reduce((a,b)=>a+b.r,0) : 0;
-            list.push({n: p.n, m: mass});
-        }
-        list.sort((a,b) => b.m - a.m);
-        
-        const html = list.slice(0,5).map((p,i) => 
-            `<div style="display:flex; justify-content:space-between; color:${p.n===this.myName?'#00d2ff':'white'}">
-                <span>${i+1}. ${p.n}</span><span>${Math.floor(p.m)}</span>
-            </div>`
-        ).join('');
-        document.getElementById('lb-content').innerHTML = html;
     }
 }
