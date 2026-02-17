@@ -3,216 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gartic Ultimate v3</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+    <title>Nebulo.io Ultimate</title>
     <style>
-        body { font-family: 'Nunito', sans-serif; overscroll-behavior: none; user-select: none; -webkit-tap-highlight-color: transparent; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.6); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); }
-        canvas { touch-action: none; cursor: crosshair; background-image: radial-gradient(#d1d5db 1px, transparent 1px); background-size: 20px 20px; }
+        /* --- ESTILOS GERAIS --- */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #050510;
+            font-family: 'Segoe UI', sans-serif;
+            touch-action: none;
+            user-select: none;
+        }
+
+        #gameCanvas {
+            display: block;
+        }
+
+        /* --- UI OVERLAY --- */
+        #uiLayer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        /* TELA DE LOGIN */
+        #loginPanel {
+            background: rgba(15, 15, 25, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            pointer-events: auto;
+            border: 2px solid #00d2ff;
+            box-shadow: 0 0 40px rgba(0, 210, 255, 0.2);
+            width: 90%;
+            max-width: 350px;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+
+        h1 { margin: 0 0 20px 0; color: #fff; font-size: 2rem; letter-spacing: 2px; text-transform: uppercase; text-shadow: 0 0 10px #00d2ff; }
         
-        /* Animações */
-        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .msg-anim { animation: slideIn 0.3s ease-out; }
-        @keyframes pulse-red { 0%, 100% { background-color: #ef4444; } 50% { background-color: #b91c1c; } }
-        .urgent-bar { animation: pulse-red 1s infinite; }
+        input {
+            width: 100%; padding: 12px; margin-bottom: 15px;
+            border-radius: 8px; border: 1px solid #333;
+            background: #222; color: white; font-size: 1.1rem;
+            box-sizing: border-box; outline: none; text-align: center;
+        }
+        input:focus { border-color: #00d2ff; background: #2a2a2a; }
+
+        .btn-primary {
+            width: 100%; padding: 12px; border-radius: 8px; border: none;
+            background: linear-gradient(90deg, #00d2ff, #0051ff);
+            color: white; font-size: 1.1rem; font-weight: bold; cursor: pointer;
+            text-transform: uppercase; box-shadow: 0 4px 15px rgba(0, 81, 255, 0.4);
+            transition: 0.2s;
+        }
+        .btn-primary:active { transform: scale(0.96); }
+
+        /* HUD DO JOGO */
+        #hud {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; display: none;
+        }
+
+        #leaderboard {
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(0,0,0,0.5); padding: 10px;
+            border-radius: 8px; color: white; width: 180px;
+        }
+        .lb-item { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+        .lb-name { color: #eee; }
+        .lb-score { color: #00d2ff; font-weight: bold; }
+
+        #stats {
+            position: absolute; bottom: 10px; left: 10px;
+            color: white; font-size: 14px; text-shadow: 1px 1px 2px black;
+        }
+
+        /* MOD MENU (ADMIN) */
+        #modMenu {
+            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+            background: rgba(75, 0, 130, 0.9); border: 2px solid #ff00ff;
+            padding: 10px; border-radius: 10px; pointer-events: auto;
+            display: none; display: flex; gap: 10px; z-index: 100;
+        }
+        .mod-btn {
+            background: #ff00ff; color: white; border: none; padding: 5px 10px;
+            border-radius: 5px; font-size: 10px; cursor: pointer; font-weight: bold;
+        }
+
+        /* CONTROLES MOBILE */
+        .mobile-controls {
+            position: absolute; bottom: 20px; right: 20px;
+            display: flex; gap: 15px; pointer-events: auto;
+        }
+        .action-btn {
+            width: 60px; height: 60px; border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.3);
+            background: rgba(0,0,0,0.5); color: white;
+            font-size: 24px; display: flex; justify-content: center; align-items: center;
+            touch-action: manipulation; cursor: pointer;
+        }
+        .action-btn:active { background: rgba(255,255,255,0.2); }
+        .split-btn { border-color: #00d2ff; color: #00d2ff; }
+        .eject-btn { border-color: #ff0055; color: #ff0055; }
+
+        #exitBtn {
+            position: absolute; top: 10px; left: 10px;
+            background: rgba(255,0,0,0.6); color: white;
+            border: none; padding: 8px 15px; border-radius: 5px;
+            pointer-events: auto; cursor: pointer; font-weight: bold;
+        }
+
+        /* RADIO */
+        #radioPlayer {
+            position: absolute; bottom: 50px; left: 10px;
+            pointer-events: auto; opacity: 0.7;
+        }
+        #radioPlayer button {
+            background: #333; color: #fff; border: 1px solid #555;
+            padding: 5px 10px; border-radius: 4px; font-size: 10px; cursor: pointer;
+        }
+        
+        @media (min-width: 768px) {
+            .mobile-controls { display: none; } /* Esconde botões mobile no PC */
+        }
     </style>
 </head>
-<body class="h-[100dvh] w-screen bg-slate-900 overflow-hidden flex flex-col text-gray-800 transition-colors duration-500 bg-cover bg-center" style="background-image: url('https://img.freepik.com/free-vector/doodle-pattern-background_53876-100984.jpg?t=st=1710000000~exp=1710003600~hmac=fake');">
-    <div class="absolute inset-0 bg-slate-900/90 backdrop-blur-sm z-0"></div>
+<body>
 
-    <!-- SONS -->
-    <audio id="bgm" loop><source src="https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3" type="audio/mp3"></audio>
-    <audio id="sfx-win" src="https://www.myinstants.com/media/sounds/tadaa.mp3"></audio>
-    <audio id="sfx-correct" src="https://www.myinstants.com/media/sounds/correct.mp3"></audio>
-    <audio id="sfx-close" src="https://www.myinstants.com/media/sounds/ding-sound-effect_2.mp3"></audio>
-    <audio id="sfx-turn" src="https://www.myinstants.com/media/sounds/discord-notification.mp3"></audio>
-    <audio id="sfx-tick" src="https://www.myinstants.com/media/sounds/clock-ticking-2.mp3"></audio>
-    <audio id="sfx-report" src="https://www.myinstants.com/media/sounds/vine-boom.mp3"></audio>
-
-    <!-- 1. SPLASH -->
-    <div id="splashScreen" class="fixed inset-0 z-[100] bg-blue-600 flex flex-col items-center justify-center cursor-pointer hover:bg-blue-700 transition relative">
-        <div class="w-32 h-32 bg-white rounded-full flex items-center justify-center mb-6 shadow-2xl animate-bounce text-blue-600 border-4 border-blue-200">
-            <i class="fa-solid fa-play text-5xl ml-2"></i>
+    <div id="uiLayer">
+        <!-- LOGIN -->
+        <div id="loginPanel">
+            <h1>Nebulo.io <span style="font-size: 0.5em; color:#00d2ff">ULTIMATE</span></h1>
+            <input type="text" id="nickname" placeholder="Seu Apelido" maxlength="12">
+            <button class="btn-primary" id="playBtn">JOGAR</button>
+            <div style="margin-top: 15px; font-size: 0.8rem; color: #aaa;">
+                <p>PC: Mouse move, <b>Espaço</b> divide, <b>W</b> ejeta</p>
+                <p>Mobile: Toque move, Botões na tela</p>
+            </div>
         </div>
-        <h1 class="text-white text-4xl font-black drop-shadow-lg">TOCAR PARA JOGAR</h1>
-        <p class="text-blue-200 font-bold mt-2 text-lg">Ativar Áudio & Microfone</p>
-    </div>
 
-    <!-- 2. LOBBY -->
-    <div id="lobbyScreen" class="fixed inset-0 z-50 flex items-center justify-center hidden p-4 relative">
-        <div class="bg-white/95 p-8 rounded-[2.5rem] shadow-2xl w-full max-w-md backdrop-blur-xl border border-white/50 relative overflow-y-auto max-h-full">
-            <div class="text-center mb-8">
-                <h1 class="text-6xl font-black text-blue-600 italic tracking-tighter drop-shadow-sm">Gartic<span class="text-orange-500">Pro</span></h1>
-            </div>
-
-            <div class="flex flex-col items-center mb-6">
-                <label class="relative cursor-pointer group hover:scale-105 transition-transform duration-300">
-                    <div class="w-32 h-32 rounded-full border-4 border-blue-500 p-1 bg-white shadow-xl">
-                        <img id="avatarPreview" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Gartic" class="w-full h-full object-cover rounded-full">
-                    </div>
-                    <div class="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full shadow-lg border-2 border-white">
-                        <i class="fa-solid fa-camera"></i>
-                    </div>
-                    <input type="file" id="avatarInput" accept="image/*" class="hidden" onchange="handleAvatarUpload(event)">
-                </label>
-                <div class="mt-4 flex gap-2">
-                    <p class="text-xs font-bold text-gray-400 uppercase">Cor do Perfil:</p>
-                    <input type="color" id="themePicker" value="#3b82f6" class="w-6 h-6 rounded-full border-none cursor-pointer" onchange="myProfile.theme = this.value">
-                </div>
-            </div>
-
-            <div class="space-y-5">
-                <input type="text" id="usernameInput" maxlength="12" placeholder="SEU NOME" class="w-full bg-slate-100 rounded-2xl px-5 py-4 font-black text-xl border-2 border-transparent focus:border-blue-500 focus:bg-white outline-none text-center uppercase shadow-inner text-slate-700 placeholder:text-slate-300">
-                
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="selectRoom('sala_geral')" class="room-btn bg-blue-50 text-blue-600 py-3 rounded-xl font-bold border-2 border-blue-100 hover:border-blue-500 transition shadow-sm">
-                        <i class="fa-solid fa-earth-americas mr-1"></i> Geral
-                    </button>
-                    <button onclick="selectRoom('sala_animais')" class="room-btn bg-green-50 text-green-600 py-3 rounded-xl font-bold border-2 border-green-100 hover:border-green-500 transition shadow-sm">
-                        <i class="fa-solid fa-paw mr-1"></i> Animais
-                    </button>
-                    <button onclick="selectRoom('sala_objetos')" class="room-btn bg-orange-50 text-orange-600 py-3 rounded-xl font-bold border-2 border-orange-100 hover:border-orange-500 transition shadow-sm">
-                        <i class="fa-solid fa-shapes mr-1"></i> Objetos
-                    </button>
-                    <button onclick="selectRoom('sala_alimentos')" class="room-btn bg-red-50 text-red-600 py-3 rounded-xl font-bold border-2 border-red-100 hover:border-red-500 transition shadow-sm">
-                        <i class="fa-solid fa-burger mr-1"></i> Comida
-                    </button>
-                </div>
-            </div>
-
-            <button onclick="enterGame()" class="w-full mt-8 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-black py-5 rounded-2xl text-2xl shadow-lg shadow-blue-500/30 hover:scale-[1.02] active:scale-95 transition-all">
-                ENTRAR AGORA
-            </button>
-        </div>
-    </div>
-
-    <!-- 3. JOGO -->
-    <div id="gameScreen" class="flex-1 flex flex-col hidden h-full relative z-10">
-        
-        <!-- Header -->
-        <header class="bg-white shadow-md z-30">
-            <!-- Barra de Tempo -->
-            <div class="h-3 w-full bg-gray-200 relative overflow-hidden">
-                <div id="timeBar" class="h-full bg-green-500 w-full transition-all duration-1000 ease-linear shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
-            </div>
+        <!-- HUD -->
+        <div id="hud">
+            <button id="exitBtn">SAIR</button>
             
-            <div class="flex items-center justify-between px-2 py-2 lg:px-4">
-                <!-- Info Esquerda -->
-                <div class="flex items-center gap-3 bg-slate-100 px-3 py-1 rounded-xl">
-                    <i class="fa-regular fa-clock text-slate-400"></i>
-                    <span id="timerText" class="text-2xl font-black text-slate-700">--</span>
-                </div>
-                
-                <!-- Palavra -->
-                <div id="wordContainer" class="flex-1 mx-2 flex justify-center">
-                    <div id="wordDisplay" class="bg-white border-2 border-slate-200 px-4 py-1.5 rounded-xl text-lg lg:text-2xl font-black tracking-[0.3em] text-slate-800 uppercase shadow-sm truncate max-w-[200px] lg:max-w-md text-center">
-                        ??????
-                    </div>
-                </div>
-                
-                <!-- Controles -->
-                <div class="flex gap-2">
-                    <button id="reportBtn" onclick="reportDrawer()" class="hidden bg-red-100 text-red-500 w-10 h-10 rounded-xl hover:bg-red-500 hover:text-white transition flex items-center justify-center shadow-sm" title="Denunciar Desenho">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                    </button>
-                    <button onclick="toggleMute()" id="muteBtn" class="bg-slate-100 text-slate-400 w-10 h-10 rounded-xl hover:text-blue-500 transition flex items-center justify-center">
-                        <i class="fa-solid fa-volume-high"></i>
-                    </button>
-                    <button onclick="toggleSideMenu()" class="bg-slate-100 text-slate-500 w-10 h-10 rounded-xl lg:hidden flex items-center justify-center">
-                        <i class="fa-solid fa-users"></i>
-                    </button>
-                </div>
-            </div>
-        </header>
-
-        <div class="flex-1 flex overflow-hidden relative">
-            <!-- Sidebar Players -->
-            <div id="playersSidebar" class="absolute inset-y-0 left-0 w-72 bg-white shadow-2xl transform -translate-x-full lg:relative lg:translate-x-0 lg:shadow-none lg:border-r border-gray-200 z-40 transition-transform duration-300 flex flex-col">
-                <div class="p-4 bg-slate-50 border-b border-gray-200 font-black text-slate-400 text-xs flex justify-between items-center tracking-wider">
-                    <span>RANKING (<span id="playerCount">0</span>)</span>
-                    <button onclick="toggleSideMenu()" class="lg:hidden text-slate-400"><i class="fa-solid fa-chevron-left text-xl"></i></button>
-                </div>
-                <div id="playersList" class="flex-1 overflow-y-auto p-3 space-y-3 bg-slate-50/50"></div>
+            <div id="modMenu">
+                <span style="color:white; font-size:10px; line-height:24px; margin-right:5px;">ADMIN:</span>
+                <button class="mod-btn" onclick="cheatMass(1000)">+1000 MASS</button>
+                <button class="mod-btn" onclick="cheatSpeed()">SPEED BOOST</button>
+                <button class="mod-btn" onclick="cheatReset()">RESET ME</button>
             </div>
 
-            <!-- Canvas Area -->
-            <div class="flex-1 flex flex-col relative bg-[#e5e7eb] p-2 lg:p-4">
-                <div class="flex-1 bg-white rounded-2xl shadow-sm border border-gray-300 overflow-hidden relative touch-none select-none">
-                    <canvas id="drawingCanvas" class="w-full h-full block"></canvas>
-                    
-                    <!-- Overlays -->
-                    <div id="gameOverlay" class="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-white hidden z-20 backdrop-blur-md animate-fade p-4 text-center">
-                        <i id="overlayIcon" class="fa-solid fa-trophy text-yellow-400 text-7xl mb-6 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)] animate-bounce"></i>
-                        <h2 id="overlayTitle" class="text-4xl font-black mb-2 uppercase tracking-wider">Vencedor!</h2>
-                        <p id="overlaySub" class="text-2xl font-bold text-gray-300">Fulano</p>
-                    </div>
-
-                    <!-- Mensagem de Status (Quem desenha / Resposta) -->
-                    <div id="statusBubble" class="absolute top-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur border border-gray-200 px-6 py-2 rounded-full font-bold text-xs uppercase shadow-lg text-slate-600 hidden z-10 flex items-center gap-2">
-                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <span id="statusText">...</span>
-                    </div>
-
-                    <!-- Ferramentas (Scrollable no Mobile) -->
-                    <div id="toolsPanel" class="absolute bottom-4 left-1/2 -translate-x-1/2 glass-panel rounded-2xl p-2 shadow-2xl flex items-center gap-3 hidden z-20 max-w-[95%] overflow-x-auto no-scrollbar">
-                        <div class="flex gap-2 p-1">
-                            <input type="color" id="colorPicker" class="w-10 h-10 rounded-lg border-2 border-white shadow-sm cursor-pointer" value="#000000" onchange="setColor(this.value)">
-                            <div class="flex gap-1.5" id="quickColors"></div>
-                        </div>
-                        <div class="w-px h-8 bg-gray-300 mx-1 flex-shrink-0"></div>
-                        <div class="flex items-center gap-2 flex-shrink-0">
-                            <i class="fa-solid fa-circle text-[4px] text-gray-400"></i>
-                            <input type="range" min="2" max="40" value="4" class="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" oninput="setLineWidth(this.value)">
-                            <i class="fa-solid fa-circle text-lg text-gray-400"></i>
-                        </div>
-                        <div class="w-px h-8 bg-gray-300 mx-1 flex-shrink-0"></div>
-                        <button onclick="clearCanvasAction()" class="w-10 h-10 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white flex-shrink-0 flex items-center justify-center transition shadow-sm border border-red-100">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                        <button id="skipBtn" onclick="skipTurn()" class="w-10 h-10 rounded-xl bg-gray-100 text-gray-500 hover:bg-gray-200 flex-shrink-0 flex items-center justify-center transition shadow-sm border border-gray-200" title="Pular Vez">
-                            <i class="fa-solid fa-forward"></i>
-                        </button>
-                    </div>
-                </div>
+            <div id="leaderboard">
+                <div style="text-align: center; border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 5px;">TOP JOGADORES</div>
+                <div id="lb-list"></div>
             </div>
 
-            <!-- Chat -->
-            <div class="w-full lg:w-80 bg-white border-l border-gray-200 flex flex-col absolute inset-y-0 right-0 lg:static transition-transform transform translate-x-full lg:translate-x-0 z-40 shadow-2xl lg:shadow-none" id="chatSidebar">
-                <button onclick="toggleChat()" class="lg:hidden absolute -left-12 top-4 w-12 h-12 bg-white text-blue-600 rounded-l-xl shadow-lg flex items-center justify-center font-bold border-y border-l border-gray-200"><i class="fa-regular fa-comments text-xl"></i></button>
-                
-                <div class="p-3 border-b border-gray-200 bg-slate-50 font-black text-slate-400 text-xs uppercase flex justify-between items-center">
-                    <span>Chat da Sala</span>
-                    <button onclick="toggleChat()" class="lg:hidden"><i class="fa-solid fa-xmark text-lg"></i></button>
-                </div>
-                
-                <div id="chatMessages" class="flex-1 overflow-y-auto p-3 space-y-2 bg-white scroll-smooth pb-4"></div>
-                
-                <div class="p-3 bg-slate-50 border-t border-gray-200">
-                    <div class="relative flex items-center gap-2">
-                        <button onclick="startVoiceInput()" class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center hover:bg-blue-200 transition flex-shrink-0" title="Falar resposta">
-                            <i class="fa-solid fa-microphone"></i>
-                        </button>
-                        <input type="text" id="chatInput" placeholder="Resposta..." class="w-full bg-white border-2 border-gray-200 focus:border-blue-500 rounded-xl pl-3 pr-10 py-2 font-bold outline-none transition uppercase text-sm" onkeypress="handleChatKey(event)">
-                        <button onclick="sendMessage()" class="absolute right-3 text-blue-500 hover:scale-110 transition"><i class="fa-solid fa-paper-plane"></i></button>
-                    </div>
-                </div>
+            <div id="stats">
+                Score: <span id="scoreDisplay">0</span> | FPS: <span id="fpsDisplay">60</span>
+            </div>
+
+            <div id="radioPlayer">
+                <button id="toggleRadio">🎵 Lofi Radio: OFF</button>
+            </div>
+
+            <div class="mobile-controls">
+                <div class="action-btn eject-btn" id="btnEject">W</div>
+                <div class="action-btn split-btn" id="btnSplit">⚡</div>
             </div>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, collection, onSnapshot, setDoc, updateDoc, addDoc, serverTimestamp, increment, query, orderBy, limit, getDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <canvas id="gameCanvas"></canvas>
 
-        // CONFIG (SUAS CHAVES AQUI)
+    <!-- FIREBASE & GAME LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, onSnapshot, deleteDoc, serverTimestamp, query, where } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        // --- CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyCXDfIO53oqtnRgs9jfApf-rZklp4SRbV8",
             authDomain: "gartic-51f3d.firebaseapp.com",
@@ -225,462 +203,745 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = "gartic-v5-stable";
 
-        // Variáveis de Estado
-        let currentUser = null;
-        let myProfile = { name: "", avatar: null, theme: "#3b82f6" };
-        let currentRoom = "sala_geral";
-        let isMyTurn = false;
-        let amIHost = false; 
-        let secretWord = "";
-        let audioEnabled = false;
-        let hostTimerInterval = null;
-        let reportCount = 0;
-        window.currentPlayersList = [];
+        // --- GAME CONSTANTS ---
+        const MAP_W = 4000;
+        const MAP_H = 4000;
+        const CAM_ZOOM_SPEED = 0.05;
+        const FOOD_COUNT = 400;
+        const VIRUS_COUNT = 30;
+        const BOT_COUNT = 15;
+        const GALAXY_CHANCE = 0.005; // Chance por frame de spawnar se não houver
+        const BASE_MASS = 30; // Raio ao inves de massa para simplificar calculos visuais
 
-        // Banco de Palavras
-        const WORDS = ["BOLA", "SOL", "CASA", "ARVORE", "GATO", "PEIXE", "CARRO", "FLOR", "LUA", "LIVRO", "MESA", "BOLO", "PIZZA", "AVIAO", "CHUVA", "FOGO", "MACA", "DADO", "GELO", "MOTO", "BOTA", "OVO", "DENTE", "UNHA", "PATO", "RATO", "VIOLAO", "PRAIA", "CELULAR", "COMPUTADOR", "BANANA", "SAPATO", "CHAPEU", "OCULOS", "RELOGIO"];
-        const ROUND_TIME = 60; 
-        const WIN_SCORE = 120;
-
-        // Canvas
-        let canvas = document.getElementById('drawingCanvas');
+        // --- STATE ---
+        let canvas = document.getElementById('gameCanvas');
         let ctx = canvas.getContext('2d');
-        let isDrawing = false, lastPos = {x:0, y:0}, currentColor = "#000000", currentWidth = 4;
+        let userId = null;
+        let gameActive = false;
+        let isAdmin = false;
+        let lastTime = 0;
+        let fps = 60;
+        
+        // Entidades
+        let myCells = []; // Array de {x, y, r, vx, vy, color}
+        let otherPlayers = {}; // id -> { cells: [], name: '', ... }
+        let foods = [];
+        let viruses = [];
+        let galaxies = [];
+        let bots = [];
+        let ejectedMass = [];
 
-        // Audio
-        const sounds = { 
-            bgm: document.getElementById('bgm'), 
-            win: document.getElementById('sfx-win'), 
-            correct: document.getElementById('sfx-correct'), 
-            turn: document.getElementById('sfx-turn'), 
-            close: document.getElementById('sfx-close'),
-            tick: document.getElementById('sfx-tick'),
-            report: document.getElementById('sfx-report')
+        // Inputs
+        let mouse = { x: 0, y: 0 };
+        let cam = { x: 0, y: 0, zoom: 1 };
+        
+        // Audio Synth
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        // --- SETUP ---
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // --- AUDIO SYSTEM (SINTETIZADOR) ---
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+            
+            if (type === 'eat') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } else if (type === 'split') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.linearRampToValueAtTime(100, now + 0.2);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'explode') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.exponentialRampToValueAtTime(10, now + 0.5);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            } else if (type === 'galaxy') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.linearRampToValueAtTime(1200, now + 1);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.linearRampToValueAtTime(0, now + 1);
+                osc.start(now);
+                osc.stop(now + 1);
+            }
+        }
+
+        // Lofi Radio
+        let isRadioPlaying = false;
+        const radioUrl = 'https://stream.zeno.fm/0r0xa792kwzuv'; // Stream de Lofi genérica
+        const radioAudio = new Audio(radioUrl);
+        radioAudio.volume = 0.3;
+
+        document.getElementById('toggleRadio').onclick = () => {
+            isRadioPlaying = !isRadioPlaying;
+            if (isRadioPlaying) {
+                radioAudio.play().catch(e => alert("O navegador bloqueou o áudio. Interaja com a página e tente de novo."));
+                document.getElementById('toggleRadio').innerText = "🎵 Lofi Radio: ON";
+                document.getElementById('toggleRadio').style.color = "#00ff00";
+            } else {
+                radioAudio.pause();
+                document.getElementById('toggleRadio').innerText = "🎵 Lofi Radio: OFF";
+                document.getElementById('toggleRadio').style.color = "white";
+            }
         };
-        sounds.bgm.volume = 0.05;
 
-        // --- INICIALIZAÇÃO ---
-        document.getElementById('splashScreen').addEventListener('click', () => {
-            document.getElementById('splashScreen').classList.add('hidden');
-            document.getElementById('lobbyScreen').classList.remove('hidden');
-            document.getElementById('lobbyScreen').classList.add('flex');
-            audioEnabled = true;
-            sounds.bgm.play().catch(()=>{});
+        // --- FIREBASE AUTH & SYNC ---
+        signInAnonymously(auth).then(cred => {
+            userId = cred.user.uid;
+            console.log("Logado como:", userId);
         });
 
-        signInAnonymously(auth);
-        onAuthStateChanged(auth, (user) => { if(user) currentUser = user; });
+        // Ouvir outros jogadores
+        const playersRef = collection(db, "players");
+        const q = query(playersRef);
+        onSnapshot(q, (snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                const data = change.doc.data();
+                const pid = change.doc.id;
+                if (pid === userId) return;
 
-        // --- UI LOBBY ---
-        window.handleAvatarUpload = (e) => {
-            const file = e.target.files[0]; if(!file) return;
-            const r = new FileReader(); r.onload=(ev)=>{const img=new Image();img.onload=()=>{
-                const c=document.createElement('canvas');c.width=100;c.height=100;
-                c.getContext('2d').drawImage(img,0,0,100,100);
-                myProfile.avatar=c.toDataURL('image/jpeg',0.6);
-                document.getElementById('avatarPreview').src=myProfile.avatar;
-            };img.src=ev.target.result;}; r.readAsDataURL(file);
-        };
-        window.selectRoom = (r) => {
-            document.querySelectorAll('.room-btn').forEach(b => b.classList.remove('ring-4', 'ring-blue-300'));
-            event.currentTarget.classList.add('ring-4', 'ring-blue-300');
-            currentRoom = r;
-        };
-
-        window.enterGame = async () => {
-            const name = document.getElementById('usernameInput').value.trim();
-            if(name.length<2) return Swal.fire('Erro','Nome muito curto!','error');
-            
-            myProfile.name = name.toUpperCase();
-            if(!myProfile.avatar) myProfile.avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`;
-
-            document.getElementById('lobbyScreen').classList.add('hidden');
-            document.getElementById('gameScreen').classList.remove('hidden');
-            document.getElementById('gameScreen').classList.add('flex');
-            resizeCanvas();
-            await joinRoom();
-        };
-
-        // --- CORE LOGIC ---
-        async function joinRoom() {
-            const pRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/players/${currentUser.uid}`);
-            await setDoc(pRef, { 
-                name: myProfile.name, avatar: myProfile.avatar, theme: myProfile.theme, score: 0, 
-                joinedAt: serverTimestamp(), isBot: false, lastActive: serverTimestamp() 
-            });
-
-            const rRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}`);
-            const snap = await getDoc(rRef);
-            if(!snap.exists()) await setDoc(rRef, { status: 'waiting', drawerId: null, word: '', timerEnd: null });
-
-            startListeners();
-            setupCanvas();
-        }
-
-        function startListeners() {
-            // 1. SALA (Sincronia Principal)
-            onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}`), (s) => {
-                const data = s.data(); if(!data) return;
-                
-                // Detectar Mudança de Turno
-                const prevTurn = isMyTurn;
-                isMyTurn = (data.drawerId === currentUser.uid);
-                secretWord = data.word;
-
-                if(!prevTurn && isMyTurn) {
-                    if(audioEnabled) sounds.turn.play();
-                    Swal.fire({ title: 'SUA VEZ!', text: 'Desenhe: '+secretWord, timer: 3000, showConfirmButton: false, icon: 'info', backdrop: `rgba(0,0,123,0.4)` });
-                }
-
-                updateUI(data);
-                if(data.clearBoard) ctx.clearRect(0,0,canvas.width,canvas.height);
-                if(data.status==='finished') showWinner(data.winnerName);
-                if(data.status==='nobody_won') showNobodyWon();
-
-                // *** SISTEMA DE TEMPO DEMOCRÁTICO ***
-                // Se o tempo acabou (com margem de 3s) e a rodada ainda está 'playing', qualquer um pode forçar o fim
-                if(data.status === 'playing' && data.timerEnd) {
-                    const left = data.timerEnd.toMillis() - Date.now();
-                    if(left < -3000) { // 3 segundos de tolerância para o host
-                        console.log("Forçando fim de rodada por timeout...");
-                        endRound("TEMPO ACABOU", false); // Chama função local que tenta escrever no banco
-                    }
-                }
-            });
-
-            // 2. JOGADORES + HOST
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/players`), (s) => {
-                const players = []; s.forEach(d => players.push({id:d.id, ...d.data()}));
-                players.sort((a,b)=>(a.joinedAt?.seconds||0)-(b.joinedAt?.seconds||0));
-                window.currentPlayersList = players;
-
-                // Eleição Host: Jogador humano mais antigo
-                const humans = players.filter(p=>!p.isBot);
-                if(humans.length>0) {
-                    amIHost = (humans[0].id === currentUser.uid);
-                    if(amIHost) manageHostLogic(players);
-                    else if(hostTimerInterval) { clearInterval(hostTimerInterval); hostTimerInterval = null; }
-                }
-                renderPlayers(players);
-            });
-
-            // 3. DESENHO
-            onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/lines`), orderBy('timestamp','asc')), (s)=>{
-                s.docChanges().forEach(c=>{ if(c.type==='added' && c.doc.data().senderId!==currentUser.uid) drawRemote(c.doc.data()); });
-            });
-
-            // 4. CHAT
-            onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/messages`), orderBy('timestamp','desc'), limit(40)), (s)=>{
-                const msgs=[]; s.forEach(d=>msgs.push(d.data())); renderChat(msgs.reverse());
-            });
-        }
-
-        // --- HOST LOGIC (CÉREBRO) ---
-        async function manageHostLogic(players) {
-            // Bots: Manter sempre 3 jogadores
-            if(players.length < 3) {
-                const botName = ["Bot_Lia","Bot_Max","Bot_Tom","Bot_Ana"][Math.floor(Math.random()*4)] + Math.floor(Math.random()*99);
-                const bid = "BOT_"+Date.now();
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/players/${bid}`), {
-                    name: botName, avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${botName}`, score: 0, joinedAt: serverTimestamp(), isBot: true, theme: '#94a3b8'
-                });
-                return;
-            }
-
-            const rRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}`);
-            const snap = await getDoc(rRef);
-            const data = snap.data();
-
-            // Iniciar Jogo
-            if(data.status === 'waiting' && players.length >= 2) {
-                startRound(players);
-                return;
-            }
-
-            // Loop de Bots (Desenhar e Chutar)
-            if(!hostTimerInterval) {
-                hostTimerInterval = setInterval(async () => {
-                    if(data.status !== 'playing') return;
-                    
-                    const drawer = players.find(p=>p.id === data.drawerId);
-                    
-                    // BOT DESENHANDO (Scribble Pattern)
-                    if(drawer && drawer.isBot && Math.random() > 0.7) {
-                        const t = Date.now() / 1000;
-                        const x = 0.5 + Math.cos(t) * 0.3 * Math.random();
-                        const y = 0.5 + Math.sin(t) * 0.3 * Math.random();
-                        const p1 = {x, y};
-                        const p2 = {x: x+0.02, y: y+0.02};
-                        
-                        addDoc(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/lines`), {
-                            senderId: drawer.id, points: [p1, p2], color: "#" + Math.floor(Math.random()*16777215).toString(16), width: 3, timestamp: serverTimestamp()
-                        });
-                    }
-
-                    // BOT CHUTANDO (Inteligente)
-                    if(drawer && !drawer.isBot && Math.random() > 0.92) { // 8% chance por segundo
-                        // Aumenta chance de acerto conforme tempo passa
-                        const timeLeft = data.timerEnd ? (data.timerEnd.toMillis() - Date.now()) / 1000 : 60;
-                        const chance = (60 - timeLeft) / 100; // Começa 0%, termina 60%
-                        
-                        const botGuessing = players.filter(p=>p.isBot && p.id !== drawer.id)[0]; // Pega um bot livre
-                        if(botGuessing) {
-                            const guess = (Math.random() < chance) ? data.word : WORDS[Math.floor(Math.random()*WORDS.length)];
-                            
-                            // Envia msg
-                            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/messages`), {
-                                sender: botGuessing.name, senderId: botGuessing.id, avatar: botGuessing.avatar, theme: botGuessing.theme, text: guess, type: 'guess', timestamp: serverTimestamp()
-                            });
-
-                            if(guess === data.word) {
-                                const pRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/players/${botGuessing.id}`);
-                                await updateDoc(pRef, { score: increment(10) });
-                                endRound(`${botGuessing.name} ACERTOU`, true);
-                            }
-                        }
-                    }
-                }, 1000);
-            }
-        }
-
-        async function startRound(players) {
-            const rRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}`);
-            const snap = await getDoc(rRef);
-            const prevDrawer = snap.data().drawerId;
-            let nextIdx = 0;
-            if(prevDrawer) {
-                const idx = players.findIndex(p=>p.id===prevDrawer);
-                if(idx !== -1) nextIdx = (idx + 1) % players.length;
-            }
-            const nextDrawer = players[nextIdx];
-            const word = WORDS[Math.floor(Math.random()*WORDS.length)];
-
-            await updateDoc(rRef, {
-                status: 'playing', drawerId: nextDrawer.id, word: word,
-                timerEnd: new Date(Date.now() + ROUND_TIME*1000), clearBoard: serverTimestamp()
-            });
-            sysMsg(`RODADA DE ${nextDrawer.name}`);
-        }
-
-        async function endRound(reason, someoneWon) {
-            // Função universal para encerrar, pode ser chamada por Host ou por Timeout
-            const rRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}`);
-            let status = 'revealing';
-            if(!someoneWon && reason.includes("TEMPO")) status = 'nobody_won';
-
-            await updateDoc(rRef, { status: status, timerEnd: null });
-            
-            if(status === 'nobody_won') sysMsg("NINGUÉM ACERTOU!");
-            else sysMsg(`${reason}! PALAVRA: ${secretWord}`);
-
-            // Apenas o host reinicia para evitar conflito
-            if(amIHost) {
-                setTimeout(async () => {
-                    const players = window.currentPlayersList;
-                    const winner = players.find(p=>p.score >= WIN_SCORE);
-                    if(winner) await updateDoc(rRef, { status: 'finished', winnerName: winner.name });
-                    else startRound(players);
-                }, 4000);
-            }
-        }
-
-        // --- PLAYER ACTIONS ---
-        window.sendMessage = async () => {
-            const inp = document.getElementById('chatInput');
-            const txt = inp.value.trim().toUpperCase();
-            if(!txt) return;
-
-            if(isMyTurn && txt.includes(secretWord)) {
-                inp.value=""; Swal.fire("Psiu!", "Sem spoiler!", "warning"); return;
-            }
-
-            // Lógica Anti-Spoiler
-            let type = 'chat';
-            let content = txt;
-            
-            // Verifica acerto
-            if(!isMyTurn && txt === secretWord && secretWord) {
-                type = 'win';
-                content = '***'; // Não salva a palavra no banco
-                
-                if(audioEnabled) sounds.correct.play();
-                const pRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/players/${currentUser.uid}`);
-                await updateDoc(pRef, { score: increment(10) });
-                
-                // Força fim da rodada
-                endRound(`${myProfile.name} ACERTOU`, true);
-            } 
-            // Verifica "Perto" (Localmente)
-            else if(!isMyTurn && isClose(txt, secretWord)) {
-                // Mostra aviso local apenas, não envia pro banco para não floodar
-                showLocalSystemMsg("ESTÁ PERTO!", "text-yellow-500");
-                if(audioEnabled) sounds.close.play();
-                inp.value = "";
-                return; 
-            }
-
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/messages`), {
-                sender: myProfile.name, senderId: currentUser.uid, avatar: myProfile.avatar, theme: myProfile.theme, 
-                text: content, type: type, timestamp: serverTimestamp()
-            });
-            inp.value="";
-        };
-
-        function isClose(guess, secret) {
-            if(!secret) return false;
-            // Lógica simples: contém parte da palavra ou tem 1 letra de diferença
-            return secret.includes(guess) && guess.length > secret.length/2;
-        }
-
-        window.skipTurn = async () => {
-             if(isMyTurn) endRound("PULOU A VEZ", false);
-        };
-
-        window.reportDrawer = async () => {
-            if(reportCount >= 1) return Swal.fire("Calma", "Você já denunciou.", "info");
-            reportCount++;
-            if(audioEnabled) sounds.report.play();
-            sysMsg(`${myProfile.name} DENUNCIOU O DESENHO!`);
-            // Se tiver muitas denúncias (simulado com 2 aqui para demo), pula
-            // Em produção leria o contador do banco
-        };
-
-        window.startVoiceInput = () => {
-            if (!('webkitSpeechRecognition' in window)) return Swal.fire("Ops", "Navegador sem suporte a voz.", "error");
-            const recognition = new webkitSpeechRecognition();
-            recognition.lang = 'pt-BR';
-            recognition.start();
-            recognition.onresult = (e) => {
-                document.getElementById('chatInput').value = e.results[0][0].transcript;
-                window.sendMessage();
-            };
-        };
-
-        window.handleChatKey = (e) => { if (e.key === 'Enter') window.sendMessage(); };
-        function sysMsg(t) { addDoc(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/messages`), { sender: "SISTEMA", text: t, type:'system', timestamp: serverTimestamp() }); }
-        function showLocalSystemMsg(t, color) {
-            const el = document.getElementById('chatMessages');
-            el.innerHTML += `<div class="text-center my-1"><span class="font-black ${color} bg-white px-2 py-1 rounded border border-gray-200 text-xs">${t}</span></div>`;
-            el.scrollTop = el.scrollHeight;
-        }
-
-        // --- RENDER ---
-        function updateUI(data) {
-            const wEl = document.getElementById('wordDisplay'); const tools = document.getElementById('toolsPanel');
-            const inp = document.getElementById('chatInput'); const sb = document.getElementById('statusBubble');
-            const overlay = document.getElementById('gameOverlay');
-
-            if(data.status === 'playing') {
-                overlay.classList.add('hidden');
-                if(isMyTurn) {
-                    wEl.innerText = secretWord; wEl.className="bg-white border-2 border-blue-500 text-blue-600 px-4 py-1.5 rounded-lg text-lg lg:text-2xl font-black uppercase shadow-lg";
-                    tools.classList.remove('hidden'); document.getElementById('reportBtn').classList.add('hidden');
-                    inp.disabled=true; inp.placeholder="VOCÊ DESENHA!";
-                    sb.innerHTML = `<i class="fa-solid fa-pencil"></i> TUA VEZ!`; sb.classList.remove('hidden');
+                if (change.type === "removed") {
+                    delete otherPlayers[pid];
                 } else {
-                    wEl.innerText = secretWord.replace(/[A-Z]/g, "_ "); wEl.className="bg-slate-50 border-2 border-slate-200 text-slate-700 px-4 py-1.5 rounded-lg text-lg lg:text-2xl font-black uppercase shadow-sm";
-                    tools.classList.add('hidden'); document.getElementById('reportBtn').classList.remove('hidden');
-                    inp.disabled=false; inp.placeholder="QUAL É O DESENHO?";
-                    const d = window.currentPlayersList.find(p=>p.id===data.drawerId);
-                    sb.innerHTML = `<i class="fa-solid fa-paintbrush"></i> ${(d?d.name:"ALGUÉM")} DESENHANDO`; sb.classList.remove('hidden');
+                    // Interpolação simples
+                    otherPlayers[pid] = data; 
                 }
-            } else if(data.status === 'revealing' || data.status === 'nobody_won') {
-                wEl.innerText = secretWord;
-                sb.innerHTML = `<i class="fa-solid fa-eye"></i> RESPOSTA: ${secretWord}`;
+            });
+        });
+
+        function sendUpdate() {
+            if (!userId || !gameActive) return;
+            
+            // Mapeia células para formato leve
+            const simpleCells = myCells.map(c => ({
+                x: Math.round(c.x),
+                y: Math.round(c.y),
+                r: Math.round(c.r),
+                c: c.color
+            }));
+
+            // Calcula massa total para ranking
+            const totalMass = Math.floor(myCells.reduce((acc, c) => acc + c.r, 0));
+
+            setDoc(doc(db, "players", userId), {
+                n: myName,
+                cells: simpleCells,
+                mass: totalMass,
+                t: serverTimestamp()
+            }, { merge: true }).catch(e => {}); // Ignora erros de rede pra não travar
+        }
+
+        setInterval(sendUpdate, 100); // 10 updates/sec
+
+        // --- GAME LOGIC ---
+
+        let myName = "Player";
+        const COLORS = ['#FF0055', '#00FF55', '#5500FF', '#FFFF00', '#00FFFF', '#FF00FF', '#FF5500'];
+
+        function initGame() {
+            // Gerar comida localmente
+            foods = [];
+            for(let i=0; i<FOOD_COUNT; i++) spawnFood();
+            
+            // Gerar Virus
+            viruses = [];
+            for(let i=0; i<VIRUS_COUNT; i++) {
+                viruses.push({
+                    x: Math.random() * MAP_W,
+                    y: Math.random() * MAP_H,
+                    r: 45 // Tamanho do virus
+                });
             }
 
-            if(data.timerEnd) {
-                const total = ROUND_TIME*1000;
-                const updateT = ()=>{
-                    const left = Math.max(0, data.timerEnd.toMillis() - Date.now());
-                    const pct = (left/total)*100;
-                    const bar = document.getElementById('timeBar');
-                    bar.style.width = pct+"%";
-                    
-                    if(pct<20) bar.className="h-full bg-red-500 w-full urgent-bar";
-                    else if(pct<50) bar.className="h-full bg-yellow-400 w-full transition-all duration-1000 ease-linear";
-                    else bar.className="h-full bg-green-500 w-full transition-all duration-1000 ease-linear";
+            // Bots
+            bots = [];
+            for(let i=0; i<BOT_COUNT; i++) spawnBot();
 
-                    document.getElementById('timerText').innerText = Math.ceil(left/1000);
-                    if(left>0) requestAnimationFrame(updateT);
-                }; requestAnimationFrame(updateT);
+            galaxies = [];
+            ejectedMass = [];
+
+            // Jogador Inicial
+            myCells = [{
+                x: Math.random() * (MAP_W-200)+100,
+                y: Math.random() * (MAP_H-200)+100,
+                r: BASE_MASS,
+                vx: 0, vy: 0,
+                color: COLORS[Math.floor(Math.random()*COLORS.length)]
+            }];
+        }
+
+        function spawnFood() {
+            foods.push({
+                x: Math.random() * MAP_W,
+                y: Math.random() * MAP_H,
+                r: Math.random() * 3 + 2,
+                c: `hsl(${Math.random()*360}, 80%, 60%)`
+            });
+        }
+
+        function spawnBot() {
+            bots.push({
+                x: Math.random() * MAP_W,
+                y: Math.random() * MAP_H,
+                r: Math.random() * 30 + 20,
+                vx: 0, vy: 0,
+                color: '#'+Math.floor(Math.random()*16777215).toString(16),
+                name: "Bot " + Math.floor(Math.random()*100),
+                state: 'wander',
+                target: null
+            });
+        }
+
+        // --- INPUTS ---
+        document.getElementById('playBtn').onclick = () => {
+            const nick = document.getElementById('nickname').value;
+            myName = nick || "Anônimo";
+            
+            // Admin Check
+            if (myName.toLowerCase() === 'david') {
+                isAdmin = true;
+                document.getElementById('modMenu').style.display = 'flex';
+                // Efeito especial
+                myCells[0].color = "#000000"; // Black hole skin?
+            } else {
+                isAdmin = false;
+                document.getElementById('modMenu').style.display = 'none';
             }
-        }
 
-        function showNobodyWon() {
-            if(audioEnabled) sounds.sfx_turn.play(); // Fail sound
-            const ov = document.getElementById('gameOverlay');
-            document.getElementById('overlayIcon').className = "fa-solid fa-face-dizzy text-gray-400 text-7xl mb-6 animate-pulse";
-            document.getElementById('overlayTitle').innerText = "NINGUÉM ACERTOU";
-            document.getElementById('overlaySub').innerText = secretWord;
-            ov.classList.remove('hidden');
-        }
+            document.getElementById('loginPanel').style.display = 'none';
+            document.getElementById('hud').style.display = 'block';
+            
+            initGame();
+            gameActive = true;
+            requestAnimationFrame(gameLoop);
+        };
 
-        function showWinner(name) {
-            if(audioEnabled) sounds.win.play();
-            const ov = document.getElementById('gameOverlay');
-            document.getElementById('overlayIcon').className = "fa-solid fa-trophy text-yellow-400 text-7xl mb-6 animate-bounce";
-            document.getElementById('overlayTitle').innerText = "VENCEDOR DA PARTIDA!";
-            document.getElementById('overlaySub').innerText = name;
-            ov.classList.remove('hidden');
-            confetti({particleCount:200, spread:100, origin:{y:0.6}});
-        }
+        document.getElementById('exitBtn').onclick = () => {
+            gameActive = false;
+            document.getElementById('hud').style.display = 'none';
+            document.getElementById('loginPanel').style.display = 'block';
+            if(userId) deleteDoc(doc(db, "players", userId));
+        };
 
-        function renderPlayers(players) {
-            document.getElementById('playerCount').innerText = players.length;
-            players.sort((a,b)=>b.score-a.score);
-            document.getElementById('playersList').innerHTML = players.map((p,i)=>`
-                <div class="flex items-center gap-3 p-3 rounded-2xl mb-2 transition-all ${p.id===currentUser.uid?'bg-blue-50 border-2 border-blue-200':'bg-white border border-slate-100'}">
-                    <span class="font-black text-slate-300 w-6 text-center text-lg italic">#${i+1}</span>
-                    <div class="relative"><img src="${p.avatar}" class="w-10 h-10 rounded-full bg-gray-200 object-cover border-2 border-white shadow-sm"></div>
-                    <div class="flex-1 min-w-0"><div class="flex items-center gap-1"><p class="font-bold text-sm truncate" style="color:${p.theme}">${p.name}</p>${p.isBot?'<span class="text-[9px] bg-slate-200 px-1 rounded text-slate-500">BOT</span>':''}</div><p class="text-xs font-bold text-slate-400">${p.score} PTS</p></div>
-                </div>`).join('');
-        }
+        window.addEventListener('keydown', e => {
+            if (!gameActive) return;
+            if (e.code === 'Space') splitCells();
+            if (e.code === 'KeyW') ejectMass();
+        });
 
-        function renderChat(msgs){
-            const el=document.getElementById('chatMessages');
-            el.innerHTML=msgs.map(m=>{
-                if(m.type==='system') return `<div class="flex justify-center my-2 msg-anim"><span class="bg-slate-200 text-slate-600 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">${m.text}</span></div>`;
-                
-                // Lógica de Vencedor (Anti-Spoiler)
-                if(m.type==='win') return `<div class="flex justify-center my-2 msg-anim"><span class="bg-green-100 text-green-600 border border-green-200 text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm"><i class="fa-solid fa-star mr-1"></i> ${m.sender} ACERTOU!</span></div>`;
+        // Mobile Binds
+        document.getElementById('btnSplit').addEventListener('touchstart', (e) => { e.preventDefault(); splitCells(); });
+        document.getElementById('btnEject').addEventListener('touchstart', (e) => { e.preventDefault(); ejectMass(); });
 
-                const me=m.senderId===currentUser.uid;
-                return `<div class="flex gap-2 mb-3 ${me?'flex-row-reverse':''} items-end msg-anim">
-                    <img src="${m.avatar}" class="w-8 h-8 rounded-full bg-gray-200 border-2 border-white shadow-sm">
-                    <div class="flex flex-col ${me?'items-end':'items-start'} max-w-[85%]">
-                        <span class="text-[9px] text-gray-400 font-bold px-1 mb-0.5 uppercase tracking-wide">${m.sender}</span>
-                        <div class="px-4 py-2 rounded-2xl text-xs font-bold shadow-md ${me?'text-white rounded-br-none':'text-gray-700 bg-slate-100 border border-gray-100 rounded-bl-none'}" style="${me?`background-color:${m.theme}`:''}">${m.text}</div>
-                    </div>
-                </div>`;
-            }).join(''); el.scrollTop=el.scrollHeight;
-        }
-
-        // --- CANVAS UTILS ---
-        const colors=['#000000','#ffffff','#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#a855f7','#ec4899','#78350f'];
-        const qc=document.getElementById('quickColors'); colors.forEach(c=>{const b=document.createElement('button');b.className="w-8 h-8 rounded-lg border-2 border-white shadow-md active:scale-90 transition hover:scale-110 flex-shrink-0";b.style.backgroundColor=c;b.onclick=()=>window.setColor(c);qc.appendChild(b);});
+        canvas.addEventListener('mousemove', e => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
         
-        window.setColor=(c)=>{currentColor=c;document.getElementById('colorPicker').value=c;};
-        window.setLineWidth=(w)=>currentWidth=w;
-        window.clearCanvasAction=async()=>{if(!isMyTurn)return;ctx.clearRect(0,0,canvas.width,canvas.height);await updateDoc(doc(db,'artifacts',appId,'public','data',`rooms/${currentRoom}`),{clearBoard:serverTimestamp()});};
-        window.toggleMute=()=>{if(sounds.bgm.paused){sounds.bgm.play();document.getElementById('muteBtn').classList.add('text-blue-500');}else{sounds.bgm.pause();document.getElementById('muteBtn').classList.remove('text-blue-500');}};
-        window.toggleSideMenu=()=>document.getElementById('playersSidebar').classList.toggle('-translate-x-full');
-        window.toggleChat=()=>document.getElementById('chatSidebar').classList.toggle('translate-x-full');
+        canvas.addEventListener('touchmove', e => {
+            e.preventDefault();
+            mouse.x = e.touches[0].clientX;
+            mouse.y = e.touches[0].clientY;
+        }, { passive: false });
 
-        function resizeCanvas(){const p=canvas.parentElement;canvas.width=p.clientWidth;canvas.height=p.clientHeight;}
-        window.addEventListener('resize',resizeCanvas);
-        function getPos(e){const r=canvas.getBoundingClientRect();const cx=e.touches?e.touches[0].clientX:e.clientX;const cy=e.touches?e.touches[0].clientY:e.clientY;return{x:(cx-r.left)/canvas.width,y:(cy-r.top)/canvas.height};}
-        function setupCanvas(){
-            const start=(e)=>{if(!isMyTurn)return;if(e.cancelable)e.preventDefault();isDrawing=true;lastPos=getPos(e);};
-            const move=(e)=>{if(!isDrawing||!isMyTurn)return;if(e.cancelable)e.preventDefault();const p=getPos(e);ctx.beginPath();ctx.strokeStyle=currentColor;ctx.lineWidth=currentWidth;ctx.lineCap='round';ctx.lineJoin='round';ctx.moveTo(lastPos.x*canvas.width,lastPos.y*canvas.height);ctx.lineTo(p.x*canvas.width,p.y*canvas.height);ctx.stroke();sendLine(lastPos,p);lastPos=p;};
-            const end=()=>isDrawing=false;
-            canvas.addEventListener('mousedown',start);canvas.addEventListener('mousemove',move);window.addEventListener('mouseup',end);
-            canvas.addEventListener('touchstart',start,{passive:false});canvas.addEventListener('touchmove',move,{passive:false});window.addEventListener('touchend',end);
+
+        // --- ACTIONS ---
+        function splitCells() {
+            playSound('split');
+            const newCells = [];
+            // Limite de células para não crashar
+            if (myCells.length >= 16) return;
+
+            myCells.forEach(cell => {
+                if (cell.r < 30) { // Muito pequeno não divide
+                    newCells.push(cell);
+                    return;
+                }
+
+                // Nova massa (Area / 2)
+                const newArea = (Math.PI * cell.r * cell.r) / 2;
+                const newR = Math.sqrt(newArea / Math.PI);
+
+                cell.r = newR;
+                
+                // Calcula direção do mouse
+                const dx = (mouse.x - canvas.width/2);
+                const dy = (mouse.y - canvas.height/2);
+                const angle = Math.atan2(dy, dx);
+
+                // Celula original fica (com pequeno recuo)
+                newCells.push(cell);
+
+                // Celula projetada
+                const splitSpeed = 15;
+                newCells.push({
+                    x: cell.x + Math.cos(angle) * cell.r,
+                    y: cell.y + Math.sin(angle) * cell.r,
+                    r: newR,
+                    vx: Math.cos(angle) * splitSpeed,
+                    vy: Math.sin(angle) * splitSpeed,
+                    color: cell.color
+                });
+            });
+            myCells = newCells;
         }
-        async function sendLine(p1,p2){const p1o={x:Number(p1.x.toFixed(4)),y:Number(p1.y.toFixed(4))};const p2o={x:Number(p2.x.toFixed(4)),y:Number(p2.y.toFixed(4))};await addDoc(collection(db,'artifacts',appId,'public','data',`rooms/${currentRoom}/lines`),{senderId:currentUser.uid,points:[p1o,p2o],color:currentColor,width:currentWidth,timestamp:serverTimestamp()});}
-        function drawRemote(l){ctx.beginPath();ctx.strokeStyle=l.color;ctx.lineWidth=l.width||4;ctx.lineCap='round';ctx.lineJoin='round';ctx.moveTo(l.points[0].x*canvas.width,l.points[0].y*canvas.height);ctx.lineTo(l.points[1].x*canvas.width,l.points[1].y*canvas.height);ctx.stroke();}
+
+        function ejectMass() {
+            myCells.forEach(cell => {
+                if (cell.r < 30) return;
+                
+                // Perde massa
+                const area = Math.PI * cell.r * cell.r;
+                const massLoss = 100; // Valor da massa ejetada (area)
+                cell.r = Math.sqrt((area - massLoss) / Math.PI);
+
+                // Cria projétil
+                const dx = (mouse.x - canvas.width/2);
+                const dy = (mouse.y - canvas.height/2);
+                const angle = Math.atan2(dy, dx);
+                
+                ejectedMass.push({
+                    x: cell.x + Math.cos(angle) * cell.r,
+                    y: cell.y + Math.sin(angle) * cell.r,
+                    vx: Math.cos(angle) * 20,
+                    vy: Math.sin(angle) * 20,
+                    r: 6, // raio visual da massa
+                    color: cell.color
+                });
+            });
+        }
+
+        function explodeCell(cellIndex) {
+            playSound('explode');
+            const cell = myCells[cellIndex];
+            const pieces = 8;
+            const newArea = (Math.PI * cell.r * cell.r) / pieces;
+            const newR = Math.sqrt(newArea / Math.PI);
+            
+            // Remove a celula grande
+            myCells.splice(cellIndex, 1);
+
+            // Cria os pedaços
+            for(let i=0; i<pieces; i++) {
+                if (myCells.length >= 16) break;
+                const angle = (Math.PI * 2 / pieces) * i;
+                myCells.push({
+                    x: cell.x,
+                    y: cell.y,
+                    r: newR,
+                    vx: Math.cos(angle) * 10,
+                    vy: Math.sin(angle) * 10,
+                    color: cell.color
+                });
+            }
+        }
+
+        // --- ADMIN FUNCTIONS ---
+        window.cheatMass = (amount) => {
+            if(!isAdmin || !gameActive) return;
+            myCells.forEach(c => c.r += Math.sqrt(amount));
+        };
+        window.cheatSpeed = () => {
+             // Speed é calculado dinamicamente, vamos apenas reduzir a massa visualmente mas manter raio
+             // Na verdade, speed é baseada no tamanho. Vamos fazer um boost de empurrão
+             myCells.forEach(c => { c.vx += 50; c.vy += 50; });
+        };
+        window.cheatReset = () => {
+            if(!isAdmin) return;
+            myCells = [{x: Math.random()*MAP_W, y: Math.random()*MAP_H, r: BASE_MASS, vx:0, vy:0, color: '#000'}];
+        };
+
+
+        // --- UPDATE LOOP ---
+        function update() {
+            // Galaxy Spawn Logic
+            if (galaxies.length < 3 && Math.random() < GALAXY_CHANCE) {
+                galaxies.push({
+                    x: Math.random() * MAP_W,
+                    y: Math.random() * MAP_H,
+                    angle: 0
+                });
+            }
+
+            // Física das minhas células
+            // Centro de massa para camera
+            let cx = 0, cy = 0, totalR = 0;
+
+            myCells.forEach((cell, idx) => {
+                // Input Movement
+                const dx = (mouse.x - canvas.width/2);
+                const dy = (mouse.y - canvas.height/2);
+                const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+                
+                // Velocidade base (maior = mais lento)
+                let speed = 40 * Math.pow(cell.r, -0.4);
+                if (isAdmin) speed *= 1.5;
+
+                // Normaliza e aplica
+                // Se tiver inercia (vx/vy), usa ela. Se não, usa input.
+                if (Math.abs(cell.vx) > 0.1 || Math.abs(cell.vy) > 0.1) {
+                    cell.x += cell.vx;
+                    cell.y += cell.vy;
+                    cell.vx *= 0.9; // Atrito
+                    cell.vy *= 0.9;
+                } else {
+                    cell.x += (dx/dist) * speed;
+                    cell.y += (dy/dist) * speed;
+                }
+
+                // Colisão Mapa
+                cell.x = Math.max(cell.r, Math.min(MAP_W-cell.r, cell.x));
+                cell.y = Math.max(cell.r, Math.min(MAP_H-cell.r, cell.y));
+
+                // Colisão entre células (Soft separation)
+                for(let j=idx+1; j<myCells.length; j++) {
+                    const other = myCells[j];
+                    const d = Math.hypot(cell.x - other.x, cell.y - other.y);
+                    const minDist = cell.r + other.r;
+                    if (d < minDist && d > 0) {
+                        const push = (minDist - d) / 2;
+                        const ang = Math.atan2(cell.y - other.y, cell.x - other.x);
+                        cell.x += Math.cos(ang) * push * 0.1;
+                        cell.y += Math.sin(ang) * push * 0.1;
+                        other.x -= Math.cos(ang) * push * 0.1;
+                        other.y -= Math.sin(ang) * push * 0.1;
+                    }
+                }
+
+                // Comer Comida
+                for(let i=foods.length-1; i>=0; i--) {
+                    if (Math.hypot(cell.x - foods[i].x, cell.y - foods[i].y) < cell.r) {
+                        const gain = 5; // Area ganha
+                        cell.r = Math.sqrt((Math.PI*cell.r*cell.r + gain) / Math.PI);
+                        foods.splice(i, 1);
+                        playSound('eat');
+                        spawnFood();
+                    }
+                }
+
+                // Comer Galaxia
+                for(let i=galaxies.length-1; i>=0; i--) {
+                    if (Math.hypot(cell.x - galaxies[i].x, cell.y - galaxies[i].y) < cell.r + 50) {
+                        cell.r += 30; // ~500 mass visual increase approx
+                        galaxies.splice(i, 1);
+                        playSound('galaxy');
+                    }
+                }
+
+                // Comer Ejected Mass
+                for(let i=ejectedMass.length-1; i>=0; i--) {
+                    if (Math.hypot(cell.x - ejectedMass[i].x, cell.y - ejectedMass[i].y) < cell.r) {
+                        cell.r += 2;
+                        ejectedMass.splice(i, 1);
+                    }
+                }
+
+                // Colisão Virus
+                viruses.forEach(v => {
+                    const d = Math.hypot(cell.x - v.x, cell.y - v.y);
+                    if (d < cell.r && cell.r > v.r * 1.2) {
+                        explodeCell(idx);
+                    }
+                });
+
+                // Comer Bots (Logica simples: se cobrir o centro do bot)
+                for (let i=bots.length-1; i>=0; i--) {
+                    const b = bots[i];
+                    if (Math.hypot(cell.x - b.x, cell.y - b.y) < cell.r && cell.r > b.r * 1.2) {
+                        cell.r = Math.sqrt((Math.PI*cell.r*cell.r + Math.PI*b.r*b.r)/Math.PI);
+                        bots.splice(i, 1);
+                        spawnBot();
+                        playSound('eat');
+                    }
+                }
+
+                // Acumula para camera
+                cx += cell.x;
+                cy += cell.y;
+                totalR += cell.r;
+            });
+
+            // Camera Setup
+            if (myCells.length > 0) {
+                cx /= myCells.length;
+                cy /= myCells.length;
+                
+                // Zoom out based on total area approximation
+                const desiredZoom = Math.max(0.1, 1 / Math.pow(totalR * 0.02, 0.5));
+                cam.zoom += (desiredZoom - cam.zoom) * CAM_ZOOM_SPEED;
+                
+                cam.x = cx - (canvas.width/2) / cam.zoom;
+                cam.y = cy - (canvas.height/2) / cam.zoom;
+            } else {
+                // Game Over state logic here usually
+                // Respawn automatico
+                myCells.push({
+                    x: Math.random()*MAP_W,
+                    y: Math.random()*MAP_H,
+                    r: BASE_MASS, vx:0, vy:0, color: COLORS[0]
+                });
+            }
+
+            // Update Bots (AI)
+            bots.forEach(bot => {
+                // Comportamento simples
+                let targetX = bot.x;
+                let targetY = bot.y;
+                let speed = 2;
+
+                // Procura jogador perto
+                let nearestPlayer = null;
+                let minD = 500;
+                
+                // Checa contra player real
+                myCells.forEach(c => {
+                    const d = Math.hypot(bot.x - c.x, bot.y - c.y);
+                    if (d < minD) { minD = d; nearestPlayer = c; }
+                });
+
+                if (nearestPlayer) {
+                    if (nearestPlayer.r > bot.r * 1.2) {
+                        // Flee
+                        const ang = Math.atan2(bot.y - nearestPlayer.y, bot.x - nearestPlayer.x);
+                        targetX = bot.x + Math.cos(ang) * 100;
+                        targetY = bot.y + Math.sin(ang) * 100;
+                        speed = 4;
+                    } else if (bot.r > nearestPlayer.r * 1.2) {
+                        // Chase
+                        targetX = nearestPlayer.x;
+                        targetY = nearestPlayer.y;
+                    }
+                } else {
+                    // Wander random
+                    if (Math.random() < 0.02) {
+                        bot.target = { x: Math.random()*MAP_W, y: Math.random()*MAP_H };
+                    }
+                    if (bot.target) {
+                        targetX = bot.target.x;
+                        targetY = bot.target.y;
+                    }
+                }
+
+                const dx = targetX - bot.x;
+                const dy = targetY - bot.y;
+                const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+                
+                bot.x += (dx/dist) * speed;
+                bot.y += (dy/dist) * speed;
+
+                // Limites
+                bot.x = Math.max(0, Math.min(MAP_W, bot.x));
+                bot.y = Math.max(0, Math.min(MAP_H, bot.y));
+            });
+
+            // Update Ejected Mass physics
+            ejectedMass.forEach(m => {
+                m.x += m.vx;
+                m.y += m.vy;
+                m.vx *= 0.9;
+                m.vy *= 0.9;
+            });
+            
+            // HUD Updates
+            document.getElementById('scoreDisplay').innerText = Math.floor(totalR);
+            updateLeaderboard(totalR);
+        }
+
+        function updateLeaderboard(myScore) {
+            let list = [{n: myName, s: Math.floor(myScore), me: true}];
+            
+            // Add online players
+            for(let pid in otherPlayers) {
+                list.push({n: otherPlayers[pid].n || "Desconhecido", s: otherPlayers[pid].mass || 0});
+            }
+            // Add top bots fake
+            list.push({n: "Bot Alpha", s: 400});
+
+            list.sort((a,b) => b.s - a.s);
+
+            const el = document.getElementById('lb-list');
+            el.innerHTML = list.slice(0, 5).map((p, i) => 
+                `<div class="lb-item" style="color:${p.me?'#00d2ff':'#eee'}">
+                    <span>${i+1}. ${p.n.substring(0,10)}</span>
+                    <span class="lb-score">${p.s}</span>
+                </div>`
+            ).join('');
+        }
+
+        // --- DRAWING ---
+        function draw() {
+            // Fundo
+            ctx.fillStyle = '#050510';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.save();
+            ctx.scale(cam.zoom, cam.zoom);
+            ctx.translate(-cam.x, -cam.y);
+
+            // Grid
+            ctx.strokeStyle = '#1a1a2e';
+            ctx.lineWidth = 2;
+            const gridSize = 100;
+            const startX = Math.floor(cam.x/gridSize)*gridSize;
+            const startY = Math.floor(cam.y/gridSize)*gridSize;
+            const endX = startX + (canvas.width/cam.zoom) + gridSize;
+            const endY = startY + (canvas.height/cam.zoom) + gridSize;
+
+            ctx.beginPath();
+            for(let x=startX; x<endX; x+=gridSize) {
+                if(x<0 || x>MAP_W) continue;
+                ctx.moveTo(x, 0); ctx.lineTo(x, MAP_H);
+            }
+            for(let y=startY; y<endY; y+=gridSize) {
+                if(y<0 || y>MAP_H) continue;
+                ctx.moveTo(0, y); ctx.lineTo(MAP_W, y);
+            }
+            ctx.stroke();
+
+            // Bordas
+            ctx.strokeStyle = '#ff0055';
+            ctx.lineWidth = 10;
+            ctx.strokeRect(0,0,MAP_W, MAP_H);
+
+            // Ejected Mass
+            ejectedMass.forEach(m => {
+                ctx.beginPath();
+                ctx.arc(m.x, m.y, m.r, 0, Math.PI*2);
+                ctx.fillStyle = m.color;
+                ctx.fill();
+            });
+
+            // Food
+            foods.forEach(f => {
+                if(f.x < cam.x - 50 || f.x > cam.x + canvas.width/cam.zoom + 50) return; // Culling
+                ctx.beginPath();
+                ctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
+                ctx.fillStyle = f.c;
+                ctx.fill();
+            });
+
+            // Galaxies
+            galaxies.forEach(g => {
+                g.angle += 0.05;
+                ctx.save();
+                ctx.translate(g.x, g.y);
+                ctx.rotate(g.angle);
+                // Draw Spiral
+                ctx.beginPath();
+                for(let i=0; i<3; i++) {
+                    ctx.rotate(Math.PI*2/3);
+                    ctx.moveTo(0,0);
+                    ctx.quadraticCurveTo(50, 50, 0, 100);
+                }
+                ctx.strokeStyle = `hsl(${g.angle*100}, 100%, 70%)`;
+                ctx.lineWidth = 5;
+                ctx.stroke();
+                // Glow
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = 'white';
+                ctx.fillStyle = 'white';
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                ctx.restore();
+            });
+
+            // Viruses
+            ctx.fillStyle = '#33ff33';
+            ctx.strokeStyle = '#22aa22';
+            ctx.lineWidth = 3;
+            viruses.forEach(v => {
+                ctx.beginPath();
+                const spikes = 20;
+                for(let i=0; i<spikes*2; i++) {
+                    const angle = (Math.PI*2 / (spikes*2)) * i;
+                    const r = (i%2===0) ? v.r : v.r - 5;
+                    const x = v.x + Math.cos(angle) * r;
+                    const y = v.y + Math.sin(angle) * r;
+                    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            });
+
+            // Bots
+            bots.forEach(b => {
+                drawCell(b.x, b.y, b.r, b.color, b.name);
+            });
+
+            // Outros Players
+            for(let pid in otherPlayers) {
+                const p = otherPlayers[pid];
+                if(p.cells) {
+                    p.cells.forEach(c => drawCell(c.x, c.y, c.r, c.c, p.n));
+                }
+            }
+
+            // Eu
+            myCells.forEach(c => {
+                drawCell(c.x, c.y, c.r, c.color, myName);
+            });
+
+            ctx.restore();
+        }
+
+        function drawCell(x, y, r, c, name) {
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI*2);
+            ctx.fillStyle = c;
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+            ctx.stroke();
+
+            if(r > 15) {
+                ctx.fillStyle = 'white';
+                ctx.font = `bold ${Math.max(10, r/2.5)}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor = 'black';
+                ctx.shadowBlur = 4;
+                ctx.fillText(name || "", x, y);
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function loop() {
+            if(gameActive) {
+                update();
+                draw();
+            }
+            requestAnimationFrame(loop);
+        }
+        loop();
+
     </script>
 </body>
 </html>
