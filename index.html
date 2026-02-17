@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gartic Ultimate + AI Bots</title>
+    <title>Gartic Ultimate v3</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -14,106 +14,120 @@
     <style>
         body { font-family: 'Nunito', sans-serif; overscroll-behavior: none; user-select: none; -webkit-tap-highlight-color: transparent; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.5); }
-        canvas { touch-action: none; cursor: crosshair; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.6); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); }
+        canvas { touch-action: none; cursor: crosshair; background-image: radial-gradient(#d1d5db 1px, transparent 1px); background-size: 20px 20px; }
         
-        /* Animações de Feedback */
-        @keyframes pop { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
-        .msg-pop { animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        
-        .bot-tag { font-size: 8px; background: #e5e7eb; color: #6b7280; padding: 1px 4px; border-radius: 4px; margin-left: 4px; vertical-align: middle; }
+        /* Animações */
+        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .msg-anim { animation: slideIn 0.3s ease-out; }
+        @keyframes pulse-red { 0%, 100% { background-color: #ef4444; } 50% { background-color: #b91c1c; } }
+        .urgent-bar { animation: pulse-red 1s infinite; }
     </style>
 </head>
-<body class="h-[100dvh] w-screen bg-[#1c2c4c] overflow-hidden flex flex-col text-gray-800 transition-colors duration-500">
+<body class="h-[100dvh] w-screen bg-slate-900 overflow-hidden flex flex-col text-gray-800 transition-colors duration-500 bg-cover bg-center" style="background-image: url('https://img.freepik.com/free-vector/doodle-pattern-background_53876-100984.jpg?t=st=1710000000~exp=1710003600~hmac=fake');">
+    <div class="absolute inset-0 bg-slate-900/90 backdrop-blur-sm z-0"></div>
 
-    <!-- AUDIO SYSTEM -->
-    <audio id="bgm" loop><source src="https://cdn.pixabay.com/download/audio/2022/11/22/audio_febc508520.mp3" type="audio/mp3"></audio>
+    <!-- SONS -->
+    <audio id="bgm" loop><source src="https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3" type="audio/mp3"></audio>
     <audio id="sfx-win" src="https://www.myinstants.com/media/sounds/tadaa.mp3"></audio>
     <audio id="sfx-correct" src="https://www.myinstants.com/media/sounds/correct.mp3"></audio>
+    <audio id="sfx-close" src="https://www.myinstants.com/media/sounds/ding-sound-effect_2.mp3"></audio>
     <audio id="sfx-turn" src="https://www.myinstants.com/media/sounds/discord-notification.mp3"></audio>
-    <audio id="sfx-fail" src="https://www.myinstants.com/media/sounds/wrong-answer-126515.mp3"></audio>
     <audio id="sfx-tick" src="https://www.myinstants.com/media/sounds/clock-ticking-2.mp3"></audio>
-
-    <!-- HOST INDICATOR (Invisible but logic active) -->
-    <div id="hostDebug" class="hidden fixed top-0 left-0 bg-red-500 text-white text-[10px] p-1 z-[9999]">HOST ATIVO</div>
+    <audio id="sfx-report" src="https://www.myinstants.com/media/sounds/vine-boom.mp3"></audio>
 
     <!-- 1. SPLASH -->
-    <div id="splashScreen" class="fixed inset-0 z-[100] bg-blue-600 flex flex-col items-center justify-center cursor-pointer hover:bg-blue-700 transition">
-        <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 shadow-xl animate-bounce">
-            <i class="fa-solid fa-play text-blue-600 text-4xl ml-2"></i>
+    <div id="splashScreen" class="fixed inset-0 z-[100] bg-blue-600 flex flex-col items-center justify-center cursor-pointer hover:bg-blue-700 transition relative">
+        <div class="w-32 h-32 bg-white rounded-full flex items-center justify-center mb-6 shadow-2xl animate-bounce text-blue-600 border-4 border-blue-200">
+            <i class="fa-solid fa-play text-5xl ml-2"></i>
         </div>
-        <h1 class="text-white text-3xl font-black">TOCAR PARA ENTRAR</h1>
-        <p class="text-white/80 font-bold mt-2 text-sm">Versão Final Corrigida + Bots Inteligentes</p>
+        <h1 class="text-white text-4xl font-black drop-shadow-lg">TOCAR PARA JOGAR</h1>
+        <p class="text-blue-200 font-bold mt-2 text-lg">Ativar Áudio & Microfone</p>
     </div>
 
     <!-- 2. LOBBY -->
-    <div id="lobbyScreen" class="fixed inset-0 z-50 bg-[#1c2c4c] hidden overflow-y-auto">
-        <div class="min-h-full p-4 flex flex-col items-center justify-center">
-            <div class="bg-white p-6 rounded-[2rem] shadow-2xl w-full max-w-sm relative">
-                <div class="text-center mb-6">
-                    <h1 class="text-5xl font-black text-blue-600 italic tracking-tighter">Gartic<span class="text-orange-500">Ult</span></h1>
-                    <p class="text-gray-400 text-[10px] font-bold tracking-widest uppercase mt-1">Multiplayer & Bots</p>
-                </div>
-
-                <div class="flex flex-col items-center mb-6">
-                    <label class="relative cursor-pointer group hover:scale-105 transition">
-                        <div class="w-24 h-24 rounded-full border-4 border-blue-100 overflow-hidden shadow-lg bg-gray-100">
-                            <img id="avatarPreview" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="w-full h-full object-cover">
-                        </div>
-                        <div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-camera text-white"></i></div>
-                        <input type="file" id="avatarInput" accept="image/*" class="hidden" onchange="handleAvatarUpload(event)">
-                    </label>
-                </div>
-
-                <div class="space-y-4">
-                    <input type="text" id="usernameInput" maxlength="12" placeholder="SEU NOME" class="w-full bg-gray-100 rounded-xl px-4 py-3 font-bold text-lg border-2 border-transparent focus:border-blue-500 outline-none text-center uppercase transition">
-                    
-                    <div>
-                        <label class="text-xs font-bold text-gray-400 ml-2 uppercase">Sala</label>
-                        <select id="roomSelect" class="w-full bg-gray-100 rounded-xl p-3 font-bold text-sm outline-none cursor-pointer hover:bg-gray-200 transition">
-                            <option value="sala_geral">Sala Geral (Pública)</option>
-                            <option value="sala_bots_pro">Sala Bots Pro</option>
-                            <option value="sala_amigos">Sala Amigos</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="text-xs font-bold text-gray-400 ml-2 uppercase">Tema</label>
-                        <div class="flex justify-center gap-3 mt-1">
-                            <button onclick="setTheme('#3b82f6')" class="w-8 h-8 rounded-full bg-blue-500 hover:ring-2 ring-offset-2 ring-blue-500 transition shadow-lg"></button>
-                            <button onclick="setTheme('#ef4444')" class="w-8 h-8 rounded-full bg-red-500 hover:ring-2 ring-offset-2 ring-red-500 transition shadow-lg"></button>
-                            <button onclick="setTheme('#10b981')" class="w-8 h-8 rounded-full bg-emerald-500 hover:ring-2 ring-offset-2 ring-emerald-500 transition shadow-lg"></button>
-                            <button onclick="setTheme('#f59e0b')" class="w-8 h-8 rounded-full bg-amber-500 hover:ring-2 ring-offset-2 ring-amber-500 transition shadow-lg"></button>
-                        </div>
-                    </div>
-                </div>
-
-                <button onclick="enterGame()" id="startBtn" class="w-full mt-8 bg-blue-600 text-white font-black py-4 rounded-xl text-xl shadow-[0_6px_0_rgb(29,78,216)] active:shadow-none active:translate-y-1 transition-all">
-                    JOGAR AGORA
-                </button>
+    <div id="lobbyScreen" class="fixed inset-0 z-50 flex items-center justify-center hidden p-4 relative">
+        <div class="bg-white/95 p-8 rounded-[2.5rem] shadow-2xl w-full max-w-md backdrop-blur-xl border border-white/50 relative overflow-y-auto max-h-full">
+            <div class="text-center mb-8">
+                <h1 class="text-6xl font-black text-blue-600 italic tracking-tighter drop-shadow-sm">Gartic<span class="text-orange-500">Pro</span></h1>
             </div>
+
+            <div class="flex flex-col items-center mb-6">
+                <label class="relative cursor-pointer group hover:scale-105 transition-transform duration-300">
+                    <div class="w-32 h-32 rounded-full border-4 border-blue-500 p-1 bg-white shadow-xl">
+                        <img id="avatarPreview" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Gartic" class="w-full h-full object-cover rounded-full">
+                    </div>
+                    <div class="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full shadow-lg border-2 border-white">
+                        <i class="fa-solid fa-camera"></i>
+                    </div>
+                    <input type="file" id="avatarInput" accept="image/*" class="hidden" onchange="handleAvatarUpload(event)">
+                </label>
+                <div class="mt-4 flex gap-2">
+                    <p class="text-xs font-bold text-gray-400 uppercase">Cor do Perfil:</p>
+                    <input type="color" id="themePicker" value="#3b82f6" class="w-6 h-6 rounded-full border-none cursor-pointer" onchange="myProfile.theme = this.value">
+                </div>
+            </div>
+
+            <div class="space-y-5">
+                <input type="text" id="usernameInput" maxlength="12" placeholder="SEU NOME" class="w-full bg-slate-100 rounded-2xl px-5 py-4 font-black text-xl border-2 border-transparent focus:border-blue-500 focus:bg-white outline-none text-center uppercase shadow-inner text-slate-700 placeholder:text-slate-300">
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="selectRoom('sala_geral')" class="room-btn bg-blue-50 text-blue-600 py-3 rounded-xl font-bold border-2 border-blue-100 hover:border-blue-500 transition shadow-sm">
+                        <i class="fa-solid fa-earth-americas mr-1"></i> Geral
+                    </button>
+                    <button onclick="selectRoom('sala_animais')" class="room-btn bg-green-50 text-green-600 py-3 rounded-xl font-bold border-2 border-green-100 hover:border-green-500 transition shadow-sm">
+                        <i class="fa-solid fa-paw mr-1"></i> Animais
+                    </button>
+                    <button onclick="selectRoom('sala_objetos')" class="room-btn bg-orange-50 text-orange-600 py-3 rounded-xl font-bold border-2 border-orange-100 hover:border-orange-500 transition shadow-sm">
+                        <i class="fa-solid fa-shapes mr-1"></i> Objetos
+                    </button>
+                    <button onclick="selectRoom('sala_alimentos')" class="room-btn bg-red-50 text-red-600 py-3 rounded-xl font-bold border-2 border-red-100 hover:border-red-500 transition shadow-sm">
+                        <i class="fa-solid fa-burger mr-1"></i> Comida
+                    </button>
+                </div>
+            </div>
+
+            <button onclick="enterGame()" class="w-full mt-8 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-black py-5 rounded-2xl text-2xl shadow-lg shadow-blue-500/30 hover:scale-[1.02] active:scale-95 transition-all">
+                ENTRAR AGORA
+            </button>
         </div>
     </div>
 
     <!-- 3. JOGO -->
-    <div id="gameScreen" class="flex-1 flex flex-col hidden h-full bg-gray-100">
-        <header class="bg-white shadow-sm z-20">
-            <div class="h-2 w-full bg-gray-200"><div id="timeBar" class="h-full bg-green-500 w-full transition-all duration-1000 ease-linear"></div></div>
-            <div class="flex items-center justify-between px-3 py-2">
-                <div class="flex items-center gap-3">
-                    <div class="flex flex-col items-center w-12">
-                        <span class="text-[9px] font-bold text-gray-400 uppercase">Tempo</span>
-                        <span id="timerText" class="text-2xl font-black text-gray-700 leading-none">--</span>
-                    </div>
-                    <div class="w-px h-8 bg-gray-200"></div>
+    <div id="gameScreen" class="flex-1 flex flex-col hidden h-full relative z-10">
+        
+        <!-- Header -->
+        <header class="bg-white shadow-md z-30">
+            <!-- Barra de Tempo -->
+            <div class="h-3 w-full bg-gray-200 relative overflow-hidden">
+                <div id="timeBar" class="h-full bg-green-500 w-full transition-all duration-1000 ease-linear shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
+            </div>
+            
+            <div class="flex items-center justify-between px-2 py-2 lg:px-4">
+                <!-- Info Esquerda -->
+                <div class="flex items-center gap-3 bg-slate-100 px-3 py-1 rounded-xl">
+                    <i class="fa-regular fa-clock text-slate-400"></i>
+                    <span id="timerText" class="text-2xl font-black text-slate-700">--</span>
                 </div>
                 
-                <div id="wordDisplay" class="bg-blue-50 border border-blue-100 px-6 py-1.5 rounded-lg text-xl font-black tracking-widest text-blue-600 uppercase shadow-sm min-w-[140px] text-center truncate mx-2">AGUARDANDO</div>
+                <!-- Palavra -->
+                <div id="wordContainer" class="flex-1 mx-2 flex justify-center">
+                    <div id="wordDisplay" class="bg-white border-2 border-slate-200 px-4 py-1.5 rounded-xl text-lg lg:text-2xl font-black tracking-[0.3em] text-slate-800 uppercase shadow-sm truncate max-w-[200px] lg:max-w-md text-center">
+                        ??????
+                    </div>
+                </div>
                 
+                <!-- Controles -->
                 <div class="flex gap-2">
-                    <button id="skipBtn" onclick="skipTurn()" class="hidden bg-red-100 text-red-500 p-2 rounded-lg hover:bg-red-200 active:scale-95 transition" title="Pular Vez"><i class="fa-solid fa-forward"></i></button>
-                    <button onclick="toggleMute()" id="muteBtn" class="p-2 text-gray-400 hover:text-blue-500"><i class="fa-solid fa-volume-high"></i></button>
-                    <button onclick="toggleSideMenu()" class="p-2 text-gray-500 lg:hidden"><i class="fa-solid fa-bars text-xl"></i></button>
+                    <button id="reportBtn" onclick="reportDrawer()" class="hidden bg-red-100 text-red-500 w-10 h-10 rounded-xl hover:bg-red-500 hover:text-white transition flex items-center justify-center shadow-sm" title="Denunciar Desenho">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </button>
+                    <button onclick="toggleMute()" id="muteBtn" class="bg-slate-100 text-slate-400 w-10 h-10 rounded-xl hover:text-blue-500 transition flex items-center justify-center">
+                        <i class="fa-solid fa-volume-high"></i>
+                    </button>
+                    <button onclick="toggleSideMenu()" class="bg-slate-100 text-slate-500 w-10 h-10 rounded-xl lg:hidden flex items-center justify-center">
+                        <i class="fa-solid fa-users"></i>
+                    </button>
                 </div>
             </div>
         </header>
@@ -121,57 +135,73 @@
         <div class="flex-1 flex overflow-hidden relative">
             <!-- Sidebar Players -->
             <div id="playersSidebar" class="absolute inset-y-0 left-0 w-72 bg-white shadow-2xl transform -translate-x-full lg:relative lg:translate-x-0 lg:shadow-none lg:border-r border-gray-200 z-40 transition-transform duration-300 flex flex-col">
-                <div class="p-4 bg-gray-50 border-b border-gray-200 font-black text-gray-400 text-xs flex justify-between items-center tracking-wider">
+                <div class="p-4 bg-slate-50 border-b border-gray-200 font-black text-slate-400 text-xs flex justify-between items-center tracking-wider">
                     <span>RANKING (<span id="playerCount">0</span>)</span>
-                    <button onclick="toggleSideMenu()" class="lg:hidden text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+                    <button onclick="toggleSideMenu()" class="lg:hidden text-slate-400"><i class="fa-solid fa-chevron-left text-xl"></i></button>
                 </div>
-                <div id="playersList" class="flex-1 overflow-y-auto p-3 space-y-3"></div>
+                <div id="playersList" class="flex-1 overflow-y-auto p-3 space-y-3 bg-slate-50/50"></div>
             </div>
 
             <!-- Canvas Area -->
-            <div class="flex-1 flex flex-col relative bg-[#e0e5ec] p-2 lg:p-4">
-                <div class="flex-1 bg-white rounded-2xl shadow-sm border border-gray-300 overflow-hidden relative touch-none cursor-crosshair">
+            <div class="flex-1 flex flex-col relative bg-[#e5e7eb] p-2 lg:p-4">
+                <div class="flex-1 bg-white rounded-2xl shadow-sm border border-gray-300 overflow-hidden relative touch-none select-none">
                     <canvas id="drawingCanvas" class="w-full h-full block"></canvas>
                     
-                    <!-- Overlay de Status -->
-                    <div id="gameOverlay" class="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-white hidden z-20 backdrop-blur-sm p-6 text-center animate-fade">
-                        <i id="overlayIcon" class="fa-solid fa-trophy text-yellow-400 text-7xl mb-6 animate-bounce"></i>
-                        <h2 id="overlayTitle" class="text-4xl font-black mb-2 uppercase tracking-wider text-shadow">Vencedor!</h2>
-                        <p id="overlaySub" class="text-2xl font-bold text-gray-200">Fulano</p>
+                    <!-- Overlays -->
+                    <div id="gameOverlay" class="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-white hidden z-20 backdrop-blur-md animate-fade p-4 text-center">
+                        <i id="overlayIcon" class="fa-solid fa-trophy text-yellow-400 text-7xl mb-6 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)] animate-bounce"></i>
+                        <h2 id="overlayTitle" class="text-4xl font-black mb-2 uppercase tracking-wider">Vencedor!</h2>
+                        <p id="overlaySub" class="text-2xl font-bold text-gray-300">Fulano</p>
                     </div>
 
-                    <!-- Mensagem flutuante (Ex: Quem está desenhando) -->
-                    <div id="statusMsg" class="absolute top-4 left-1/2 -translate-x-1/2 bg-black/80 text-white px-6 py-2 rounded-full font-bold text-xs uppercase tracking-wide hidden pointer-events-none shadow-lg whitespace-nowrap z-10"></div>
+                    <!-- Mensagem de Status (Quem desenha / Resposta) -->
+                    <div id="statusBubble" class="absolute top-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur border border-gray-200 px-6 py-2 rounded-full font-bold text-xs uppercase shadow-lg text-slate-600 hidden z-10 flex items-center gap-2">
+                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span id="statusText">...</span>
+                    </div>
 
-                    <!-- Ferramentas -->
-                    <div id="toolsPanel" class="absolute bottom-6 left-1/2 -translate-x-1/2 glass-panel rounded-full px-6 py-3 shadow-2xl flex items-center gap-5 hidden z-20">
-                        <div class="relative group">
-                            <input type="color" id="colorPicker" class="w-10 h-10 rounded-full border-2 border-white cursor-pointer bg-transparent shadow-md" value="#000000" onchange="setColor(this.value)">
+                    <!-- Ferramentas (Scrollable no Mobile) -->
+                    <div id="toolsPanel" class="absolute bottom-4 left-1/2 -translate-x-1/2 glass-panel rounded-2xl p-2 shadow-2xl flex items-center gap-3 hidden z-20 max-w-[95%] overflow-x-auto no-scrollbar">
+                        <div class="flex gap-2 p-1">
+                            <input type="color" id="colorPicker" class="w-10 h-10 rounded-lg border-2 border-white shadow-sm cursor-pointer" value="#000000" onchange="setColor(this.value)">
+                            <div class="flex gap-1.5" id="quickColors"></div>
                         </div>
-                        <div class="flex gap-2" id="quickColors"></div>
-                        <div class="w-px h-8 bg-gray-300"></div>
-                        <div class="flex items-center gap-3">
-                            <i class="fa-solid fa-circle text-[6px] text-gray-400"></i>
-                            <input type="range" min="2" max="30" value="4" class="w-24 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" oninput="setLineWidth(this.value)">
-                            <i class="fa-solid fa-circle text-xl text-gray-400"></i>
+                        <div class="w-px h-8 bg-gray-300 mx-1 flex-shrink-0"></div>
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <i class="fa-solid fa-circle text-[4px] text-gray-400"></i>
+                            <input type="range" min="2" max="40" value="4" class="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" oninput="setLineWidth(this.value)">
+                            <i class="fa-solid fa-circle text-lg text-gray-400"></i>
                         </div>
-                        <div class="w-px h-8 bg-gray-300"></div>
-                        <button onclick="clearCanvasAction()" class="w-10 h-10 rounded-full bg-red-100 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition shadow-sm active:scale-90"><i class="fa-solid fa-trash-can"></i></button>
+                        <div class="w-px h-8 bg-gray-300 mx-1 flex-shrink-0"></div>
+                        <button onclick="clearCanvasAction()" class="w-10 h-10 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white flex-shrink-0 flex items-center justify-center transition shadow-sm border border-red-100">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                        <button id="skipBtn" onclick="skipTurn()" class="w-10 h-10 rounded-xl bg-gray-100 text-gray-500 hover:bg-gray-200 flex-shrink-0 flex items-center justify-center transition shadow-sm border border-gray-200" title="Pular Vez">
+                            <i class="fa-solid fa-forward"></i>
+                        </button>
                     </div>
                 </div>
             </div>
 
             <!-- Chat -->
             <div class="w-full lg:w-80 bg-white border-l border-gray-200 flex flex-col absolute inset-y-0 right-0 lg:static transition-transform transform translate-x-full lg:translate-x-0 z-40 shadow-2xl lg:shadow-none" id="chatSidebar">
-                <button onclick="toggleChat()" class="lg:hidden absolute -left-14 top-4 w-14 h-14 bg-blue-600 text-white rounded-l-2xl shadow-lg flex items-center justify-center font-bold active:scale-95 transition"><i class="fa-regular fa-comments text-2xl"></i></button>
-                <div class="p-4 border-b border-gray-200 bg-gray-50 font-black text-gray-500 text-xs uppercase flex justify-between items-center tracking-wider">
+                <button onclick="toggleChat()" class="lg:hidden absolute -left-12 top-4 w-12 h-12 bg-white text-blue-600 rounded-l-xl shadow-lg flex items-center justify-center font-bold border-y border-l border-gray-200"><i class="fa-regular fa-comments text-xl"></i></button>
+                
+                <div class="p-3 border-b border-gray-200 bg-slate-50 font-black text-slate-400 text-xs uppercase flex justify-between items-center">
                     <span>Chat da Sala</span>
                     <button onclick="toggleChat()" class="lg:hidden"><i class="fa-solid fa-xmark text-lg"></i></button>
                 </div>
-                <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50 scroll-smooth"></div>
-                <div class="p-4 bg-white border-t border-gray-200 relative">
-                    <input type="text" id="chatInput" placeholder="DIGITE A RESPOSTA..." class="w-full bg-gray-100 border-2 border-transparent focus:border-blue-500 focus:bg-white rounded-xl pl-4 pr-12 py-3.5 font-bold outline-none transition uppercase text-sm placeholder:text-gray-400" onkeypress="handleChatKey(event)">
-                    <button onclick="sendMessage()" class="absolute right-6 top-1/2 -translate-y-1/2 text-blue-600 hover:scale-110 transition bg-blue-50 p-2 rounded-lg"><i class="fa-solid fa-paper-plane"></i></button>
+                
+                <div id="chatMessages" class="flex-1 overflow-y-auto p-3 space-y-2 bg-white scroll-smooth pb-4"></div>
+                
+                <div class="p-3 bg-slate-50 border-t border-gray-200">
+                    <div class="relative flex items-center gap-2">
+                        <button onclick="startVoiceInput()" class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center hover:bg-blue-200 transition flex-shrink-0" title="Falar resposta">
+                            <i class="fa-solid fa-microphone"></i>
+                        </button>
+                        <input type="text" id="chatInput" placeholder="Resposta..." class="w-full bg-white border-2 border-gray-200 focus:border-blue-500 rounded-xl pl-3 pr-10 py-2 font-bold outline-none transition uppercase text-sm" onkeypress="handleChatKey(event)">
+                        <button onclick="sendMessage()" class="absolute right-3 text-blue-500 hover:scale-110 transition"><i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -182,6 +212,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, collection, onSnapshot, setDoc, updateDoc, addDoc, serverTimestamp, increment, query, orderBy, limit, getDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // CONFIG (SUAS CHAVES AQUI)
         const firebaseConfig = {
             apiKey: "AIzaSyCXDfIO53oqtnRgs9jfApf-rZklp4SRbV8",
             authDomain: "gartic-51f3d.firebaseapp.com",
@@ -194,9 +225,9 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = "gartic-final-v2";
+        const appId = "gartic-v5-stable";
 
-        // Variáveis
+        // Variáveis de Estado
         let currentUser = null;
         let myProfile = { name: "", avatar: null, theme: "#3b82f6" };
         let currentRoom = "sala_geral";
@@ -205,33 +236,36 @@
         let secretWord = "";
         let audioEnabled = false;
         let hostTimerInterval = null;
+        let reportCount = 0;
         window.currentPlayersList = [];
 
-        // Game Config
-        const WORDS = ["BOLA", "SOL", "CASA", "ARVORE", "GATO", "PEIXE", "CARRO", "FLOR", "LUA", "LIVRO", "MESA", "BOLO", "PIZZA", "AVIAO", "CHUVA", "FOGO", "MACA", "DADO", "GELO", "MOTO", "BOTA", "OVO", "DENTE", "UNHA", "PATO", "RATO"];
-        // Dados de Desenho "Fake" para Bots (Coordenadas normalizadas 0-1)
-        const BOT_DRAWINGS = {
-            "SOL": [[0.5,0.3],[0.5,0.7],[0.3,0.5],[0.7,0.5]], // Cruz (Sol preguiçoso)
-            "BOLA": [[0.4,0.4],[0.6,0.4],[0.6,0.6],[0.4,0.6],[0.4,0.4]], // Quadrado (Bola cubista)
-            "CASA": [[0.3,0.6],[0.3,0.4],[0.5,0.2],[0.7,0.4],[0.7,0.6],[0.3,0.6]], // Casinha
-            "ARVORE": [[0.5,0.8],[0.5,0.5],[0.4,0.4],[0.6,0.4],[0.5,0.5]] // Tronco e copa
-        };
+        // Banco de Palavras
+        const WORDS = ["BOLA", "SOL", "CASA", "ARVORE", "GATO", "PEIXE", "CARRO", "FLOR", "LUA", "LIVRO", "MESA", "BOLO", "PIZZA", "AVIAO", "CHUVA", "FOGO", "MACA", "DADO", "GELO", "MOTO", "BOTA", "OVO", "DENTE", "UNHA", "PATO", "RATO", "VIOLAO", "PRAIA", "CELULAR", "COMPUTADOR", "BANANA", "SAPATO", "CHAPEU", "OCULOS", "RELOGIO"];
         const ROUND_TIME = 60; 
-        const WIN_SCORE = 100;
+        const WIN_SCORE = 120;
 
         // Canvas
         let canvas = document.getElementById('drawingCanvas');
         let ctx = canvas.getContext('2d');
         let isDrawing = false, lastPos = {x:0, y:0}, currentColor = "#000000", currentWidth = 4;
 
-        // Sons
-        const sounds = { bgm: document.getElementById('bgm'), win: document.getElementById('sfx-win'), correct: document.getElementById('sfx-correct'), turn: document.getElementById('sfx-turn'), fail: document.getElementById('sfx-fail'), tick: document.getElementById('sfx-tick') };
-        sounds.bgm.volume = 0.08;
+        // Audio
+        const sounds = { 
+            bgm: document.getElementById('bgm'), 
+            win: document.getElementById('sfx-win'), 
+            correct: document.getElementById('sfx-correct'), 
+            turn: document.getElementById('sfx-turn'), 
+            close: document.getElementById('sfx-close'),
+            tick: document.getElementById('sfx-tick'),
+            report: document.getElementById('sfx-report')
+        };
+        sounds.bgm.volume = 0.05;
 
-        // INIT
+        // --- INICIALIZAÇÃO ---
         document.getElementById('splashScreen').addEventListener('click', () => {
             document.getElementById('splashScreen').classList.add('hidden');
             document.getElementById('lobbyScreen').classList.remove('hidden');
+            document.getElementById('lobbyScreen').classList.add('flex');
             audioEnabled = true;
             sounds.bgm.play().catch(()=>{});
         });
@@ -239,22 +273,26 @@
         signInAnonymously(auth);
         onAuthStateChanged(auth, (user) => { if(user) currentUser = user; });
 
-        // --- UI FUNCS ---
+        // --- UI LOBBY ---
         window.handleAvatarUpload = (e) => {
             const file = e.target.files[0]; if(!file) return;
             const r = new FileReader(); r.onload=(ev)=>{const img=new Image();img.onload=()=>{
                 const c=document.createElement('canvas');c.width=100;c.height=100;
                 c.getContext('2d').drawImage(img,0,0,100,100);
-                myProfile.avatar=c.toDataURL('image/jpeg',0.7);
+                myProfile.avatar=c.toDataURL('image/jpeg',0.6);
                 document.getElementById('avatarPreview').src=myProfile.avatar;
             };img.src=ev.target.result;}; r.readAsDataURL(file);
         };
-        window.setTheme=(c)=>{myProfile.theme=c;document.getElementById('startBtn').style.backgroundColor=c;};
+        window.selectRoom = (r) => {
+            document.querySelectorAll('.room-btn').forEach(b => b.classList.remove('ring-4', 'ring-blue-300'));
+            event.currentTarget.classList.add('ring-4', 'ring-blue-300');
+            currentRoom = r;
+        };
 
         window.enterGame = async () => {
             const name = document.getElementById('usernameInput').value.trim();
-            if(name.length<2) return Swal.fire('Erro','Nome curto!','error');
-            currentRoom = document.getElementById('roomSelect').value;
+            if(name.length<2) return Swal.fire('Erro','Nome muito curto!','error');
+            
             myProfile.name = name.toUpperCase();
             if(!myProfile.avatar) myProfile.avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`;
 
@@ -267,11 +305,12 @@
 
         // --- CORE LOGIC ---
         async function joinRoom() {
-            // Entrar na sala
             const pRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/players/${currentUser.uid}`);
-            await setDoc(pRef, { name: myProfile.name, avatar: myProfile.avatar, theme: myProfile.theme, score: 0, joinedAt: serverTimestamp(), isBot: false, lastActive: serverTimestamp() });
+            await setDoc(pRef, { 
+                name: myProfile.name, avatar: myProfile.avatar, theme: myProfile.theme, score: 0, 
+                joinedAt: serverTimestamp(), isBot: false, lastActive: serverTimestamp() 
+            });
 
-            // Garantir sala
             const rRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}`);
             const snap = await getDoc(rRef);
             if(!snap.exists()) await setDoc(rRef, { status: 'waiting', drawerId: null, word: '', timerEnd: null });
@@ -281,103 +320,125 @@
         }
 
         function startListeners() {
-            // 1. Sala
+            // 1. SALA (Sincronia Principal)
             onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}`), (s) => {
                 const data = s.data(); if(!data) return;
+                
+                // Detectar Mudança de Turno
                 const prevTurn = isMyTurn;
                 isMyTurn = (data.drawerId === currentUser.uid);
                 secretWord = data.word;
 
-                if(!prevTurn && isMyTurn && audioEnabled) {
-                    sounds.turn.play();
-                    Swal.fire({ title: 'SUA VEZ!', text: 'Desenhe: '+secretWord, timer: 2000, showConfirmButton: false, icon: 'info' });
+                if(!prevTurn && isMyTurn) {
+                    if(audioEnabled) sounds.turn.play();
+                    Swal.fire({ title: 'SUA VEZ!', text: 'Desenhe: '+secretWord, timer: 3000, showConfirmButton: false, icon: 'info', backdrop: `rgba(0,0,123,0.4)` });
                 }
+
                 updateUI(data);
                 if(data.clearBoard) ctx.clearRect(0,0,canvas.width,canvas.height);
                 if(data.status==='finished') showWinner(data.winnerName);
                 if(data.status==='nobody_won') showNobodyWon();
+
+                // *** SISTEMA DE TEMPO DEMOCRÁTICO ***
+                // Se o tempo acabou (com margem de 3s) e a rodada ainda está 'playing', qualquer um pode forçar o fim
+                if(data.status === 'playing' && data.timerEnd) {
+                    const left = data.timerEnd.toMillis() - Date.now();
+                    if(left < -3000) { // 3 segundos de tolerância para o host
+                        console.log("Forçando fim de rodada por timeout...");
+                        endRound("TEMPO ACABOU", false); // Chama função local que tenta escrever no banco
+                    }
+                }
             });
 
-            // 2. Jogadores + Host Election
+            // 2. JOGADORES + HOST
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/players`), (s) => {
                 const players = []; s.forEach(d => players.push({id:d.id, ...d.data()}));
                 players.sort((a,b)=>(a.joinedAt?.seconds||0)-(b.joinedAt?.seconds||0));
                 window.currentPlayersList = players;
 
-                // Eleição de Host (O player humano mais antigo)
+                // Eleição Host: Jogador humano mais antigo
                 const humans = players.filter(p=>!p.isBot);
                 if(humans.length>0) {
                     amIHost = (humans[0].id === currentUser.uid);
-                    if(amIHost) {
-                        document.getElementById('hostDebug').classList.remove('hidden');
-                        manageGameLoop(players);
-                    } else {
-                        document.getElementById('hostDebug').classList.add('hidden');
-                        if(hostTimerInterval) { clearInterval(hostTimerInterval); hostTimerInterval = null; }
-                    }
+                    if(amIHost) manageHostLogic(players);
+                    else if(hostTimerInterval) { clearInterval(hostTimerInterval); hostTimerInterval = null; }
                 }
                 renderPlayers(players);
             });
 
-            // 3. Desenho
+            // 3. DESENHO
             onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/lines`), orderBy('timestamp','asc')), (s)=>{
                 s.docChanges().forEach(c=>{ if(c.type==='added' && c.doc.data().senderId!==currentUser.uid) drawRemote(c.doc.data()); });
             });
 
-            // 4. Chat
-            onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/messages`), orderBy('timestamp','desc'), limit(30)), (s)=>{
+            // 4. CHAT
+            onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/messages`), orderBy('timestamp','desc'), limit(40)), (s)=>{
                 const msgs=[]; s.forEach(d=>msgs.push(d.data())); renderChat(msgs.reverse());
             });
         }
 
-        // --- HOST LOGIC (CÉREBRO DO JOGO) ---
-        async function manageGameLoop(players) {
-            const rRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}`);
-            const rSnap = await getDoc(rRef);
-            const data = rSnap.data();
-
-            // 1. Criar Bots se < 3 players
+        // --- HOST LOGIC (CÉREBRO) ---
+        async function manageHostLogic(players) {
+            // Bots: Manter sempre 3 jogadores
             if(players.length < 3) {
-                const botName = ["Bot_Rick","Bot_Eva","Bot_Max"][Math.floor(Math.random()*3)] + Math.floor(Math.random()*99);
+                const botName = ["Bot_Lia","Bot_Max","Bot_Tom","Bot_Ana"][Math.floor(Math.random()*4)] + Math.floor(Math.random()*99);
                 const bid = "BOT_"+Date.now();
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/players/${bid}`), {
-                    name: botName, avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${botName}`, score: 0, joinedAt: serverTimestamp(), isBot: true, theme: '#9ca3af'
+                    name: botName, avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${botName}`, score: 0, joinedAt: serverTimestamp(), isBot: true, theme: '#94a3b8'
                 });
-                return; // Aguarda prox ciclo
+                return;
             }
 
-            // 2. Iniciar Jogo se Waiting
+            const rRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}`);
+            const snap = await getDoc(rRef);
+            const data = snap.data();
+
+            // Iniciar Jogo
             if(data.status === 'waiting' && players.length >= 2) {
                 startRound(players);
                 return;
             }
 
-            // 3. Monitorar Tempo (Intervalo Local Rigoroso)
+            // Loop de Bots (Desenhar e Chutar)
             if(!hostTimerInterval) {
                 hostTimerInterval = setInterval(async () => {
-                    // Re-ler estado
-                    const snap = await getDoc(rRef);
-                    const room = snap.data();
+                    if(data.status !== 'playing') return;
                     
-                    if(room.status === 'playing' && room.timerEnd) {
-                        const left = room.timerEnd.toMillis() - Date.now();
+                    const drawer = players.find(p=>p.id === data.drawerId);
+                    
+                    // BOT DESENHANDO (Scribble Pattern)
+                    if(drawer && drawer.isBot && Math.random() > 0.7) {
+                        const t = Date.now() / 1000;
+                        const x = 0.5 + Math.cos(t) * 0.3 * Math.random();
+                        const y = 0.5 + Math.sin(t) * 0.3 * Math.random();
+                        const p1 = {x, y};
+                        const p2 = {x: x+0.02, y: y+0.02};
                         
-                        // BOT AI: Bot Desenhando
-                        const drawer = players.find(p=>p.id === room.drawerId);
-                        if(drawer && drawer.isBot && Math.random() > 0.8) {
-                            // Bot desenha um traço "fake"
-                            botDraw(drawer.id, room.word);
-                        }
+                        addDoc(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/lines`), {
+                            senderId: drawer.id, points: [p1, p2], color: "#" + Math.floor(Math.random()*16777215).toString(16), width: 3, timestamp: serverTimestamp()
+                        });
+                    }
 
-                        // BOT AI: Bot Adivinhando
-                        if(drawer && !drawer.isBot && Math.random() > 0.96) {
-                            // Bot tenta adivinhar (Chance baixa)
-                            botGuess(players, room.word);
-                        }
+                    // BOT CHUTANDO (Inteligente)
+                    if(drawer && !drawer.isBot && Math.random() > 0.92) { // 8% chance por segundo
+                        // Aumenta chance de acerto conforme tempo passa
+                        const timeLeft = data.timerEnd ? (data.timerEnd.toMillis() - Date.now()) / 1000 : 60;
+                        const chance = (60 - timeLeft) / 100; // Começa 0%, termina 60%
+                        
+                        const botGuessing = players.filter(p=>p.isBot && p.id !== drawer.id)[0]; // Pega um bot livre
+                        if(botGuessing) {
+                            const guess = (Math.random() < chance) ? data.word : WORDS[Math.floor(Math.random()*WORDS.length)];
+                            
+                            // Envia msg
+                            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/messages`), {
+                                sender: botGuessing.name, senderId: botGuessing.id, avatar: botGuessing.avatar, theme: botGuessing.theme, text: guess, type: 'guess', timestamp: serverTimestamp()
+                            });
 
-                        // Tempo Esgotado
-                        if(left <= 0) {
-                            endRound("TEMPO ESGOTADO", false);
+                            if(guess === data.word) {
+                                const pRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/players/${botGuessing.id}`);
+                                await updateDoc(pRef, { score: increment(10) });
+                                endRound(`${botGuessing.name} ACERTOU`, true);
+                            }
                         }
                     }
                 }, 1000);
@@ -385,17 +446,14 @@
         }
 
         async function startRound(players) {
-            // Pega o ultimo drawerId e acha o proximo na lista
             const rRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}`);
             const snap = await getDoc(rRef);
             const prevDrawer = snap.data().drawerId;
-            
             let nextIdx = 0;
             if(prevDrawer) {
-                const currIdx = players.findIndex(p=>p.id===prevDrawer);
-                if(currIdx !== -1) nextIdx = (currIdx + 1) % players.length;
+                const idx = players.findIndex(p=>p.id===prevDrawer);
+                if(idx !== -1) nextIdx = (idx + 1) % players.length;
             }
-            
             const nextDrawer = players[nextIdx];
             const word = WORDS[Math.floor(Math.random()*WORDS.length)];
 
@@ -403,141 +461,148 @@
                 status: 'playing', drawerId: nextDrawer.id, word: word,
                 timerEnd: new Date(Date.now() + ROUND_TIME*1000), clearBoard: serverTimestamp()
             });
-            sysMsg(`NOVA RODADA! ${nextDrawer.name} DESENHA!`);
+            sysMsg(`RODADA DE ${nextDrawer.name}`);
         }
 
         async function endRound(reason, someoneWon) {
-            if(!amIHost) return;
+            // Função universal para encerrar, pode ser chamada por Host ou por Timeout
             const rRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}`);
-            
-            // Se ninguém acertou e tempo acabou
             let status = 'revealing';
-            if(!someoneWon && reason === "TEMPO ESGOTADO") status = 'nobody_won';
+            if(!someoneWon && reason.includes("TEMPO")) status = 'nobody_won';
 
             await updateDoc(rRef, { status: status, timerEnd: null });
             
-            if(status === 'nobody_won') sysMsg("NINGUÉM ACERTOU! A PALAVRA ERA: " + secretWord);
-            else sysMsg(`${reason}. ERA: ${secretWord}`);
+            if(status === 'nobody_won') sysMsg("NINGUÉM ACERTOU!");
+            else sysMsg(`${reason}! PALAVRA: ${secretWord}`);
 
-            setTimeout(async () => {
-                // Checar Vencedor Final (100 pts)
-                const players = window.currentPlayersList;
-                const winner = players.find(p=>p.score >= WIN_SCORE);
-                if(winner) await updateDoc(rRef, { status: 'finished', winnerName: winner.name });
-                else startRound(players);
-            }, 4000);
-        }
-
-        // BOTS AI IMPLEMENTATION
-        async function botDraw(botId, word) {
-            // Tenta desenhar algo coerente se tivermos o "script", senão risca aleatório
-            let points = [];
-            const script = BOT_DRAWINGS[word];
-            if(script) {
-                // Desenha parte do script
-                const start = script[Math.floor(Math.random()*(script.length-1))];
-                const end = script[script.indexOf(start)+1] || script[0];
-                points = [start, end];
-            } else {
-                // Aleatório
-                const x = Math.random(); const y = Math.random();
-                points = [{x,y}, {x:x+0.05, y:y+0.05}];
-            }
-            
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/lines`), {
-                senderId: botId, points: points, color: "#000000", width: 4, timestamp: serverTimestamp()
-            });
-        }
-
-        async function botGuess(players, secret) {
-            const bots = players.filter(p=>p.isBot);
-            if(bots.length===0) return;
-            const bot = bots[Math.floor(Math.random()*bots.length)];
-            
-            // 20% de chance de acertar a palavra, 80% de falar bobagem
-            const guess = (Math.random() > 0.8) ? secret : WORDS[Math.floor(Math.random()*WORDS.length)];
-            
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/messages`), {
-                sender: bot.name, senderId: bot.id, avatar: bot.avatar, theme: bot.theme, text: guess, timestamp: serverTimestamp()
-            });
-
-            if(guess === secret) {
-                // Bot acertou!
-                 const pRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/players/${bot.id}`);
-                 await updateDoc(pRef, { score: increment(10) });
-                 endRound(`${bot.name} ACERTOU`, true);
+            // Apenas o host reinicia para evitar conflito
+            if(amIHost) {
+                setTimeout(async () => {
+                    const players = window.currentPlayersList;
+                    const winner = players.find(p=>p.score >= WIN_SCORE);
+                    if(winner) await updateDoc(rRef, { status: 'finished', winnerName: winner.name });
+                    else startRound(players);
+                }, 4000);
             }
         }
-
 
         // --- PLAYER ACTIONS ---
         window.sendMessage = async () => {
-            const inp = document.getElementById('chatInput'); const txt = inp.value.trim().toUpperCase();
+            const inp = document.getElementById('chatInput');
+            const txt = inp.value.trim().toUpperCase();
             if(!txt) return;
-            if(isMyTurn && txt.includes(secretWord)) { inp.value=""; return Swal.fire('Ei','Sem spoiler!','warning'); }
 
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/messages`), {
-                sender: myProfile.name, senderId: currentUser.uid, avatar: myProfile.avatar, theme: myProfile.theme, text: txt, timestamp: serverTimestamp()
-            });
+            if(isMyTurn && txt.includes(secretWord)) {
+                inp.value=""; Swal.fire("Psiu!", "Sem spoiler!", "warning"); return;
+            }
 
+            // Lógica Anti-Spoiler
+            let type = 'chat';
+            let content = txt;
+            
+            // Verifica acerto
             if(!isMyTurn && txt === secretWord && secretWord) {
+                type = 'win';
+                content = '***'; // Não salva a palavra no banco
+                
                 if(audioEnabled) sounds.correct.play();
                 const pRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/players/${currentUser.uid}`);
                 await updateDoc(pRef, { score: increment(10) });
                 
-                // Se eu acertei, tento finalizar a rodada (se eu for host ou não, aqui forçamos via status)
-                // Mas idealmente o Host vê a mensagem e finaliza. 
-                // Para garantir rapidez:
-                const rRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}`);
-                await updateDoc(rRef, { status: 'revealing', timerEnd: null }); // Force end
-                sysMsg(`${myProfile.name} ACERTOU!`);
+                // Força fim da rodada
+                endRound(`${myProfile.name} ACERTOU`, true);
+            } 
+            // Verifica "Perto" (Localmente)
+            else if(!isMyTurn && isClose(txt, secretWord)) {
+                // Mostra aviso local apenas, não envia pro banco para não floodar
+                showLocalSystemMsg("ESTÁ PERTO!", "text-yellow-500");
+                if(audioEnabled) sounds.close.play();
+                inp.value = "";
+                return; 
             }
+
+            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/messages`), {
+                sender: myProfile.name, senderId: currentUser.uid, avatar: myProfile.avatar, theme: myProfile.theme, 
+                text: content, type: type, timestamp: serverTimestamp()
+            });
             inp.value="";
         };
 
-        window.skipTurn = async () => { if(isMyTurn) endRound("PULOU A VEZ", false); }; // Só funciona se eu for host? Não. Precisa trigger global.
-        // Correção Skip: O desenhista (não host) precisa forçar status
+        function isClose(guess, secret) {
+            if(!secret) return false;
+            // Lógica simples: contém parte da palavra ou tem 1 letra de diferença
+            return secret.includes(guess) && guess.length > secret.length/2;
+        }
+
         window.skipTurn = async () => {
-             if(isMyTurn) {
-                 const rRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}`);
-                 await updateDoc(rRef, { status: 'revealing', timerEnd: null });
-                 sysMsg("DESENHISTA DESISTIU!");
-             }
+             if(isMyTurn) endRound("PULOU A VEZ", false);
+        };
+
+        window.reportDrawer = async () => {
+            if(reportCount >= 1) return Swal.fire("Calma", "Você já denunciou.", "info");
+            reportCount++;
+            if(audioEnabled) sounds.report.play();
+            sysMsg(`${myProfile.name} DENUNCIOU O DESENHO!`);
+            // Se tiver muitas denúncias (simulado com 2 aqui para demo), pula
+            // Em produção leria o contador do banco
+        };
+
+        window.startVoiceInput = () => {
+            if (!('webkitSpeechRecognition' in window)) return Swal.fire("Ops", "Navegador sem suporte a voz.", "error");
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = 'pt-BR';
+            recognition.start();
+            recognition.onresult = (e) => {
+                document.getElementById('chatInput').value = e.results[0][0].transcript;
+                window.sendMessage();
+            };
         };
 
         window.handleChatKey = (e) => { if (e.key === 'Enter') window.sendMessage(); };
-        function sysMsg(t) { addDoc(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/messages`), { sender: "SISTEMA", text: t, timestamp: serverTimestamp() }); }
+        function sysMsg(t) { addDoc(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/messages`), { sender: "SISTEMA", text: t, type:'system', timestamp: serverTimestamp() }); }
+        function showLocalSystemMsg(t, color) {
+            const el = document.getElementById('chatMessages');
+            el.innerHTML += `<div class="text-center my-1"><span class="font-black ${color} bg-white px-2 py-1 rounded border border-gray-200 text-xs">${t}</span></div>`;
+            el.scrollTop = el.scrollHeight;
+        }
 
-        // --- RENDER UI ---
+        // --- RENDER ---
         function updateUI(data) {
             const wEl = document.getElementById('wordDisplay'); const tools = document.getElementById('toolsPanel');
-            const inp = document.getElementById('chatInput'); const stMsg = document.getElementById('statusMsg');
+            const inp = document.getElementById('chatInput'); const sb = document.getElementById('statusBubble');
             const overlay = document.getElementById('gameOverlay');
 
             if(data.status === 'playing') {
                 overlay.classList.add('hidden');
                 if(isMyTurn) {
-                    wEl.innerText = secretWord; wEl.className="bg-white border-2 border-blue-500 text-blue-600 px-6 py-2 rounded-lg text-xl font-black uppercase shadow-lg";
-                    tools.classList.remove('hidden'); document.getElementById('skipBtn').classList.remove('hidden');
+                    wEl.innerText = secretWord; wEl.className="bg-white border-2 border-blue-500 text-blue-600 px-4 py-1.5 rounded-lg text-lg lg:text-2xl font-black uppercase shadow-lg";
+                    tools.classList.remove('hidden'); document.getElementById('reportBtn').classList.add('hidden');
                     inp.disabled=true; inp.placeholder="VOCÊ DESENHA!";
-                    stMsg.innerText="SUA VEZ!"; stMsg.classList.remove('hidden');
+                    sb.innerHTML = `<i class="fa-solid fa-pencil"></i> TUA VEZ!`; sb.classList.remove('hidden');
                 } else {
-                    wEl.innerText = secretWord.replace(/[A-Z]/g, "_ "); wEl.className="bg-blue-50 border border-blue-100 text-blue-400 px-6 py-2 rounded-lg text-xl font-black uppercase shadow-sm";
-                    tools.classList.add('hidden'); document.getElementById('skipBtn').classList.add('hidden');
+                    wEl.innerText = secretWord.replace(/[A-Z]/g, "_ "); wEl.className="bg-slate-50 border-2 border-slate-200 text-slate-700 px-4 py-1.5 rounded-lg text-lg lg:text-2xl font-black uppercase shadow-sm";
+                    tools.classList.add('hidden'); document.getElementById('reportBtn').classList.remove('hidden');
                     inp.disabled=false; inp.placeholder="QUAL É O DESENHO?";
                     const d = window.currentPlayersList.find(p=>p.id===data.drawerId);
-                    stMsg.innerText = (d?d.name:"ALGUÉM") + " DESENHANDO..."; stMsg.classList.remove('hidden');
+                    sb.innerHTML = `<i class="fa-solid fa-paintbrush"></i> ${(d?d.name:"ALGUÉM")} DESENHANDO`; sb.classList.remove('hidden');
                 }
             } else if(data.status === 'revealing' || data.status === 'nobody_won') {
                 wEl.innerText = secretWord;
-                stMsg.innerText = `RESPOSTA: ${secretWord}`;
+                sb.innerHTML = `<i class="fa-solid fa-eye"></i> RESPOSTA: ${secretWord}`;
             }
 
             if(data.timerEnd) {
-                const total = ROUND_TIME*1000; const updateT = ()=>{
+                const total = ROUND_TIME*1000;
+                const updateT = ()=>{
                     const left = Math.max(0, data.timerEnd.toMillis() - Date.now());
                     const pct = (left/total)*100;
-                    document.getElementById('timeBar').style.width = pct+"%";
+                    const bar = document.getElementById('timeBar');
+                    bar.style.width = pct+"%";
+                    
+                    if(pct<20) bar.className="h-full bg-red-500 w-full urgent-bar";
+                    else if(pct<50) bar.className="h-full bg-yellow-400 w-full transition-all duration-1000 ease-linear";
+                    else bar.className="h-full bg-green-500 w-full transition-all duration-1000 ease-linear";
+
                     document.getElementById('timerText').innerText = Math.ceil(left/1000);
                     if(left>0) requestAnimationFrame(updateT);
                 }; requestAnimationFrame(updateT);
@@ -545,11 +610,11 @@
         }
 
         function showNobodyWon() {
-            if(audioEnabled) sounds.fail.play();
+            if(audioEnabled) sounds.sfx_turn.play(); // Fail sound
             const ov = document.getElementById('gameOverlay');
-            document.getElementById('overlayIcon').className = "fa-solid fa-face-frown text-gray-400 text-7xl mb-6 animate-pulse";
+            document.getElementById('overlayIcon').className = "fa-solid fa-face-dizzy text-gray-400 text-7xl mb-6 animate-pulse";
             document.getElementById('overlayTitle').innerText = "NINGUÉM ACERTOU";
-            document.getElementById('overlaySub').innerText = `A palavra era: ${secretWord}`;
+            document.getElementById('overlaySub').innerText = secretWord;
             ov.classList.remove('hidden');
         }
 
@@ -557,39 +622,50 @@
             if(audioEnabled) sounds.win.play();
             const ov = document.getElementById('gameOverlay');
             document.getElementById('overlayIcon').className = "fa-solid fa-trophy text-yellow-400 text-7xl mb-6 animate-bounce";
-            document.getElementById('overlayTitle').innerText = "VENCEDOR!";
+            document.getElementById('overlayTitle').innerText = "VENCEDOR DA PARTIDA!";
             document.getElementById('overlaySub').innerText = name;
             ov.classList.remove('hidden');
-            confetti({particleCount:150, spread:70, origin:{y:0.6}});
+            confetti({particleCount:200, spread:100, origin:{y:0.6}});
         }
 
         function renderPlayers(players) {
             document.getElementById('playerCount').innerText = players.length;
             players.sort((a,b)=>b.score-a.score);
             document.getElementById('playersList').innerHTML = players.map((p,i)=>`
-                <div class="flex items-center gap-3 p-3 rounded-2xl mb-2 transition-all ${p.id===currentUser.uid?'bg-blue-50 border-2 border-blue-200 shadow-md transform scale-105':'bg-white border border-gray-100 shadow-sm'}">
-                    <span class="font-black text-gray-300 w-6 text-center text-lg italic">#${i+1}</span>
-                    <div class="relative"><img src="${p.avatar}" class="w-10 h-10 rounded-full bg-gray-200 object-cover border-2 border-white shadow-sm">
-                    ${p.id===window.drawerId ? '<div class="absolute -right-1 -bottom-1 bg-orange-500 text-white text-[8px] p-1 rounded-full"><i class="fa-solid fa-pencil"></i></div>':''}</div>
-                    <div class="flex-1 min-w-0"><div class="flex items-center gap-1"><p class="font-bold text-sm truncate" style="color:${p.theme}">${p.name}</p>${p.isBot?'<span class="bot-tag">BOT</span>':''}</div><p class="text-xs font-bold text-gray-400">${p.score} PTS</p></div>
+                <div class="flex items-center gap-3 p-3 rounded-2xl mb-2 transition-all ${p.id===currentUser.uid?'bg-blue-50 border-2 border-blue-200':'bg-white border border-slate-100'}">
+                    <span class="font-black text-slate-300 w-6 text-center text-lg italic">#${i+1}</span>
+                    <div class="relative"><img src="${p.avatar}" class="w-10 h-10 rounded-full bg-gray-200 object-cover border-2 border-white shadow-sm"></div>
+                    <div class="flex-1 min-w-0"><div class="flex items-center gap-1"><p class="font-bold text-sm truncate" style="color:${p.theme}">${p.name}</p>${p.isBot?'<span class="text-[9px] bg-slate-200 px-1 rounded text-slate-500">BOT</span>':''}</div><p class="text-xs font-bold text-slate-400">${p.score} PTS</p></div>
                 </div>`).join('');
         }
+
         function renderChat(msgs){
             const el=document.getElementById('chatMessages');
             el.innerHTML=msgs.map(m=>{
-                if(m.sender==="SISTEMA") return `<div class="flex justify-center my-2 animate-fade"><span class="bg-gray-200 text-gray-600 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-sm border border-gray-300">${m.text}</span></div>`;
+                if(m.type==='system') return `<div class="flex justify-center my-2 msg-anim"><span class="bg-slate-200 text-slate-600 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">${m.text}</span></div>`;
+                
+                // Lógica de Vencedor (Anti-Spoiler)
+                if(m.type==='win') return `<div class="flex justify-center my-2 msg-anim"><span class="bg-green-100 text-green-600 border border-green-200 text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm"><i class="fa-solid fa-star mr-1"></i> ${m.sender} ACERTOU!</span></div>`;
+
                 const me=m.senderId===currentUser.uid;
-                return `<div class="flex gap-2 mb-3 ${me?'flex-row-reverse':''} items-end msg-pop"><img src="${m.avatar}" class="w-8 h-8 rounded-full bg-gray-200 border-2 border-white shadow-sm"><div class="flex flex-col ${me?'items-end':'items-start'} max-w-[85%]"><span class="text-[9px] text-gray-400 font-bold px-1 mb-0.5 uppercase tracking-wide">${m.sender}</span><div class="px-4 py-2 rounded-2xl text-xs font-bold shadow-md ${me?'text-white rounded-br-none':'text-gray-700 bg-white border border-gray-100 rounded-bl-none'}" style="${me?`background-color:${m.theme}`:''}">${m.text}</div></div></div>`;
+                return `<div class="flex gap-2 mb-3 ${me?'flex-row-reverse':''} items-end msg-anim">
+                    <img src="${m.avatar}" class="w-8 h-8 rounded-full bg-gray-200 border-2 border-white shadow-sm">
+                    <div class="flex flex-col ${me?'items-end':'items-start'} max-w-[85%]">
+                        <span class="text-[9px] text-gray-400 font-bold px-1 mb-0.5 uppercase tracking-wide">${m.sender}</span>
+                        <div class="px-4 py-2 rounded-2xl text-xs font-bold shadow-md ${me?'text-white rounded-br-none':'text-gray-700 bg-slate-100 border border-gray-100 rounded-bl-none'}" style="${me?`background-color:${m.theme}`:''}">${m.text}</div>
+                    </div>
+                </div>`;
             }).join(''); el.scrollTop=el.scrollHeight;
         }
 
-        // --- CANVAS ---
+        // --- CANVAS UTILS ---
         const colors=['#000000','#ffffff','#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#a855f7','#ec4899','#78350f'];
-        const qc=document.getElementById('quickColors'); colors.forEach(c=>{const b=document.createElement('button');b.className="w-7 h-7 rounded-full border-2 border-white shadow-md active:scale-90 transition hover:scale-110";b.style.backgroundColor=c;b.onclick=()=>window.setColor(c);qc.appendChild(b);});
+        const qc=document.getElementById('quickColors'); colors.forEach(c=>{const b=document.createElement('button');b.className="w-8 h-8 rounded-lg border-2 border-white shadow-md active:scale-90 transition hover:scale-110 flex-shrink-0";b.style.backgroundColor=c;b.onclick=()=>window.setColor(c);qc.appendChild(b);});
+        
         window.setColor=(c)=>{currentColor=c;document.getElementById('colorPicker').value=c;};
         window.setLineWidth=(w)=>currentWidth=w;
         window.clearCanvasAction=async()=>{if(!isMyTurn)return;ctx.clearRect(0,0,canvas.width,canvas.height);await updateDoc(doc(db,'artifacts',appId,'public','data',`rooms/${currentRoom}`),{clearBoard:serverTimestamp()});};
-        window.toggleMute=()=>{if(sounds.bgm.paused){sounds.bgm.play();document.getElementById('muteBtn').innerHTML='<i class="fa-solid fa-volume-high"></i>';}else{sounds.bgm.pause();document.getElementById('muteBtn').innerHTML='<i class="fa-solid fa-volume-xmark"></i>';}};
+        window.toggleMute=()=>{if(sounds.bgm.paused){sounds.bgm.play();document.getElementById('muteBtn').classList.add('text-blue-500');}else{sounds.bgm.pause();document.getElementById('muteBtn').classList.remove('text-blue-500');}};
         window.toggleSideMenu=()=>document.getElementById('playersSidebar').classList.toggle('-translate-x-full');
         window.toggleChat=()=>document.getElementById('chatSidebar').classList.toggle('translate-x-full');
 
