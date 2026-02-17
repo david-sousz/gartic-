@@ -5,108 +5,140 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gartic Mobile</title>
     
-    <!-- Tailwind CSS (Estilos) -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Ícones -->
+    <!-- FontAwesome para ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Ajustes para Mobile (Toque) -->
     <style>
-        body { overscroll-behavior-y: contain; touch-action: pan-x pan-y; }
-        canvas { touch-action: none; background-image: radial-gradient(#e5e7eb 1px, transparent 1px); background-size: 20px 20px; }
+        /* Impede scroll e comportamentos indesejados no mobile */
+        body { 
+            overscroll-behavior-y: contain; 
+            touch-action: pan-x pan-y; 
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        canvas { 
+            touch-action: none; 
+            background-image: radial-gradient(#e5e7eb 1px, transparent 1px); 
+            background-size: 20px 20px; 
+        }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Animações simples */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fade { animation: fadeIn 0.3s ease-out; }
     </style>
 </head>
-<body class="bg-blue-50 text-gray-800 h-screen w-screen overflow-hidden flex flex-col font-sans">
+<body class="bg-slate-50 text-slate-800 h-screen w-screen overflow-hidden flex flex-col font-sans">
 
-    <!-- TELA DE LOGIN -->
-    <div id="loginScreen" class="fixed inset-0 z-50 bg-blue-600 flex flex-col items-center justify-center p-6 text-center">
-        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-xs">
-            <h1 class="text-4xl font-bold text-blue-600 mb-2 italic">Gart<span class="text-orange-500">ic</span></h1>
-            <p class="text-gray-400 text-sm mb-6">Multiplayer Mobile</p>
+    <!-- STATUS DE CONEXÃO (DEBUG) -->
+    <div id="connStatus" class="fixed top-0 left-0 w-full h-1 z-[60] bg-red-500 transition-all duration-500" style="width: 0%"></div>
+
+    <!-- TELA DE ENTRADA -->
+    <div id="loginScreen" class="fixed inset-0 z-50 bg-blue-600 flex flex-col items-center justify-center p-6 text-center animate-fade">
+        <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl w-full max-w-xs border-b-8 border-blue-700">
+            <h1 class="text-5xl font-black text-blue-600 mb-2 italic tracking-tighter">Gart<span class="text-orange-500">ic</span></h1>
+            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-8">Mobile Multiplayer</p>
             
-            <input type="text" id="usernameInput" maxlength="10" placeholder="Teu Apelido" 
-                class="w-full bg-gray-100 border-2 border-gray-100 rounded-2xl px-4 py-3 text-lg focus:outline-none focus:border-blue-500 transition mb-4 text-center font-bold uppercase">
+            <input type="text" id="usernameInput" maxlength="12" placeholder="TEU NOME" 
+                class="w-full bg-slate-100 border-2 border-slate-100 rounded-2xl px-4 py-4 text-xl focus:outline-none focus:border-blue-500 transition-all mb-4 text-center font-black uppercase placeholder:text-slate-300">
             
             <button onclick="enterGame()" id="enterBtn"
-                class="w-full bg-green-500 hover:bg-green-600 text-white font-black py-4 rounded-2xl text-xl shadow-lg active:scale-95 transition-all">
-                ENTRAR NA SALA
+                class="w-full bg-green-500 hover:bg-green-600 text-white font-black py-5 rounded-2xl text-2xl shadow-[0_6px_0_rgb(22,163,74)] active:shadow-none active:translate-y-1 transition-all">
+                JOGAR
             </button>
-            <p id="statusMsg" class="mt-4 text-xs text-gray-400">A conectar...</p>
+            
+            <p id="authText" class="mt-6 text-[10px] text-slate-300 font-bold uppercase tracking-tighter">A ligar ao Firebase...</p>
         </div>
     </div>
 
     <!-- CABEÇALHO DO JOGO -->
-    <div id="gameHeader" class="bg-white border-b border-gray-200 p-3 flex justify-between items-center z-10 hidden shadow-sm">
-        <div class="bg-blue-600 text-white px-3 py-1 rounded-full font-bold text-xs shadow-sm">
-            <i class="fa-solid fa-clock mr-1"></i> <span id="timerDisplay">--</span>
+    <div id="gameHeader" class="bg-white border-b-2 border-slate-200 p-3 flex justify-between items-center z-10 hidden shadow-sm">
+        <div class="flex items-center gap-2">
+            <div class="bg-blue-600 text-white px-4 py-1.5 rounded-full font-black text-sm shadow-md flex items-center gap-2">
+                <i class="fa-solid fa-clock"></i> <span id="timerDisplay">--</span>
+            </div>
         </div>
         
-        <!-- PALAVRA SECRETA -->
-        <div id="wordDisplay" class="text-lg font-black tracking-widest text-gray-700 uppercase truncate max-w-[140px]">
+        <div id="wordDisplay" class="text-xl font-black tracking-[0.2em] text-slate-700 uppercase truncate max-w-[150px] drop-shadow-sm">
             AGUARDANDO
         </div>
 
-        <button onclick="togglePlayerList()" class="relative text-blue-600 p-1">
-            <i class="fa-solid fa-users text-2xl"></i>
-            <span id="playerCountBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center border-2 border-white shadow-sm">0</span>
+        <button onclick="togglePlayerList()" class="relative text-blue-600 active:scale-90 transition">
+            <i class="fa-solid fa-users-viewfinder text-3xl"></i>
+            <span id="playerCountBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full h-5 w-5 flex items-center justify-center border-2 border-white font-black">0</span>
         </button>
     </div>
 
-    <!-- ÁREA PRINCIPAL -->
-    <div id="gameArea" class="flex-1 relative hidden flex-col">
+    <!-- ÁREA DE JOGO -->
+    <div id="gameArea" class="flex-1 relative hidden flex-col animate-fade">
         
-        <!-- CANVAS (ONDE SE DESENHA) -->
-        <div class="relative w-full aspect-square bg-white shadow-inner border-b border-gray-200">
+        <!-- CANVAS -->
+        <div class="relative w-full aspect-square bg-white shadow-inner border-b-2 border-slate-200 overflow-hidden">
             <canvas id="drawingCanvas" class="w-full h-full"></canvas>
             
-            <!-- FERRAMENTAS (Só aparecem para quem desenha) -->
-            <div id="drawerTools" class="absolute bottom-3 left-0 right-0 flex justify-center gap-3 px-4 hidden animate-slide-up">
-                <button onclick="setColor('#000000')" class="w-10 h-10 rounded-full bg-black border-4 border-white shadow-lg transform transition active:scale-90"></button>
-                <button onclick="setColor('#ef4444')" class="w-10 h-10 rounded-full bg-red-500 border-4 border-white shadow-lg transform transition active:scale-90"></button>
-                <button onclick="setColor('#3b82f6')" class="w-10 h-10 rounded-full bg-blue-500 border-4 border-white shadow-lg transform transition active:scale-90"></button>
-                <button onclick="clearCanvasAction()" class="w-10 h-10 rounded-full bg-gray-100 text-gray-600 border-4 border-white shadow-lg flex items-center justify-center transform transition active:scale-90">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
+            <!-- FERRAMENTAS DO DESENHISTA -->
+            <div id="drawerTools" class="absolute bottom-4 left-0 right-0 flex justify-center gap-4 px-4 hidden pointer-events-none">
+                <div class="flex gap-2 p-2 bg-white/90 backdrop-blur rounded-full shadow-2xl border border-slate-200 pointer-events-auto">
+                    <button onclick="setColor('#000000')" class="w-10 h-10 rounded-full bg-black border-2 border-white shadow-inner active:scale-90 transition"></button>
+                    <button onclick="setColor('#ef4444')" class="w-10 h-10 rounded-full bg-red-500 border-2 border-white shadow-inner active:scale-90 transition"></button>
+                    <button onclick="setColor('#3b82f6')" class="w-10 h-10 rounded-full bg-blue-500 border-2 border-white shadow-inner active:scale-90 transition"></button>
+                    <button onclick="setColor('#22c55e')" class="w-10 h-10 rounded-full bg-green-500 border-2 border-white shadow-inner active:scale-90 transition"></button>
+                    <div class="w-px h-10 bg-slate-200 mx-1"></div>
+                    <button onclick="clearCanvasAction()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-600 border-2 border-white shadow-inner flex items-center justify-center active:scale-90 transition">
+                        <i class="fa-solid fa-trash-can text-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- OVERLAY DE STATUS -->
+            <div id="statusOverlay" class="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                <span id="statusMessage" class="bg-black/70 text-white px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest hidden"></span>
             </div>
         </div>
 
-        <!-- CHAT E MENSAGENS -->
-        <div class="flex-1 bg-gray-50 flex flex-col overflow-hidden">
-            <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-2 text-sm no-scrollbar"></div>
+        <!-- CHAT -->
+        <div class="flex-1 bg-slate-50 flex flex-col overflow-hidden relative">
+            <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3 text-sm no-scrollbar">
+                <!-- Mensagens aqui -->
+            </div>
             
-            <div id="guessInputArea" class="p-3 bg-white border-t border-gray-200 flex gap-2 shadow-lg">
-                <input type="text" id="chatInput" placeholder="Qual é o desenho?" 
-                    class="flex-1 bg-gray-100 border-none rounded-2xl px-5 py-3 focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-gray-700"
+            <div id="guessInputArea" class="p-3 bg-white border-t border-slate-200 flex gap-2 shadow-[0_-4px_15px_rgba(0,0,0,0.05)]">
+                <input type="text" id="chatInput" placeholder="QUAL É O DESENHO?" 
+                    class="flex-1 bg-slate-100 border-none rounded-2xl px-5 py-4 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 placeholder:text-slate-400 uppercase"
                     onkeypress="handleChatKey(event)">
-                <button onclick="sendMessage()" id="sendBtn" class="bg-blue-600 text-white rounded-2xl w-12 h-12 flex items-center justify-center shadow-md active:scale-90 transition">
-                    <i class="fa-solid fa-paper-plane"></i>
+                <button onclick="sendMessage()" id="sendBtn" class="bg-blue-600 text-white rounded-2xl w-14 h-14 flex items-center justify-center shadow-lg active:scale-90 transition shadow-blue-200">
+                    <i class="fa-solid fa-paper-plane text-xl"></i>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL: LISTA DE JOGADORES -->
-    <div id="playersModal" class="fixed inset-0 bg-black/60 z-40 hidden flex items-end justify-center backdrop-blur-sm">
-        <div class="bg-white w-full rounded-t-[40px] p-6 max-h-[70vh] flex flex-col shadow-2xl animate-slide-up">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="font-black text-xl text-gray-800">Jogadores (<span id="modalPlayerCount">0</span>)</h3>
-                <button onclick="togglePlayerList()" class="bg-gray-100 p-3 rounded-full"><i class="fa-solid fa-xmark text-gray-400"></i></button>
+    <!-- MODAL DE JOGADORES -->
+    <div id="playersModal" class="fixed inset-0 bg-slate-900/60 z-40 hidden flex items-end justify-center backdrop-blur-sm transition-all">
+        <div class="bg-white w-full rounded-t-[3rem] p-8 max-h-[80vh] flex flex-col shadow-2xl border-t-4 border-blue-500">
+            <div class="flex justify-between items-center mb-8">
+                <h3 class="font-black text-2xl text-slate-800 tracking-tighter uppercase">No Jogo (<span id="modalPlayerCount">0</span>)</h3>
+                <button onclick="togglePlayerList()" class="bg-slate-100 p-4 rounded-full text-slate-400 active:bg-slate-200 transition">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
             </div>
-            <div id="playersList" class="space-y-3 overflow-y-auto flex-1 no-scrollbar pb-10"></div>
+            <div id="playersList" class="space-y-4 overflow-y-auto flex-1 no-scrollbar pb-10">
+                <!-- Lista de jogadores -->
+            </div>
         </div>
     </div>
 
-    <!-- LÓGICA DO JOGO -->
+    <!-- SCRIPTS -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, collection, onSnapshot, setDoc, updateDoc, addDoc, serverTimestamp, increment, query, orderBy, limit, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, collection, onSnapshot, setDoc, updateDoc, addDoc, serverTimestamp, increment, query, orderBy, limit, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ============================================================
-        //  TUA CONFIGURAÇÃO (JÁ INSERIDA)
-        // ============================================================
+        // CONFIGURAÇÃO USANDO AS TUAS CHAVES ENVIADAS
         const firebaseConfig = {
             apiKey: "AIzaSyCXDfIO53oqtnRgs9jfApf-rZklp4SRbV8",
             authDomain: "gartic-51f3d.firebaseapp.com",
@@ -116,60 +148,41 @@
             appId: "1:844900784609:web:5fc7dbdf7e83035dee1aa0",
             measurementId: "G-98R6DCDDJS"
         };
-        // ============================================================
 
-        // Inicializar Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = "gartic-prod";
+        const appId = "gartic-v1"; // Identificador fixo para o teu jogo
 
-        // Login Anónimo Automático
-        signInAnonymously(auth)
-            .then(() => {
-                document.getElementById('statusMsg').innerText = "Conectado! Põe o nome.";
-                document.getElementById('statusMsg').className = "mt-4 text-xs text-green-500 font-bold";
-            })
-            .catch((error) => {
-                console.error(error);
-                document.getElementById('statusMsg').innerText = "Erro no Login. Ativa 'Authentication > Anónimo' no Firebase.";
-                document.getElementById('statusMsg').className = "mt-4 text-xs text-red-500 font-bold";
-            });
+        // Conectar Anónimo
+        signInAnonymously(auth).then(() => {
+            document.getElementById('authText').innerText = "LIGADO AO SERVIDOR ✅";
+            document.getElementById('authText').classList.replace('text-slate-300', 'text-green-500');
+            document.getElementById('connStatus').style.width = '100%';
+        }).catch(err => {
+            document.getElementById('authText').innerText = "ERRO: ATIVA O LOGIN ANÓNIMO NO FIREBASE ❌";
+            document.getElementById('authText').classList.replace('text-slate-300', 'text-red-500');
+            console.error(err);
+        });
 
-        // Configurações da Sala
-        const ROOM_ID = "sala_unica_brasil";
-        const ROUND_TIME = 60; // Segundos
+        const ROOM_ID = "brasil_global_01";
+        const ROUND_TIME = 60;
         const WORDS = ["BOLA", "CASA", "SOL", "ARVORE", "GATO", "PEIXE", "CARRO", "FLOR", "LUA", "LIVRO", "MESA", "BOLO", "PIZZA", "AVIAO", "CHUVA", "FOGO", "MACA", "DADO", "GELO", "MOTO", "BOTA", "OVO", "DENTE", "UNHA", "PATO", "RATO"];
 
-        // Variáveis de Estado
         let currentUser = null, myName = "", currentDrawerId = null, secretWord = "", isMyTurn = false;
-        let canvas = document.getElementById('drawingCanvas');
-        let ctx = canvas.getContext('2d');
-        let isDrawing = false, lastPos = { x: 0, y: 0 }, currentColor = "#000000";
+        let canvas = document.getElementById('drawingCanvas'), ctx = canvas.getContext('2d'), isDrawing = false, lastPos = { x: 0, y: 0 }, currentColor = "#000000";
         window.currentPlayersList = [];
 
-        // Detetar Login
         onAuthStateChanged(auth, (user) => { if (user) currentUser = user; });
 
-        // --- FUNÇÕES DE UI ---
-        
         window.enterGame = async () => {
             const input = document.getElementById('usernameInput');
-            if (input.value.trim().length < 2) {
-                alert("Digite um nome com pelo menos 2 letras!");
-                return;
-            }
-            if (!currentUser) {
-                alert("Aguarde a conexão com o servidor...");
-                return;
-            }
-
-            myName = input.value.trim().toUpperCase();
+            if (input.value.trim().length < 2) return;
+            if (!currentUser) return alert("A aguardar ligação...");
             
-            // Troca de Tela
+            myName = input.value.trim().toUpperCase();
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('gameHeader').classList.remove('hidden');
-            document.getElementById('gameHeader').classList.add('flex');
             document.getElementById('gameArea').classList.remove('hidden');
             document.getElementById('gameArea').classList.add('flex');
             
@@ -183,7 +196,6 @@
         window.clearCanvasAction = async () => {
             if (!isMyTurn) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            // Avisar servidor
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}`), { clearBoard: serverTimestamp() });
         };
 
@@ -192,59 +204,48 @@
             const msg = input.value.trim().toUpperCase();
             if (!msg) return;
 
-            // Se for desenhista, não pode dar spoiler
-            if (isMyTurn && msg.includes(secretWord)) { 
-                input.value = ""; 
-                alert("Você está desenhando! Não pode falar a palavra.");
-                return; 
+            if (isMyTurn && msg.includes(secretWord) && secretWord !== "") {
+                input.value = "";
+                return;
             }
 
             const chatRef = collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/messages`);
-            await addDoc(chatRef, { 
-                sender: myName, 
-                senderId: currentUser.uid, 
-                text: msg, 
-                timestamp: serverTimestamp() 
-            });
+            await addDoc(chatRef, { sender: myName, senderId: currentUser.uid, text: msg, timestamp: serverTimestamp() });
 
-            // Verificar Vitória
-            if (!isMyTurn && msg === secretWord && secretWord !== "") {
-                handleWin();
-            }
+            if (!isMyTurn && msg === secretWord && secretWord !== "") handleWin();
             input.value = "";
         };
 
         window.handleChatKey = (e) => { if (e.key === 'Enter') window.sendMessage(); };
 
-        // --- LÓGICA DO JOGO ---
-
         async function joinRoom() {
-            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}`);
-            const playerRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/players/${currentUser.uid}`);
-            
-            // Adicionar Jogador
-            await setDoc(playerRef, { name: myName, score: 0, lastActive: serverTimestamp() });
-            
-            // Criar Sala se não existir
-            const snap = await getDoc(roomRef);
-            if (!snap.exists()) {
-                await setDoc(roomRef, { status: 'waiting', drawerId: null, word: '', timerEnd: null });
+            try {
+                const roomRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}`);
+                const playerRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/players/${currentUser.uid}`);
+                
+                await setDoc(playerRef, { name: myName, score: 0, lastActive: serverTimestamp() });
+                
+                const snap = await getDoc(roomRef);
+                if (!snap.exists()) {
+                    await setDoc(roomRef, { status: 'waiting', drawerId: null, word: '', timerEnd: null });
+                }
+                
+                startListeners();
+                setupCanvas();
+            } catch (err) {
+                console.error("Erro ao entrar na sala:", err);
+                alert("Verifica se as regras do Firestore estão em 'Modo de Teste'!");
             }
-            
-            startListeners();
-            setupCanvas();
         }
 
         function startListeners() {
-            // 1. Ouvir Sala (Estado do Jogo)
+            // 1. Ouvir Estado da Sala
             onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}`), (s) => {
                 const data = s.data(); if (!data) return;
                 currentDrawerId = data.drawerId; 
                 secretWord = data.word; 
                 isMyTurn = (currentUser.uid === currentDrawerId);
-                
                 updateUI(data);
-                
                 if (data.clearBoard) ctx.clearRect(0, 0, canvas.width, canvas.height);
             });
 
@@ -254,25 +255,23 @@
                 s.forEach(d => players.push({ id: d.id, ...d.data() }));
                 window.currentPlayersList = players;
                 renderPlayers(players);
-                
-                // Começar jogo se houver 2 pessoas e ninguém desenhando
+                // Iniciar se houver 2 e sala vazia
                 if (players.length >= 2 && !currentDrawerId) startRound();
             });
 
-            // 3. Ouvir Linhas (Desenho)
+            // 3. Ouvir Desenho
             const qLines = query(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/lines`), orderBy('timestamp', 'asc'));
             onSnapshot(qLines, (s) => {
                 s.docChanges().forEach(c => { 
                     if (c.type === "added") {
                         const line = c.doc.data();
-                        // Só desenha se NÃO fui eu (pra evitar lag local)
                         if (line.senderId !== currentUser.uid) drawRemote(line.points, line.color); 
                     }
                 });
             });
 
             // 4. Ouvir Chat
-            const qChat = query(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/messages`), orderBy('timestamp', 'desc'), limit(30));
+            const qChat = query(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/messages`), orderBy('timestamp', 'desc'), limit(40));
             onSnapshot(qChat, (s) => {
                 const msgs = []; s.forEach(d => msgs.push(d.data()));
                 renderChat(msgs.reverse());
@@ -291,29 +290,22 @@
                 drawerId: drawer, 
                 word: word, 
                 timerEnd: new Date(Date.now() + ROUND_TIME * 1000), 
-                clearBoard: serverTimestamp() // Limpa o quadro
+                clearBoard: serverTimestamp()
             });
-            
-            // Avisar no chat
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/messages`), {
-                sender: "SISTEMA",
-                text: "NOVA RODADA! ADIVINHEM O DESENHO!",
-                timestamp: serverTimestamp()
-            });
+
+            // Limpar linhas antigas do banco para não pesar
+            // Em produção aqui usariamos um Cloud Function, aqui apenas marcamos o clear local
         }
 
         async function handleWin() {
-            // Dar Pontos
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/players/${currentUser.uid}`), { score: increment(10) });
             
-            // Avisar Vencedor
             await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/messages`), {
                 sender: "SISTEMA",
-                text: `🏆 ${myName} ACERTOU! A PALAVRA ERA: ${secretWord}`,
+                text: `🏆 ${myName.toUpperCase()} ACERTOU!`,
                 timestamp: serverTimestamp()
             });
 
-            // Pausa Dramática
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}`), { status: 'end' });
             setTimeout(() => startRound(), 3000);
         }
@@ -322,44 +314,39 @@
             const wordEl = document.getElementById('wordDisplay');
             const tools = document.getElementById('drawerTools');
             const input = document.getElementById('chatInput');
+            const statusMsg = document.getElementById('statusMessage');
             
             if (data.status === 'playing') {
-                // Se eu desenho, vejo a palavra. Se não, vejo traços.
+                statusMsg.classList.add('hidden');
                 wordEl.innerText = isMyTurn ? secretWord : secretWord.replace(/[A-Z]/g, "_ ");
-                wordEl.className = isMyTurn ? "text-lg font-black tracking-widest text-blue-600 uppercase" : "text-lg font-black tracking-widest text-gray-700 uppercase";
+                wordEl.classList.toggle('text-blue-600', isMyTurn);
                 
                 if (isMyTurn) {
                     tools.classList.remove('hidden');
                     input.disabled = true;
-                    input.placeholder = "Você está desenhando!";
+                    input.placeholder = "TUA VEZ DE DESENHAR!";
                 } else {
                     tools.classList.add('hidden');
                     input.disabled = false;
-                    input.placeholder = "Qual é o desenho?";
+                    input.placeholder = "QUAL É O DESENHO?";
                 }
-            } else if (data.status === 'end') { 
-                wordEl.innerText = secretWord; 
-                tools.classList.add('hidden'); 
+            } else if (data.status === 'end') {
+                statusMsg.innerText = `RESPOSTA: ${secretWord}`;
+                statusMsg.classList.remove('hidden');
+                wordEl.innerText = secretWord;
+                tools.classList.add('hidden');
             }
 
-            // Timer
             if (data.timerEnd) {
-                const checkTimer = () => {
+                const timer = setInterval(() => {
                     const left = Math.ceil((data.timerEnd.toMillis() - Date.now()) / 1000);
                     const el = document.getElementById('timerDisplay');
-                    if (el) el.innerText = Math.max(0, left) + "s";
-                    
-                    if (left <= 0 && isMyTurn && data.status === 'playing') {
-                        // Tempo Esgotado -> Nova Rodada
-                        addDoc(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/messages`), {
-                            sender: "SISTEMA", text: "TEMPO ESGOTADO! A PALAVRA ERA " + secretWord, timestamp: serverTimestamp()
-                        });
-                        startRound();
+                    if (el) el.innerText = Math.max(0, left) + "S";
+                    if (left <= 0) {
+                        clearInterval(timer);
+                        if (isMyTurn && data.status === 'playing') startRound();
                     }
-                };
-                // Atualiza a cada segundo (simplificado)
-                checkTimer(); 
-                // Num app real usariamos setInterval com limpeza
+                }, 1000);
             }
         }
 
@@ -367,104 +354,92 @@
             document.getElementById('playerCountBadge').innerText = players.length;
             document.getElementById('modalPlayerCount').innerText = players.length;
             
-            document.getElementById('playersList').innerHTML = players.sort((a,b)=>b.score-a.score).map(p => `
-                <div class="flex justify-between items-center bg-gray-50 p-4 rounded-2xl border-2 ${p.id === currentUser.uid ? 'border-blue-400' : 'border-transparent'}">
-                    <div class="flex items-center gap-2">
-                        <span class="font-black text-gray-700 uppercase truncate max-w-[150px]">${p.name}</span>
-                        ${p.id === currentDrawerId ? '<i class="fa-solid fa-pencil text-orange-500 animate-bounce"></i>' : ''}
-                    </div>
-                    <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold">${p.score} pts</span>
-                </div>`).join('');
+            document.getElementById('playersList').innerHTML = players.sort((a,b)=>b.score-a.score).map(p => {
+                const isMe = p.id === currentUser.uid;
+                const isDrawer = p.id === currentDrawerId;
+                return `
+                    <div class="flex justify-between items-center bg-slate-50 p-5 rounded-3xl border-2 ${isMe ? 'border-blue-400' : 'border-transparent'}">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center font-black text-blue-600">
+                                ${p.name.charAt(0)}
+                            </div>
+                            <div>
+                                <span class="font-black text-slate-700 uppercase block leading-none">${p.name}</span>
+                                ${isDrawer ? '<span class="text-[10px] font-bold text-orange-500 uppercase">A desenhar...</span>' : ''}
+                            </div>
+                        </div>
+                        <span class="bg-blue-600 text-white px-4 py-1 rounded-full text-xs font-black shadow-sm">${p.score} PTS</span>
+                    </div>`;
+            }).join('');
         }
 
         function renderChat(msgs) {
             const el = document.getElementById('chatMessages');
             el.innerHTML = msgs.map(m => {
-                if(m.sender === "SISTEMA") return `<div class="text-center text-xs font-bold text-orange-500 my-2 bg-orange-100 py-1 rounded-lg border border-orange-200">${m.text}</div>`;
+                if (m.sender === "SISTEMA") return `<div class="text-center"><span class="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-[10px] font-black uppercase border border-orange-200">${m.text}</span></div>`;
                 const isMe = m.senderId === currentUser.uid;
                 return `
                     <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
-                        <span class="text-[10px] text-gray-400 font-bold px-1">${m.sender}</span>
-                        <div class="${isMe ? 'bg-blue-100 text-blue-900' : 'bg-gray-200 text-gray-800'} px-3 py-2 rounded-2xl text-xs font-semibold max-w-[80%] break-words">
+                        <span class="text-[9px] text-slate-400 font-black px-2 uppercase">${m.sender}</span>
+                        <div class="${isMe ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-700'} px-4 py-2 rounded-2xl font-bold shadow-sm max-w-[85%] break-words">
                             ${m.text}
                         </div>
-                    </div>
-                `;
+                    </div>`;
             }).join('');
             el.scrollTop = el.scrollHeight;
         }
 
-        // --- CANVAS ---
         function resizeCanvas() { 
-            const parent = canvas.parentElement;
-            canvas.width = parent.clientWidth; 
-            canvas.height = parent.clientHeight; 
+            const p = canvas.parentElement; 
+            canvas.width = p.clientWidth; 
+            canvas.height = p.clientHeight; 
         }
         window.addEventListener('resize', resizeCanvas);
 
         function getPos(e) {
             const r = canvas.getBoundingClientRect();
-            // Suporte para Mouse e Touch
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            
-            return { 
-                x: (clientX - r.left) / canvas.width, 
-                y: (clientY - r.top) / canvas.height 
-            };
+            const cx = e.touches ? e.touches[0].clientX : e.clientX;
+            const cy = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: (cx - r.left) / canvas.width, y: (cy - r.top) / canvas.height };
         }
 
         function setupCanvas() {
             const start = (e) => { 
                 if (!isMyTurn) return; 
-                e.preventDefault(); // Impede scroll
+                e.preventDefault(); 
                 isDrawing = true; 
                 lastPos = getPos(e); 
             };
-            
             const move = (e) => {
                 if (!isDrawing || !isMyTurn) return;
-                e.preventDefault(); 
+                e.preventDefault();
                 const p = getPos(e);
-                
-                // Desenhar Local
                 ctx.beginPath(); 
                 ctx.strokeStyle = currentColor; 
-                ctx.lineWidth = 4; 
+                ctx.lineWidth = 5; 
                 ctx.lineCap = 'round';
-                ctx.moveTo(lastPos.x * canvas.width, lastPos.y * canvas.height);
+                ctx.moveTo(lastPos.x * canvas.width, lastPos.y * canvas.height); 
                 ctx.lineTo(p.x * canvas.width, p.y * canvas.height); 
                 ctx.stroke();
-                
-                // Enviar
                 sendLine(lastPos, p); 
                 lastPos = p;
             };
-
-            const end = (e) => { 
-                if(isDrawing) e.preventDefault();
-                isDrawing = false; 
-            };
-
-            // Mouse
-            canvas.addEventListener('mousedown', start); 
+            const end = () => isDrawing = false;
+            
+            canvas.addEventListener('mousedown', start);
             canvas.addEventListener('mousemove', move);
             window.addEventListener('mouseup', end);
-            
-            // Touch (Mobile)
-            canvas.addEventListener('touchstart', start, {passive: false}); 
+            canvas.addEventListener('touchstart', start, {passive: false});
             canvas.addEventListener('touchmove', move, {passive: false});
             window.addEventListener('touchend', end);
         }
 
         async function sendLine(p1, p2) {
-            // Otimização: Arredondar números para economizar dados
-            const p1_opt = {x: parseFloat(p1.x.toFixed(4)), y: parseFloat(p1.y.toFixed(4))};
-            const p2_opt = {x: parseFloat(p2.x.toFixed(4)), y: parseFloat(p2.y.toFixed(4))};
-            
+            const p1o = {x: Number(p1.x.toFixed(4)), y: Number(p1.y.toFixed(4))};
+            const p2o = {x: Number(p2.x.toFixed(4)), y: Number(p2.y.toFixed(4))};
             await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/lines`), { 
                 senderId: currentUser.uid, 
-                points: [p1_opt, p2_opt], 
+                points: [p1o, p2o], 
                 color: currentColor, 
                 timestamp: serverTimestamp() 
             });
@@ -473,7 +448,7 @@
         function drawRemote(pts, color) {
             ctx.beginPath(); 
             ctx.strokeStyle = color; 
-            ctx.lineWidth = 4; 
+            ctx.lineWidth = 5; 
             ctx.lineCap = 'round';
             ctx.moveTo(pts[0].x * canvas.width, pts[0].y * canvas.height);
             ctx.lineTo(pts[1].x * canvas.width, pts[1].y * canvas.height); 
