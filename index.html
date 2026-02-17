@@ -3,81 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nebulo.io - Vercel Edition</title>
+    <title>Nebulo Mobile</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 </head>
 <body>
 
     <div id="uiLayer">
         
-        <div id="lofiPlayerWidget">
-            <div class="lofi-header">
-                <span>🎵 Lofi Radio (Ao Vivo)</span>
-                <button id="toggleRadioBtn">▶️</button>
+        <div class="top-panel">
+            <div id="radioWidget">
+                <span>🎵 Lofi Radio</span>
+                <button id="btnRadioToggle">▶️</button>
+                <div id="youtube-container"></div>
             </div>
-            <div id="youtube-frame-container" style="display:none;">
-                </div>
-            <input type="range" id="volumeSlider" min="0" max="100" value="30">
-        </div>
-
-        <div id="storeModal">
-            <div class="store-content">
-                <h2>🛒 LOJA PREMIUM</h2>
-                <div class="coin-display">💰 <span id="storeCoins">0</span></div>
-                
-                <div class="store-grid">
-                    <div class="store-item" onclick="game.buyItem('startMass', 100)">
-                        <span>💪 Começar Grande</span>
-                        <small>+50 Massa Inicial</small>
-                        <button class="btn-buy">100 💰</button>
-                    </div>
-                    <div class="store-item" onclick="game.buyItem('neonSkin', 500)">
-                        <span>🎨 Skin Neon</span>
-                        <small>Brilha no escuro</small>
-                        <button class="btn-buy">500 💰</button>
-                    </div>
-                </div>
-                <button class="btn btn-close" onclick="game.closeStore()">FECHAR</button>
+            
+            <div class="zoom-control">
+                <span>🔍 Zoom</span>
+                <input type="range" id="zoomSlider" min="10" max="200" value="100">
             </div>
         </div>
 
         <div id="mainMenu">
-            <h1>Nebulo<span style="color:#00d2ff">.io</span></h1>
+            <h1>NEBULO<span style="color:#00d2ff">.IO</span></h1>
             
-            <div id="userProfile" style="display:none; margin-bottom: 15px;">
-                <img id="userAvatar" src="" alt="Avatar">
-                <span id="userNameDisplay">Jogador</span>
-                <div style="color: #ffd700; font-size: 14px;">💰 <span id="menuCoins">0</span></div>
+            <div id="profileSection" style="display:none;">
+                <img id="userAvatar" src="" alt="">
+                <span id="userName">Jogador</span>
+                <div class="coins">💰 <span id="coinDisplay">0</span></div>
             </div>
 
-            <div id="loginArea">
-                <input type="text" id="nicknameInput" placeholder="Nick Temporário" maxlength="12">
-                <button class="btn btn-google" id="btnLoginGoogle">
-                    <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.715H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.159 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
-                    Entrar com Google
-                </button>
+            <div id="loginSection">
+                <input type="text" id="nickInput" placeholder="Seu Nick" maxlength="10">
+                <button class="btn google-btn" id="btnLogin">G - Entrar com Google</button>
             </div>
-            
-            <button class="btn btn-play" id="btnPlay">JOGAR</button>
-            <button class="btn btn-store" onclick="game.openStore()">LOJA</button>
-            
-            <div class="controls-hint">
-                Mouse Scroll: Zoom | Espaço: Split | W: Ejetar
+
+            <div class="menu-grid">
+                <button class="btn play-btn" id="btnPlay">JOGAR AGORA</button>
+                <button class="btn shop-btn" id="btnShop">🛒 LOJA</button>
             </div>
         </div>
 
-        <div id="hud">
+        <div id="shopModal" class="modal">
+            <div class="modal-content">
+                <h2>LOJA DE ITENS</h2>
+                <p>Moedas: <span id="shopCoins">0</span></p>
+                <div class="item" onclick="window.game.buyItem('startMass', 100)">
+                    <span>💪 Começar Grande (+Mass)</span>
+                    <button>100 💰</button>
+                </div>
+                <div class="item" onclick="window.game.buyItem('neonSkin', 500)">
+                    <span>🎨 Skin Neon (Brilha)</span>
+                    <button>500 💰</button>
+                </div>
+                <button class="btn close-btn" onclick="document.getElementById('shopModal').style.display='none'">FECHAR</button>
+            </div>
+        </div>
+
+        <div id="gameHUD" style="display:none;">
             <div id="leaderboard">
-                <div class="lb-header">TOP JOGADORES</div>
-                <div id="lb-content"></div>
+                <div class="lb-title">TOP JOGADORES</div>
+                <div id="lb-list"></div>
             </div>
-            <div id="joystickZone"><div id="joystickKnob"></div></div>
-            <div class="action-container">
-                <div class="action-btn eject" id="btnEject">W</div>
-                <div class="action-btn split" id="btnSplit">⚡</div>
+            
+            <div id="score">Massa: <span id="massVal">0</span></div>
+
+            <div id="joystickZone">
+                <div id="joystickStick"></div>
             </div>
-            <div id="stats">Massa: <span id="massDisplay">0</span></div>
+
+            <div class="action-buttons">
+                <button id="btnEject" class="action-btn eject-btn">W</button>
+                <button id="btnSplit" class="action-btn split-btn">⚡</button>
+            </div>
         </div>
     </div>
 
@@ -85,17 +82,10 @@
 
     <script type="module">
         import { Game } from './js/game.js';
-        import { AuthManager } from './js/firebase-config.js';
-        import { AudioManager } from './js/audio.js';
-
-        // Inicializa os sistemas
-        window.audioManager = new AudioManager();
-        window.authManager = new AuthManager();
-        window.game = new Game();
-
-        // Expõe funções globais para o HTML
-        window.openStore = () => window.game.openStore();
-        // A lógica de inicialização agora acontece dentro das classes
+        // Inicializa o jogo quando a página carrega
+        window.onload = () => {
+            window.game = new Game();
+        };
     </script>
 </body>
 </html>
