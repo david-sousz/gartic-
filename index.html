@@ -3,98 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nebulo.io - Ultimate</title>
+    <title>Nebulo.io - Perfect Edition</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
     <div class="bg-animation"></div>
+    <div class="particles" id="particles"></div>
 
     <div id="uiLayer">
         
         <div class="hud-panel top-left">
-            <div class="widget">
-                <i class="fa-solid fa-music"></i>
-                <div id="youtube-container"></div>
-                <button id="btnRadioToggle">OFF</button>
+            <div class="widget radio-widget">
+                <i class="fa-solid fa-headphones-simple"></i>
+                <div class="radio-controls">
+                    <span>Lofi Girl LIVE</span>
+                    <button id="btnRadioToggle" class="btn-mini">PLAY ▶</button>
+                </div>
+                <div id="youtube-wrapper">
+                    <div id="player"></div>
+                </div>
             </div>
+            
             <div class="widget zoom-widget">
-                <i class="fa-solid fa-magnifying-glass"></i>
+                <i class="fa-solid fa-magnifying-glass-plus"></i>
                 <input type="range" id="zoomSlider" min="10" max="200" value="100">
             </div>
         </div>
 
         <div class="hud-panel top-right">
             <div id="leaderboard">
-                <h3>🏆 TOP 5</h3>
+                <h3><i class="fa-solid fa-trophy"></i> TOP 5</h3>
                 <div id="lb-list"></div>
             </div>
         </div>
 
         <div id="mainMenu">
             <div class="menu-header">
-                <div class="logo-glitch" data-text="NEBULO">NEBULO</div>
-                <span class="version">v3.0</span>
+                <h1 class="logo-glitch" data-text="NEBULO">NEBULO</h1>
+                <span class="version">v4.0 Perfect</span>
             </div>
             
             <div id="profileCard" style="display:none;">
-                <div class="avatar-container">
-                    <img id="userAvatar" src="" alt="">
+                <div class="avatar-wrapper">
+                    <img id="userAvatar" src="" alt="Avatar">
                     <div class="level-badge" id="levelBadge">1</div>
                 </div>
-                <div class="profile-info">
+                <div class="profile-details">
                     <span id="userName">Carregando...</span>
-                    <div class="xp-container">
-                        <div class="xp-bar-bg"><div class="xp-bar-fill" id="menuXpBar" style="width: 0%"></div></div>
-                        <span class="xp-text" id="menuXpText">0 / 100 XP</span>
+                    <div class="xp-track">
+                        <div class="xp-fill" id="menuXpBar" style="width: 0%"></div>
                     </div>
-                    <div class="coin-pill">💰 <span id="coinDisplay">0</span></div>
+                    <div class="stats-row">
+                        <span class="coin-pill"><i class="fa-solid fa-coins"></i> <span id="coinDisplay">0</span></span>
+                        <span class="xp-text" id="menuXpText">0 XP</span>
+                    </div>
                 </div>
+                <button id="btnLogout" class="btn-logout" title="Sair"><i class="fa-solid fa-power-off"></i></button>
             </div>
 
             <div id="loginSection">
-                <input type="text" id="nickInput" placeholder="Digite seu Nick..." maxlength="12">
-                <button class="btn btn-google" id="btnLogin"><i class="fa-brands fa-google"></i> Entrar com Google</button>
+                <input type="text" id="nickInput" placeholder="Seu Nick..." maxlength="14">
+                <button class="btn btn-google" id="btnLogin">
+                    <i class="fa-brands fa-google"></i> Entrar com Google para Salvar
+                </button>
             </div>
 
             <div class="menu-actions">
-                <button class="btn btn-play" id="btnPlay">JOGAR <i class="fa-solid fa-play"></i></button>
-                <button class="btn btn-shop" id="btnShop">LOJA <i class="fa-solid fa-cart-shopping"></i></button>
+                <button class="btn btn-play" id="btnPlay">JOGAR</button>
+                <button class="btn btn-shop" id="btnShop">LOJA</button>
             </div>
         </div>
 
         <div id="shopModal" class="modal">
             <div class="modal-content">
-                <h2>🛒 LOJA VIP</h2>
+                <h2><i class="fa-solid fa-shop"></i> LOJA</h2>
                 <div class="shop-grid">
                     <div class="shop-item" onclick="window.game.buyItem('startMass', 100)">
                         <div class="icon">💪</div>
-                        <span>Start Mass</span>
-                        <button>100 💰</button>
+                        <div class="info">
+                            <span>Massa Inicial</span>
+                            <small>Comece maior</small>
+                        </div>
+                        <button class="buy-btn">100 💰</button>
                     </div>
                     <div class="shop-item" onclick="window.game.buyItem('neonSkin', 500)">
-                        <div class="icon">🎨</div>
-                        <span>Neon Skin</span>
-                        <button>500 💰</button>
+                        <div class="icon">🌟</div>
+                        <div class="info">
+                            <span>Skin Neon</span>
+                            <small>Brilho Intenso</small>
+                        </div>
+                        <button class="buy-btn">500 💰</button>
                     </div>
                 </div>
-                <button class="btn btn-close" onclick="document.getElementById('shopModal').style.display='none'">FECHAR</button>
+                <button class="btn-close" onclick="document.getElementById('shopModal').style.display='none'">FECHAR</button>
             </div>
         </div>
 
         <div id="gameHUD" style="display:none;">
-            <div class="bottom-stats">
-                <div class="stat-box">
-                    <span>Massa:</span> <b id="massVal">0</b>
-                </div>
+            <div class="bottom-center">
+                <div class="mass-counter">Massa: <span id="massVal">0</span></div>
                 <div class="xp-hud">
-                    <div class="xp-bar-bg"><div class="xp-bar-fill" id="gameXpBar" style="width: 0%"></div></div>
-                    <span class="level-hud">Lvl <span id="gameLevelVal">1</span></span>
+                    <div class="xp-fill" id="gameXpBar" style="width: 0%"></div>
+                    <span class="lvl-txt">Lvl <span id="gameLevelVal">1</span></span>
                 </div>
             </div>
 
             <div id="joystickZone"><div id="joystickStick"></div></div>
+            
             <div class="action-buttons">
                 <button id="btnEject" class="action-btn eject-btn">W</button>
                 <button id="btnSplit" class="action-btn split-btn">⚡</button>
@@ -104,9 +121,14 @@
 
     <canvas id="gameCanvas"></canvas>
 
+    <script src="https://www.youtube.com/iframe_api"></script>
+
     <script type="module">
         import { Game } from './js/game.js';
-        window.onload = () => window.game = new Game();
+        // Inicia apenas quando a página carregar tudo
+        window.onload = () => {
+            window.game = new Game();
+        };
     </script>
 </body>
 </html>
