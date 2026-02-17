@@ -3,717 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nebulo.io - Ultimate Edition V2</title>
-    <style>
-        /* --- CSS GERAL --- */
-        body {
-            margin: 0; padding: 0; overflow: hidden;
-            background-color: #050510;
-            font-family: 'Segoe UI', sans-serif;
-            touch-action: none; user-select: none;
-            -webkit-user-select: none;
-        }
-        canvas { display: block; }
-
-        /* --- UI LAYER --- */
-        #uiLayer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; display: flex; flex-direction: column; z-index: 10;
-        }
-
-        /* PAINEL PRINCIPAL (LOGIN/LOJA) */
-        #mainMenu {
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(20, 20, 35, 0.95);
-            padding: 25px; border-radius: 15px;
-            text-align: center; pointer-events: auto;
-            border: 2px solid #00d2ff;
-            box-shadow: 0 0 50px rgba(0, 210, 255, 0.2);
-            width: 90%; max-width: 400px;
-            display: flex; flex-direction: column; gap: 10px;
-        }
-
-        h1 { margin: 0; color: white; text-transform: uppercase; text-shadow: 0 0 10px #00d2ff; font-size: 24px; }
-        
-        .input-group { position: relative; width: 100%; }
-        input {
-            width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444;
-            background: #111; color: white; font-size: 16px; box-sizing: border-box;
-            outline: none; text-align: center;
-        }
-        
-        .btn {
-            padding: 12px; border-radius: 8px; border: none; font-weight: bold;
-            cursor: pointer; color: white; font-size: 16px; transition: 0.2s;
-            text-transform: uppercase;
-        }
-        .btn-play { background: linear-gradient(90deg, #00d2ff, #0051ff); box-shadow: 0 4px 15px rgba(0, 81, 255, 0.4); }
-        .btn-play:active { transform: scale(0.96); }
-        
-        .btn-store { background: #ff9900; box-shadow: 0 4px 15px rgba(255, 153, 0, 0.4); }
-        
-        /* STORE MODAL */
-        #storeModal {
-            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 200; pointer-events: auto;
-            justify-content: center; align-items: center;
-        }
-        .store-content {
-            background: #1a1a2e; padding: 20px; border-radius: 10px; border: 1px solid #ff9900;
-            width: 300px; text-align: center; color: white;
-        }
-        .store-item {
-            background: #2a2a40; margin: 10px 0; padding: 10px; border-radius: 5px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .coin-display { color: #ffd700; font-weight: bold; margin-bottom: 10px; font-size: 18px; }
-
-        /* HUD JOGO */
-        #hud { width: 100%; height: 100%; position: relative; display: none; }
-
-        /* JOYSTICK */
-        #joystickZone {
-            position: absolute; bottom: 50px; left: 50px;
-            width: 120px; height: 120px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%; pointer-events: auto;
-            display: none; touch-action: none;
-        }
-        #joystickKnob {
-            position: absolute; top: 50%; left: 50%;
-            width: 50px; height: 50px; background: rgba(0, 210, 255, 0.8);
-            border-radius: 50%; transform: translate(-50%, -50%);
-            pointer-events: none;
-        }
-
-        /* ACTION BUTTONS */
-        .action-container {
-            position: absolute; bottom: 40px; right: 40px;
-            display: flex; gap: 20px; pointer-events: auto;
-        }
-        .action-btn {
-            width: 70px; height: 70px; border-radius: 50%;
-            border: 3px solid rgba(255,255,255,0.3);
-            background: rgba(0,0,0,0.6); color: white;
-            font-size: 28px; display: flex; justify-content: center; align-items: center;
-            cursor: pointer; backdrop-filter: blur(4px);
-        }
-        .split { border-color: #00d2ff; color: #00d2ff; }
-        .eject { border-color: #ff0055; color: #ff0055; }
-
-        /* UTILS */
-        #stats { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); color: white; text-shadow: 1px 1px 2px black; font-size: 14px; }
-        #leaderboard { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; color: white; width: 160px; font-size: 12px; }
-        #modMenu { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: purple; padding: 5px 15px; border-radius: 20px; display: none; gap: 10px; pointer-events: auto; }
-        .mod-btn { font-size: 10px; cursor: pointer; background: white; border: none; border-radius: 4px; padding: 2px 5px; }
-
-        @media (max-width: 900px) and (orientation: landscape) {
-            #joystickZone { bottom: 20px; left: 20px; width: 90px; height: 90px; }
-            #joystickKnob { width: 40px; height: 40px; }
-            .action-container { bottom: 20px; right: 20px; }
-            .action-btn { width: 55px; height: 55px; }
-        }
-    </style>
+    <title>Nebulo.io - Vercel Edition</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 </head>
 <body>
 
     <div id="uiLayer">
-        <!-- STORE MODAL -->
+        
+        <div id="lofiPlayerWidget">
+            <div class="lofi-header">
+                <span>🎵 Lofi Radio (Ao Vivo)</span>
+                <button id="toggleRadioBtn">▶️</button>
+            </div>
+            <div id="youtube-frame-container" style="display:none;">
+                </div>
+            <input type="range" id="volumeSlider" min="0" max="100" value="30">
+        </div>
+
         <div id="storeModal">
             <div class="store-content">
-                <h2>LOJA DE ITENS</h2>
+                <h2>🛒 LOJA PREMIUM</h2>
                 <div class="coin-display">💰 <span id="storeCoins">0</span></div>
                 
-                <div class="store-item">
-                    <span>Começar Grande (+50 Mass)</span>
-                    <button class="btn" style="background:#444; font-size:12px;" onclick="buyItem('startMass', 100)">100 💰</button>
+                <div class="store-grid">
+                    <div class="store-item" onclick="game.buyItem('startMass', 100)">
+                        <span>💪 Começar Grande</span>
+                        <small>+50 Massa Inicial</small>
+                        <button class="btn-buy">100 💰</button>
+                    </div>
+                    <div class="store-item" onclick="game.buyItem('neonSkin', 500)">
+                        <span>🎨 Skin Neon</span>
+                        <small>Brilha no escuro</small>
+                        <button class="btn-buy">500 💰</button>
+                    </div>
                 </div>
-                <div class="store-item">
-                    <span>Skin Neon Premium</span>
-                    <button class="btn" style="background:#444; font-size:12px;" onclick="buyItem('neonSkin', 500)">500 💰</button>
-                </div>
-                
-                <button class="btn" style="background:#ff5555; width:100%; margin-top:10px;" onclick="closeStore()">FECHAR</button>
+                <button class="btn btn-close" onclick="game.closeStore()">FECHAR</button>
             </div>
         </div>
 
-        <!-- MAIN MENU -->
         <div id="mainMenu">
-            <h1>Nebulo.io <span style="font-size:12px; color:#ff9900">V2</span></h1>
+            <h1>Nebulo<span style="color:#00d2ff">.io</span></h1>
             
-            <div class="coin-display" style="font-size:14px;">Minhas Moedas: <span id="menuCoins">0</span></div>
+            <div id="userProfile" style="display:none; margin-bottom: 15px;">
+                <img id="userAvatar" src="" alt="Avatar">
+                <span id="userNameDisplay">Jogador</span>
+                <div style="color: #ffd700; font-size: 14px;">💰 <span id="menuCoins">0</span></div>
+            </div>
+
+            <div id="loginArea">
+                <input type="text" id="nicknameInput" placeholder="Nick Temporário" maxlength="12">
+                <button class="btn btn-google" id="btnLoginGoogle">
+                    <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.715H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.159 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+                    Entrar com Google
+                </button>
+            </div>
             
-            <input type="text" id="nickname" placeholder="Digite seu Nick" maxlength="12">
+            <button class="btn btn-play" id="btnPlay">JOGAR</button>
+            <button class="btn btn-store" onclick="game.openStore()">LOJA</button>
             
-            <button class="btn btn-play" id="btnPlay">JOGAR AGORA</button>
-            <button class="btn btn-store" onclick="openStore()">LOJA</button>
-            
-            <div style="font-size: 10px; color: #888; margin-top: 5px;">
-                Dica: Junte 100 moedas para começar maior.<br>
-                Admin? Digite "david" para menu secreto.
+            <div class="controls-hint">
+                Mouse Scroll: Zoom | Espaço: Split | W: Ejetar
             </div>
         </div>
 
-        <!-- HUD -->
         <div id="hud">
-            <div id="modMenu">
-                <b style="color:white; margin-right:5px;">ADMIN:</b>
-                <button class="mod-btn" onclick="cheat('mass')">+MASS</button>
-                <button class="mod-btn" onclick="cheat('speed')">SPEED</button>
-                <button class="mod-btn" onclick="cheat('reset')">RESET</button>
-            </div>
-
             <div id="leaderboard">
-                <div style="text-align:center; border-bottom:1px solid #555; margin-bottom:5px;">TOP PLAYERS</div>
+                <div class="lb-header">TOP JOGADORES</div>
                 <div id="lb-content"></div>
             </div>
-
             <div id="joystickZone"><div id="joystickKnob"></div></div>
-            
             <div class="action-container">
                 <div class="action-btn eject" id="btnEject">W</div>
                 <div class="action-btn split" id="btnSplit">⚡</div>
             </div>
-
             <div id="stats">Massa: <span id="massDisplay">0</span></div>
         </div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
-    <!-- FIREBASE SDK -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, onSnapshot, deleteDoc, serverTimestamp, query } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { Game } from './js/game.js';
+        import { AuthManager } from './js/firebase-config.js';
+        import { AudioManager } from './js/audio.js';
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCXDfIO53oqtnRgs9jfApf-rZklp4SRbV8",
-            authDomain: "gartic-51f3d.firebaseapp.com",
-            projectId: "gartic-51f3d",
-            storageBucket: "gartic-51f3d.firebasestorage.app",
-            messagingSenderId: "844900784609",
-            appId: "1:844900784609:web:5fc7dbdf7e83035dee1aa0"
-        };
+        // Inicializa os sistemas
+        window.audioManager = new AudioManager();
+        window.authManager = new AuthManager();
+        window.game = new Game();
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        let myUserId = null;
-
-        signInAnonymously(auth).then(c => myUserId = c.user.uid);
-
-        // --- GAME ENGINE ---
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-
-        // Configurações Globais
-        const MAP_SIZE = 8000; // Mapa Gigante
-        const FOOD_COUNT = 1000;
-        const BOT_COUNT = 20;
-        const MERGE_DELAY = 15000; // 15s para juntar
-        const DECAY_THRESHOLD = 2000; // Começa a perder massa
-
-        // Variaveis de Estado
-        let gameRunning = false;
-        let isAdmin = false;
-        let myName = "Player";
-        let cam = { x: 0, y: 0, zoom: 1 };
-        
-        // Dados do Jogador (Salvos)
-        let userStats = {
-            coins: parseInt(localStorage.getItem('nebulo_coins') || 0),
-            items: JSON.parse(localStorage.getItem('nebulo_items') || '[]')
-        };
-
-        // Entidades
-        let myCells = [];
-        let otherPlayers = {};
-        let foods = [];
-        let viruses = [];
-        let bots = [];
-        let ejected = [];
-
-        // Input
-        let joystickVector = { x: 0, y: 0 };
-        let activeJoystick = false;
-
-        // --- INICIALIZAÇÃO E UI ---
-        function updateCoinsUI() {
-            document.getElementById('menuCoins').innerText = userStats.coins;
-            document.getElementById('storeCoins').innerText = userStats.coins;
-        }
-        updateCoinsUI();
-
-        window.openStore = () => document.getElementById('storeModal').style.display = 'flex';
-        window.closeStore = () => document.getElementById('storeModal').style.display = 'none';
-        
-        window.buyItem = (item, price) => {
-            if(userStats.coins >= price) {
-                userStats.coins -= price;
-                userStats.items.push(item);
-                localStorage.setItem('nebulo_coins', userStats.coins);
-                localStorage.setItem('nebulo_items', JSON.stringify(userStats.items));
-                updateCoinsUI();
-                alert("Comprado com sucesso!");
-            } else {
-                alert("Moedas insuficientes!");
-            }
-        };
-
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            if('ontouchstart' in window) document.getElementById('joystickZone').style.display = 'block';
-        }
-        window.addEventListener('resize', resize);
-        resize();
-
-        // --- JOYSTICK LOGIC ---
-        const joyZone = document.getElementById('joystickZone');
-        const joyKnob = document.getElementById('joystickKnob');
-        let joyCenter = {x:0, y:0};
-
-        joyZone.addEventListener('touchstart', e => {
-            e.preventDefault(); activeJoystick = true;
-            const r = joyZone.getBoundingClientRect();
-            joyCenter = {x: r.left+r.width/2, y: r.top+r.height/2};
-            moveJoy(e.touches[0]);
-        }, {passive:false});
-        
-        joyZone.addEventListener('touchmove', e => { e.preventDefault(); if(activeJoystick) moveJoy(e.touches[0]); }, {passive:false});
-        
-        const resetJoy = e => { e.preventDefault(); activeJoystick = false; joystickVector = {x:0,y:0}; joyKnob.style.transform='translate(-50%,-50%)'; };
-        joyZone.addEventListener('touchend', resetJoy);
-
-        function moveJoy(touch) {
-            const max = joyZone.clientWidth/2;
-            let dx = touch.clientX - joyCenter.x;
-            let dy = touch.clientY - joyCenter.y;
-            const dist = Math.sqrt(dx*dx+dy*dy);
-            if(dist>max) { dx = (dx/dist)*max; dy = (dy/dist)*max; }
-            joyKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-            joystickVector = {x: dx/max, y: dy/max};
-        }
-
-        // --- CONTROLS PC ---
-        window.addEventListener('keydown', e => {
-            if(e.code==='Space') split();
-            if(e.code==='KeyW') eject();
-        });
-        window.addEventListener('mousemove', e => {
-            if(!activeJoystick) {
-                const cx = window.innerWidth/2, cy = window.innerHeight/2;
-                const dx = e.clientX-cx, dy = e.clientY-cy;
-                const max = Math.min(cx,cy);
-                joystickVector = {x: dx/max, y: dy/max};
-            }
-        });
-
-        // --- GAME START ---
-        document.getElementById('btnPlay').onclick = () => {
-            const nick = document.getElementById('nickname').value.trim();
-            myName = nick || "Player";
-
-            // ADMIN CHECK (Estrito)
-            if(myName.toLowerCase() === "david") {
-                isAdmin = true;
-                document.getElementById('modMenu').style.display = 'flex';
-                myName = "👑 ADMIN";
-            } else {
-                isAdmin = false;
-                document.getElementById('modMenu').style.display = 'none';
-            }
-
-            document.getElementById('mainMenu').style.display = 'none';
-            document.getElementById('hud').style.display = 'block';
-
-            startGame();
-        };
-
-        function startGame() {
-            gameRunning = true;
-            
-            // World Gen
-            foods = []; for(let i=0; i<FOOD_COUNT; i++) spawnFood();
-            viruses = []; for(let i=0; i<40; i++) viruses.push({x:rand(MAP_SIZE), y:rand(MAP_SIZE), r:50});
-            bots = []; for(let i=0; i<BOT_COUNT; i++) spawnBot();
-            
-            // Player Spawn (Bonus Store Item)
-            let initialMass = 30;
-            if(userStats.items.includes('startMass')) initialMass = 50; // Bonus visual
-
-            myCells = [{
-                x: rand(MAP_SIZE), y: rand(MAP_SIZE),
-                r: initialMass,
-                c: userStats.items.includes('neonSkin') ? '#00ff00' : getRandomColor(),
-                vx: 0, vy: 0,
-                birth: Date.now(),
-                id: Math.random() // Unique ID para cada celula
-            }];
-
-            loop();
-        }
-
-        // --- ACTIONS ---
-        document.getElementById('btnSplit').addEventListener('touchstart', (e)=>{e.preventDefault(); split()});
-        document.getElementById('btnEject').addEventListener('touchstart', (e)=>{e.preventDefault(); eject()});
-
-        function split() {
-            if(myCells.length >= 16) return;
-            let toAdd = [];
-            myCells.forEach(cell => {
-                if(cell.r < 35) return; // Mínimo para split
-                
-                // Reduz pela metade a area
-                let newR = cell.r / 1.414; 
-                cell.r = newR;
-                
-                // Calcula direção do tiro
-                let angle = Math.atan2(joystickVector.y, joystickVector.x);
-                // Se joystick parado, usa direção aleatoria ou frente
-                if(joystickVector.x === 0 && joystickVector.y === 0) angle = 0;
-
-                toAdd.push({
-                    x: cell.x + Math.cos(angle)*cell.r,
-                    y: cell.y + Math.sin(angle)*cell.r,
-                    r: newR,
-                    c: cell.c,
-                    vx: Math.cos(angle) * 25, // Força do Split
-                    vy: Math.sin(angle) * 25,
-                    birth: Date.now(),
-                    id: Math.random()
-                });
-            });
-            myCells = myCells.concat(toAdd);
-        }
-
-        function eject() {
-            myCells.forEach(cell => {
-                if(cell.r < 30) return;
-                let angle = Math.atan2(joystickVector.y, joystickVector.x);
-                // Perde massa
-                let massLoss = 15;
-                let area = Math.PI*cell.r*cell.r - 200; // perda fixa
-                cell.r = Math.sqrt(area/Math.PI);
-
-                ejected.push({
-                    x: cell.x + Math.cos(angle)*cell.r,
-                    y: cell.y + Math.sin(angle)*cell.r,
-                    r: 8,
-                    c: cell.c,
-                    vx: Math.cos(angle)*15,
-                    vy: Math.sin(angle)*15
-                });
-            });
-        }
-
-        // --- PHYSICS LOOP ---
-        function loop() {
-            if(!gameRunning) return;
-            update();
-            draw();
-            requestAnimationFrame(loop);
-        }
-
-        let lastDecay = 0;
-
-        function update() {
-            const now = Date.now();
-            let totalMass = 0;
-
-            // 1. Minhas Células
-            for(let i=0; i<myCells.length; i++) {
-                let cell = myCells[i];
-
-                // Movimento (Física de Nebulous: Lento se grande)
-                let baseSpeed = 8;
-                let speed = baseSpeed * Math.pow(cell.r, -0.44) * 5; 
-                if(isAdmin) speed *= 1.5;
-
-                // Inercia do Split
-                if(Math.abs(cell.vx) > 0.1 || Math.abs(cell.vy) > 0.1) {
-                    cell.x += cell.vx;
-                    cell.y += cell.vy;
-                    cell.vx *= 0.85; // Desacelera rápido
-                    cell.vy *= 0.85;
-                } else {
-                    cell.x += joystickVector.x * speed;
-                    cell.y += joystickVector.y * speed;
-                }
-
-                // Limites
-                cell.x = Math.max(cell.r, Math.min(MAP_SIZE-cell.r, cell.x));
-                cell.y = Math.max(cell.r, Math.min(MAP_SIZE-cell.r, cell.y));
-
-                totalMass += Math.floor(cell.r);
-
-                // Colisão entre minhas células (Merge Logic)
-                for(let j=i+1; j<myCells.length; j++) {
-                    let other = myCells[j];
-                    let d = Math.hypot(cell.x - other.x, cell.y - other.y);
-                    let minDist = cell.r + other.r;
-
-                    // Verifica se pode juntar
-                    let canMerge = (now - cell.birth > MERGE_DELAY) && (now - other.birth > MERGE_DELAY);
-
-                    if(d < minDist) {
-                        if(canMerge) {
-                            // MAGNÉTICO: Puxa suavemente para o centro
-                            let lerpFactor = 0.05;
-                            cell.x += (other.x - cell.x) * lerpFactor;
-                            cell.y += (other.y - cell.y) * lerpFactor;
-                            
-                            // Se estiver MUITO perto, funde
-                            if(d < (cell.r + other.r) * 0.3) {
-                                let newArea = Math.PI*cell.r*cell.r + Math.PI*other.r*other.r;
-                                cell.r = Math.sqrt(newArea/Math.PI);
-                                myCells.splice(j, 1);
-                                j--;
-                                continue;
-                            }
-                        } else {
-                            // COLISÃO RÍGIDA (Não deixa sobrepor)
-                            let overlap = minDist - d;
-                            let ang = Math.atan2(cell.y - other.y, cell.x - other.x);
-                            let force = 0.5; // Rigidez
-                            cell.x += Math.cos(ang) * overlap * force;
-                            cell.y += Math.sin(ang) * overlap * force;
-                            other.x -= Math.cos(ang) * overlap * force;
-                            other.y -= Math.sin(ang) * overlap * force;
-                        }
-                    }
-                }
-
-                // Comer Comida
-                for(let f=foods.length-1; f>=0; f--) {
-                    if(dist(cell, foods[f]) < cell.r) {
-                        let gain = 3; // area gain
-                        cell.r = Math.sqrt((Math.PI*cell.r*cell.r + gain)/Math.PI);
-                        foods.splice(f, 1);
-                        spawnFood();
-                        // Ganha moeda raramente
-                        if(Math.random() < 0.05) {
-                            userStats.coins++;
-                            localStorage.setItem('nebulo_coins', userStats.coins);
-                        }
-                    }
-                }
-
-                // Comer Bots (Colisão Real)
-                for(let b=bots.length-1; b>=0; b--) {
-                    let bot = bots[b];
-                    let d = dist(cell, bot);
-                    
-                    if(d < cell.r && cell.r > bot.r * 1.2) {
-                        // Comi o bot
-                        let gain = Math.PI*bot.r*bot.r;
-                        cell.r = Math.sqrt((Math.PI*cell.r*cell.r + gain)/Math.PI);
-                        bots.splice(b, 1);
-                        spawnBot();
-                        userStats.coins += 5; // Recompensa
-                    } else if (d < bot.r && bot.r > cell.r * 1.2) {
-                        // Fui comido pelo bot (GAME OVER PARCIAL)
-                        myCells.splice(i, 1);
-                        i--;
-                        checkGameOver();
-                        break;
-                    }
-                }
-
-                // Virus
-                for(let v=0; v<viruses.length; v++) {
-                    if(dist(cell, viruses[v]) < cell.r) {
-                        if(cell.r > viruses[v].r * 1.1) {
-                            // Explode
-                            myCells.splice(i, 1);
-                            let pieces = 8;
-                            let newR = Math.sqrt((Math.PI*cell.r*cell.r/pieces)/Math.PI);
-                            for(let k=0; k<pieces; k++) {
-                                if(myCells.length >= 16) break;
-                                let a = (Math.PI*2/pieces)*k;
-                                myCells.push({
-                                    x: cell.x, y: cell.y, r: newR, c: cell.c,
-                                    vx: Math.cos(a)*20, vy: Math.sin(a)*20,
-                                    birth: Date.now(), id: Math.random()
-                                });
-                            }
-                            viruses.splice(v, 1);
-                            viruses.push({x:rand(MAP_SIZE), y:rand(MAP_SIZE), r:50}); // Respawn virus
-                            break;
-                        }
-                    }
-                }
-            } // Fim loop myCells
-
-            // Decaimento de Massa
-            if(totalMass > DECAY_THRESHOLD && now - lastDecay > 1000) {
-                lastDecay = now;
-                myCells.forEach(c => {
-                    if(c.r > 30) c.r *= 0.99; // Perde 1% por segundo
-                });
-            }
-
-            // Update Bots (IA Melhorada)
-            bots.forEach(bot => {
-                let targetX = bot.target.x, targetY = bot.target.y;
-                let threat = null;
-
-                // Foge do player se player for maior
-                myCells.forEach(c => {
-                    let d = dist(bot, c);
-                    if(d < 400 && c.r > bot.r * 1.2) threat = c;
-                });
-
-                if(threat) {
-                    let ang = Math.atan2(bot.y - threat.y, bot.x - threat.x);
-                    targetX = bot.x + Math.cos(ang) * 500;
-                    targetY = bot.y + Math.sin(ang) * 500;
-                } else if(dist(bot, bot.target) < 50) {
-                    bot.target = {x: rand(MAP_SIZE), y: rand(MAP_SIZE)};
-                }
-
-                let ang = Math.atan2(targetY - bot.y, targetX - bot.x);
-                bot.x += Math.cos(ang) * 3;
-                bot.y += Math.sin(ang) * 3;
-                bot.x = Math.max(0, Math.min(MAP_SIZE, bot.x));
-                bot.y = Math.max(0, Math.min(MAP_SIZE, bot.y));
-            });
-
-            // Camera update
-            if(myCells.length > 0) {
-                let cx=0, cy=0;
-                myCells.forEach(c => { cx+=c.x; cy+=c.y; });
-                cx /= myCells.length; cy /= myCells.length;
-                
-                // Zoom suave
-                let targetZoom = 1 / Math.pow(totalMass/40, 0.4);
-                targetZoom = Math.max(0.05, Math.min(1.2, targetZoom));
-                cam.zoom += (targetZoom - cam.zoom) * 0.05;
-                cam.x = cx - (canvas.width/2)/cam.zoom;
-                cam.y = cy - (canvas.height/2)/cam.zoom;
-                
-                document.getElementById('massDisplay').innerText = totalMass;
-            }
-
-            // Sync Rede (Simplificado)
-            if(now % 200 < 20 && myUserId) {
-                 const simple = myCells.map(c => ({x:Math.round(c.x), y:Math.round(c.y), r:Math.round(c.r), c:c.c}));
-                 setDoc(doc(db, "players", myUserId), {
-                     n: myName, cells: simple, mass: totalMass, t: serverTimestamp()
-                 }, {merge:true}).catch(()=>{});
-            }
-        }
-
-        function checkGameOver() {
-            if(myCells.length === 0) {
-                gameRunning = false;
-                alert("VOCÊ FOI ELIMINADO! :(");
-                document.getElementById('hud').style.display = 'none';
-                document.getElementById('mainMenu').style.display = 'flex';
-                updateCoinsUI();
-                if(myUserId) deleteDoc(doc(db, "players", myUserId));
-            }
-        }
-
-        function draw() {
-            ctx.fillStyle = '#0b0b14';
-            ctx.fillRect(0,0,canvas.width, canvas.height);
-            
-            ctx.save();
-            ctx.scale(cam.zoom, cam.zoom);
-            ctx.translate(-cam.x, -cam.y);
-
-            // Grid
-            ctx.lineWidth = 2; ctx.strokeStyle = '#1a1a2e';
-            let gs = 200;
-            let sx = Math.floor(cam.x/gs)*gs, sy = Math.floor(cam.y/gs)*gs;
-            let ex = sx + (canvas.width/cam.zoom)+gs, ey = sy + (canvas.height/cam.zoom)+gs;
-            ctx.beginPath();
-            for(let x=sx; x<ex; x+=gs) { ctx.moveTo(x,0); ctx.lineTo(x, MAP_SIZE); }
-            for(let y=sy; y<ey; y+=gs) { ctx.moveTo(0,y); ctx.lineTo(MAP_SIZE, y); }
-            ctx.stroke();
-
-            // Bordas
-            ctx.strokeStyle = '#333'; ctx.lineWidth = 50; ctx.strokeRect(0,0,MAP_SIZE,MAP_SIZE);
-
-            // Itens
-            foods.forEach(f => {
-                if(f.x<sx || f.x>ex) return; // Culling
-                ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,Math.PI*2); ctx.fillStyle=f.c; ctx.fill();
-            });
-
-            ejected.forEach(e => {
-                e.x+=e.vx; e.y+=e.vy; e.vx*=0.9; e.vy*=0.9;
-                ctx.beginPath(); ctx.arc(e.x,e.y,e.r,0,Math.PI*2); ctx.fillStyle=e.c; ctx.fill();
-            });
-
-            viruses.forEach(v => {
-                ctx.beginPath(); ctx.fillStyle = '#33ff33';
-                let spikes = 20;
-                for(let i=0; i<spikes*2; i++) {
-                    let a = (Math.PI*2/(spikes*2))*i;
-                    let r = i%2==0 ? v.r : v.r-5;
-                    ctx.lineTo(v.x+Math.cos(a)*r, v.y+Math.sin(a)*r);
-                }
-                ctx.fill(); ctx.stroke();
-            });
-
-            // Players & Bots (Z-Index sort)
-            let renderList = [
-                ...bots.map(b=>({...b, type:'bot'})),
-                ...myCells.map(c=>({...c, name:myName, type:'me'})),
-                ...Object.values(otherPlayers).flatMap(p=>(p.cells||[]).map(c=>({...c, name:p.n, type:'other'})))
-            ];
-            renderList.sort((a,b)=>a.r - b.r);
-
-            renderList.forEach(c => {
-                ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI*2);
-                ctx.fillStyle = c.c || c.color; ctx.fill();
-                ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.stroke();
-                
-                if(c.r > 20) {
-                    ctx.fillStyle = 'white'; ctx.font = `bold ${c.r/2}px Arial`;
-                    ctx.textAlign = 'center'; ctx.textBaseline='middle';
-                    ctx.fillText(c.name || (c.type=='bot'?'Bot':''), c.x, c.y);
-                }
-            });
-
-            ctx.restore();
-        }
-
-        // Utils & Admin
-        function rand(m) { return Math.random()*m; }
-        function dist(a,b) { return Math.hypot(a.x-b.x, a.y-b.y); }
-        function getRandomColor() { return ['#F05','#0F5','#50F','#FF0','#0FF'].at(Math.floor(rand(5))); }
-        function spawnFood() { foods.push({x:rand(MAP_SIZE), y:rand(MAP_SIZE), r:rand(3)+3, c:getRandomColor()}); }
-        function spawnBot() { bots.push({x:rand(MAP_SIZE), y:rand(MAP_SIZE), r:rand(30)+30, c:getRandomColor(), target:{x:rand(MAP_SIZE),y:rand(MAP_SIZE)}}); }
-
-        window.cheat = (type) => {
-            if(!isAdmin) return;
-            if(type=='mass') myCells.forEach(c => c.r += 20);
-            if(type=='speed') myCells.forEach(c => { c.vx=50; c.vy=50; });
-            if(type=='reset') myCells=[{x:rand(MAP_SIZE), y:rand(MAP_SIZE), r:50, c:'#fff', vx:0, vy:0, birth:Date.now()}];
-        };
-
-        // Rede Listener
-        onSnapshot(query(collection(db, "players")), s => {
-            s.docChanges().forEach(c => {
-                if(c.doc.id === myUserId) return;
-                if(c.type === 'removed') delete otherPlayers[c.doc.id];
-                else otherPlayers[c.doc.id] = c.doc.data();
-            });
-            // Update Leaderboard
-            let list = [{n:myName, m:myCells.reduce((a,b)=>a+b.r,0), me:true}];
-            for(let id in otherPlayers) list.push({n:otherPlayers[id].n, m:otherPlayers[id].mass});
-            list.sort((a,b)=>b.m - a.m);
-            document.getElementById('lb-content').innerHTML = list.slice(0,5).map((p,i)=>
-                `<div style="display:flex; justify-content:space-between; color:${p.me?'#00d2ff':'white'}"><span>${i+1}.${p.n.substr(0,8)}</span><span>${Math.floor(p.m)}</span></div>`
-            ).join('');
-        });
-
+        // Expõe funções globais para o HTML
+        window.openStore = () => window.game.openStore();
+        // A lógica de inicialização agora acontece dentro das classes
     </script>
 </body>
 </html>
