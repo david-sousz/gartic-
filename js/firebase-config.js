@@ -2,15 +2,14 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-// SUBSTITUA ISSO PELA SUA CONFIGURAÇÃO DO FIREBASE CONSOLE
 const firebaseConfig = {
-    apiKey: "SUA_API_KEY_AQUI",
-    authDomain: "SEU_PROJETO.firebaseapp.com",
-    projectId: "SEU_PROJETO_ID",
-    storageBucket: "SEU_PROJETO.appspot.com",
-    messagingSenderId: "NUMERO",
-    appId: "ID_DO_APP"
-};
+            apiKey: "AIzaSyCXDfIO53oqtnRgs9jfApf-rZklp4SRbV8",
+            authDomain: "gartic-51f3d.firebaseapp.com",
+            projectId: "gartic-51f3d",
+            storageBucket: "gartic-51f3d.firebasestorage.app",
+            messagingSenderId: "844900784609",
+            appId: "1:844900784609:web:5fc7dbdf7e83035dee1aa0"
+        };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
