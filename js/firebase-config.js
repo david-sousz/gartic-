@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
 const firebaseConfig = {
             apiKey: "AIzaSyCXDfIO53oqtnRgs9jfApf-rZklp4SRbV8",
@@ -11,99 +11,87 @@ const firebaseConfig = {
             appId: "1:844900784609:web:5fc7dbdf7e83035dee1aa0"
         };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+// Inicialização segura
+let app, auth, db;
+try {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+} catch (e) {
+    console.error("Erro Firebase (Verifique as chaves):", e);
+}
+
 const provider = new GoogleAuthProvider();
 
-export class AuthManager {
-    constructor() {
+export class AuthSystem {
+    constructor(gameInstance) {
+        this.game = gameInstance;
         this.user = null;
-        this.userData = { coins: 0, items: [], skins: [] };
-        
-        this.initUI();
-        
-        // Monitora estado do login
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                this.user = user;
-                await this.loadUserData(user);
+        this.userData = { coins: 0, items: [] };
+
+        if (!auth) return;
+
+        // Botão de Login
+        const btnLogin = document.getElementById('btnLogin');
+        if (btnLogin) btnLogin.onclick = () => this.login();
+
+        // Monitorar Status
+        onAuthStateChanged(auth, async (u) => {
+            if (u) {
+                this.user = u;
+                await this.loadProfile();
                 this.updateUI(true);
             } else {
-                this.user = null;
-                this.userData = { coins: 0, items: [] }; // Reset
                 this.updateUI(false);
             }
         });
     }
 
-    initUI() {
-        document.getElementById('btnLoginGoogle').onclick = () => this.loginGoogle();
-    }
-
-    async loginGoogle() {
+    async login() {
         try {
             await signInWithPopup(auth, provider);
         } catch (error) {
-            console.error("Erro no login:", error);
-            alert("Erro ao logar com Google. Verifique o console.");
+            alert("Erro no login: " + error.message);
         }
     }
 
-    async loadUserData(user) {
-        const userRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(userRef);
-
-        if (docSnap.exists()) {
-            this.userData = docSnap.data();
-        } else {
-            // Cria usuário novo no banco
-            this.userData = {
-                username: user.displayName,
-                coins: 50, // Bônus de boas vindas
-                items: [],
-                createdAt: new Date()
-            };
-            await setDoc(userRef, this.userData);
-        }
-        
-        // Sincroniza moedas com a UI
-        this.updateCoinDisplay();
+    async loadProfile() {
+        if (!this.user || !db) return;
+        const ref = doc(db, "users", this.user.uid);
+        try {
+            const snap = await getDoc(ref);
+            if (snap.exists()) {
+                this.userData = snap.data();
+            } else {
+                // Novo usuário
+                this.userData = { coins: 50, items: [], name: this.user.displayName };
+                await setDoc(ref, this.userData);
+            }
+            this.game.updateCoins(this.userData.coins);
+        } catch (e) { console.error("Erro perfil:", e); }
     }
 
     async saveCoins(amount) {
-        if (!this.user) return;
-        const userRef = doc(db, "users", this.user.uid);
-        await updateDoc(userRef, {
-            coins: amount
-        });
+        if (!this.user || !db) return;
         this.userData.coins = amount;
-        this.updateCoinDisplay();
-    }
-    
-    async addItem(itemId) {
-        if (!this.user) return;
-        this.userData.items.push(itemId);
-        const userRef = doc(db, "users", this.user.uid);
-        await updateDoc(userRef, { items: this.userData.items });
+        await updateDoc(doc(db, "users", this.user.uid), { coins: amount });
     }
 
-    updateCoinDisplay() {
-        document.getElementById('menuCoins').innerText = this.userData.coins;
-        document.getElementById('storeCoins').innerText = this.userData.coins;
+    async saveItem(item) {
+        if (!this.user || !db) return;
+        this.userData.items.push(item);
+        await updateDoc(doc(db, "users", this.user.uid), { items: this.userData.items });
     }
 
-    updateUI(isLoggedIn) {
-        if (isLoggedIn) {
-            document.getElementById('loginArea').style.display = 'none';
-            document.getElementById('userProfile').style.display = 'flex';
+    updateUI(logged) {
+        if (logged) {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('profileSection').style.display = 'flex';
             document.getElementById('userAvatar').src = this.user.photoURL;
-            document.getElementById('userNameDisplay').innerText = this.user.displayName.split(' ')[0];
+            document.getElementById('userName').innerText = this.user.displayName.split(' ')[0];
         } else {
-            document.getElementById('loginArea').style.display = 'block';
-            document.getElementById('userProfile').style.display = 'none';
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('profileSection').style.display = 'none';
         }
     }
 }
-
-export { auth, db };
