@@ -1,82 +1,146 @@
-/* RESET E BASE */
-* { box-sizing: border-box; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
-body { margin: 0; overflow: hidden; background: #0b0b14; font-family: 'Segoe UI', sans-serif; touch-action: none; }
+/* --- RESET & BASE --- */
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap');
+
+* { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+body { margin: 0; overflow: hidden; background: #080810; font-family: 'Rajdhani', sans-serif; color: white; touch-action: none; }
 canvas { display: block; width: 100%; height: 100%; }
 
-/* UI GERAL */
+/* --- BACKGROUND ANIMADO --- */
+.bg-animation {
+    position: absolute; width: 100%; height: 100%;
+    background: radial-gradient(circle at center, #1a1a2e 0%, #000 100%);
+    z-index: -1;
+}
+
+/* --- UI GERAL (GLASSMORPHISM) --- */
 #uiLayer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
-button { pointer-events: auto; font-family: inherit; border: none; outline: none; }
-input { pointer-events: auto; }
+button, input { pointer-events: auto; font-family: inherit; border: none; outline: none; }
 
-/* MENUS CENTRALIZADOS */
-#mainMenu, .modal-content {
+/* --- MENU PRINCIPAL --- */
+#mainMenu {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    background: rgba(20, 20, 35, 0.95); padding: 25px; border-radius: 15px;
-    border: 2px solid #00d2ff; text-align: center; pointer-events: auto;
-    width: 90%; max-width: 350px; display: flex; flex-direction: column; gap: 15px;
-    box-shadow: 0 0 50px rgba(0, 210, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 30px; border-radius: 20px;
+    width: 90%; max-width: 400px;
+    text-align: center; pointer-events: auto;
+    box-shadow: 0 0 50px rgba(0, 210, 255, 0.1);
+    display: flex; flex-direction: column; gap: 20px;
 }
 
-.modal { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); pointer-events:auto; z-index: 100;}
+.logo-glitch {
+    font-size: 48px; font-weight: 800; color: #fff;
+    text-shadow: 2px 2px #00d2ff, -2px -2px #ff0055;
+    letter-spacing: 4px;
+}
+.version { font-size: 12px; color: #666; letter-spacing: 2px; }
 
-h1 { color: white; margin: 0; font-size: 28px; }
-h2 { color: #ff9900; margin: 0 0 10px 0; }
+/* PERFIL */
+#profileCard {
+    background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px;
+    display: flex; align-items: center; gap: 15px;
+}
+.avatar-container { position: relative; }
+#userAvatar { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #00d2ff; }
+.level-badge {
+    position: absolute; bottom: -5px; right: -5px;
+    background: #ff9900; color: black; font-weight: bold;
+    font-size: 10px; width: 20px; height: 20px;
+    display: flex; justify-content: center; align-items: center;
+    border-radius: 50%; border: 2px solid #fff;
+}
+.profile-info { flex: 1; text-align: left; }
+#userName { font-weight: bold; font-size: 18px; display: block; margin-bottom: 5px; }
+.xp-container { width: 100%; margin-bottom: 5px; }
+.xp-bar-bg { width: 100%; height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
+.xp-bar-fill { height: 100%; background: linear-gradient(90deg, #00d2ff, #0051ff); transition: width 0.5s; }
+.xp-text { font-size: 10px; color: #aaa; }
+.coin-pill { font-size: 12px; color: #ffd700; font-weight: bold; }
 
-input[type="text"] { width: 100%; padding: 12px; background: #111; border: 1px solid #444; color: white; border-radius: 8px; text-align: center; }
+/* INPUTS E BOTOES */
+input[type="text"] {
+    width: 100%; padding: 15px; background: rgba(0,0,0,0.4);
+    border: 1px solid #333; color: white; border-radius: 10px;
+    text-align: center; font-size: 16px; margin-bottom: 10px;
+}
 
-.btn { padding: 12px; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; transition: 0.2s; width: 100%; }
-.play-btn { background: linear-gradient(90deg, #00d2ff, #0051ff); font-size: 18px; }
-.shop-btn { background: #ff9900; color: black; }
-.google-btn { background: white; color: #444; border: 1px solid #ccc; }
-.close-btn { background: #ff4444; margin-top: 10px; }
-.item { background: #222; padding: 10px; border-radius: 5px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; color: white; }
+.btn {
+    padding: 15px; border-radius: 10px; font-weight: 700; font-size: 16px;
+    cursor: pointer; transition: 0.2s; text-transform: uppercase;
+    display: flex; justify-content: center; align-items: center; gap: 10px;
+}
+.btn:hover { transform: scale(1.02); filter: brightness(1.2); }
+.btn-google { background: white; color: #333; margin-bottom: 10px; width: 100%; font-size: 14px; }
+.btn-play { background: linear-gradient(45deg, #00d2ff, #0051ff); color: white; width: 100%; font-size: 20px; box-shadow: 0 4px 15px rgba(0, 81, 255, 0.4); }
+.btn-shop { background: #222; border: 1px solid #444; color: #aaa; width: 100%; margin-top: 10px; }
+.menu-actions { width: 100%; }
 
-/* HUD SUPERIOR */
-.top-panel { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; gap: 10px; pointer-events: auto; }
-#radioWidget, .zoom-control { background: rgba(0,0,0,0.6); padding: 8px; border-radius: 8px; color: white; display: flex; align-items: center; gap: 10px; backdrop-filter: blur(4px); border: 1px solid #333; }
-#youtube-container { display: none; width: 0; height: 0; }
-#zoomSlider { width: 100px; accent-color: #00d2ff; }
+/* --- HUD IN GAME --- */
+.hud-panel { position: absolute; pointer-events: auto; display: flex; flex-direction: column; gap: 10px; }
+.top-left { top: 15px; left: 15px; }
+.top-right { top: 15px; right: 15px; }
 
-#leaderboard { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); padding: 8px; border-radius: 8px; color: white; width: 140px; font-size: 11px; }
-.lb-title { text-align: center; border-bottom: 1px solid #555; margin-bottom: 4px; color: #aaa; }
-#score { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); color: white; font-size: 20px; font-weight: bold; text-shadow: 1px 1px 2px black; }
+.widget {
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+    padding: 8px 12px; border-radius: 20px; display: flex; align-items: center; gap: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+#btnRadioToggle { background: none; color: #00d2ff; font-weight: bold; cursor: pointer; }
 
-/* CONTROLES MOBILE */
+#leaderboard {
+    background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; width: 180px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+#leaderboard h3 { margin: 0 0 10px 0; font-size: 14px; color: #888; text-align: center; border-bottom: 1px solid #444; padding-bottom: 5px; }
+.lb-item { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+.lb-item.me { color: #00d2ff; font-weight: bold; }
+
+.bottom-stats {
+    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+    text-align: center; width: 300px; pointer-events: none;
+}
+.stat-box { font-size: 24px; text-shadow: 0 2px 4px black; margin-bottom: 5px; }
+.xp-hud { display: flex; align-items: center; gap: 10px; }
+.level-hud { font-weight: bold; font-size: 14px; text-shadow: 0 1px 2px black; }
+
+/* --- CONTROLES --- */
 #joystickZone {
-    position: absolute; bottom: 40px; left: 40px;
-    width: 120px; height: 120px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    pointer-events: auto; /* CRUCIAL */
-    touch-action: none;   /* CRUCIAL */
+    position: absolute; bottom: 40px; left: 40px; width: 120px; height: 120px;
+    background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 50%; pointer-events: auto; touch-action: none;
 }
-
 #joystickStick {
-    position: absolute; top: 50%; left: 50%;
-    width: 50px; height: 50px;
-    background: #00d2ff;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-    box-shadow: 0 0 10px #00d2ff;
+    position: absolute; top: 50%; left: 50%; width: 50px; height: 50px;
+    background: #00d2ff; border-radius: 50%; transform: translate(-50%, -50%);
+    box-shadow: 0 0 15px #00d2ff; pointer-events: none;
 }
-
-.action-buttons { position: absolute; bottom: 40px; right: 30px; display: flex; gap: 15px; pointer-events: auto; }
+.action-buttons { position: absolute; bottom: 40px; right: 40px; display: flex; gap: 20px; pointer-events: auto; }
 .action-btn {
-    width: 70px; height: 70px; border-radius: 50%;
-    font-size: 24px; color: white; display: flex; align-items: center; justify-content: center;
-    background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.3);
-    backdrop-filter: blur(4px);
+    width: 70px; height: 70px; border-radius: 50%; font-size: 24px; color: white;
+    background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.2);
+    backdrop-filter: blur(4px); cursor: pointer;
 }
-.action-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.2); }
+.action-btn:active { transform: scale(0.9); }
 .split-btn { border-color: #00d2ff; color: #00d2ff; }
 .eject-btn { border-color: #ff0055; color: #ff0055; }
 
-/* MOBILE RESPONSIVE TWEAKS */
-@media (max-width: 600px) {
+/* MODAL LOJA */
+.modal { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); z-index: 100; pointer-events: auto; }
+.modal-content {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: #1a1a2e; padding: 20px; border-radius: 15px; width: 300px; text-align: center;
+    border: 1px solid #00d2ff;
+}
+.shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+.shop-item { background: #111; padding: 10px; border-radius: 8px; cursor: pointer; }
+.shop-item:hover { background: #222; }
+.shop-item .icon { font-size: 24px; margin-bottom: 5px; }
+.shop-item button { background: #ff9900; color: black; padding: 5px; width: 100%; border-radius: 4px; margin-top: 5px; font-weight: bold; cursor: pointer; }
+.btn-close { background: #ff4444; width: 100%; padding: 10px; border-radius: 8px; color: white; cursor: pointer; }
+
+@media (max-width: 700px) {
     #joystickZone { bottom: 20px; left: 20px; width: 100px; height: 100px; }
-    #joystickStick { width: 40px; height: 40px; }
     .action-buttons { bottom: 20px; right: 20px; gap: 10px; }
-    .action-btn { width: 60px; height: 60px; font-size: 20px; }
+    #mainMenu { width: 95%; padding: 20px; }
 }
