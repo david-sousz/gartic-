@@ -1,133 +1,237 @@
 <!DOCTYPE html>
-<html lang="pt-PT">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gartic Mobile</title>
+    <title>Gartic Ultimate</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- FontAwesome para ícones -->
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- Confetti (Efeito de Vitória) -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Alertas Bonitos -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        /* Impede scroll e comportamentos indesejados no mobile */
         body { 
-            overscroll-behavior-y: contain; 
-            touch-action: pan-x pan-y; 
-            -webkit-user-select: none;
+            font-family: 'Nunito', sans-serif; 
+            overscroll-behavior: none; 
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
-        canvas { 
-            touch-action: none; 
-            background-image: radial-gradient(#e5e7eb 1px, transparent 1px); 
-            background-size: 20px 20px; 
-        }
+        /* Scrollbar Invisível mas funcional */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Animações */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+        .animate-ring { animation: pulse-ring 2s infinite; }
         
-        /* Animações simples */
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .animate-fade { animation: fadeIn 0.3s ease-out; }
+        .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(8px); }
+        
+        /* Previne o Canvas de selecionar texto ou dar zoom */
+        canvas { touch-action: none; cursor: crosshair; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 h-screen w-screen overflow-hidden flex flex-col font-sans">
+<body class="h-[100dvh] w-screen bg-[#1c2c4c] overflow-hidden flex flex-col text-gray-800 transition-colors duration-500" id="mainBody">
 
-    <!-- STATUS DE CONEXÃO (DEBUG) -->
-    <div id="connStatus" class="fixed top-0 left-0 w-full h-1 z-[60] bg-red-500 transition-all duration-500" style="width: 0%"></div>
+    <!-- SONS -->
+    <!-- Música Lofi calma -->
+    <audio id="bgm" loop>
+        <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3" type="audio/mp3">
+    </audio>
+    <!-- Efeitos Sonoros -->
+    <audio id="sfx-win" src="https://www.myinstants.com/media/sounds/tadaa.mp3"></audio>
+    <audio id="sfx-correct" src="https://www.myinstants.com/media/sounds/correct.mp3"></audio>
+    <audio id="sfx-turn" src="https://www.myinstants.com/media/sounds/discord-notification.mp3"></audio>
 
-    <!-- TELA DE ENTRADA -->
-    <div id="loginScreen" class="fixed inset-0 z-50 bg-blue-600 flex flex-col items-center justify-center p-6 text-center animate-fade">
-        <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl w-full max-w-xs border-b-8 border-blue-700">
-            <h1 class="text-5xl font-black text-blue-600 mb-2 italic tracking-tighter">Gart<span class="text-orange-500">ic</span></h1>
-            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-8">Mobile Multiplayer</p>
-            
-            <input type="text" id="usernameInput" maxlength="12" placeholder="TEU NOME" 
-                class="w-full bg-slate-100 border-2 border-slate-100 rounded-2xl px-4 py-4 text-xl focus:outline-none focus:border-blue-500 transition-all mb-4 text-center font-black uppercase placeholder:text-slate-300">
-            
-            <button onclick="enterGame()" id="enterBtn"
-                class="w-full bg-green-500 hover:bg-green-600 text-white font-black py-5 rounded-2xl text-2xl shadow-[0_6px_0_rgb(22,163,74)] active:shadow-none active:translate-y-1 transition-all">
-                JOGAR
-            </button>
-            
-            <p id="authText" class="mt-6 text-[10px] text-slate-300 font-bold uppercase tracking-tighter">A ligar ao Firebase...</p>
+    <!-- 1. TELA DE SPLASH (Para ativar o som) -->
+    <div id="splashScreen" class="fixed inset-0 z-[100] bg-blue-600 flex flex-col items-center justify-center cursor-pointer hover:bg-blue-700 transition">
+        <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 animate-ring">
+            <i class="fa-solid fa-play text-blue-600 text-4xl ml-2"></i>
         </div>
+        <h1 class="text-white text-3xl font-black mb-2">TOCAR PARA ENTRAR</h1>
+        <p class="text-white/70 font-bold">Ativa sons e música</p>
     </div>
 
-    <!-- CABEÇALHO DO JOGO -->
-    <div id="gameHeader" class="bg-white border-b-2 border-slate-200 p-3 flex justify-between items-center z-10 hidden shadow-sm">
-        <div class="flex items-center gap-2">
-            <div class="bg-blue-600 text-white px-4 py-1.5 rounded-full font-black text-sm shadow-md flex items-center gap-2">
-                <i class="fa-solid fa-clock"></i> <span id="timerDisplay">--</span>
+    <!-- 2. LOBBY (Perfil e Salas) -->
+    <div id="lobbyScreen" class="fixed inset-0 z-50 bg-[#1c2c4c] hidden overflow-y-auto">
+        <div class="min-h-full p-4 flex flex-col items-center justify-center">
+            
+            <div class="bg-white p-6 rounded-[2rem] shadow-2xl w-full max-w-sm relative">
+                <!-- Logo -->
+                <div class="text-center mb-6">
+                    <h1 class="text-5xl font-black text-blue-600 italic tracking-tighter">Gartic<span class="text-orange-500">Ult</span></h1>
+                    <p class="text-gray-400 text-xs font-bold tracking-[0.3em] uppercase mt-1">Mobile Edition</p>
+                </div>
+
+                <!-- Avatar -->
+                <div class="flex flex-col items-center mb-6">
+                    <label class="relative cursor-pointer group">
+                        <div class="w-28 h-28 rounded-full border-4 border-blue-100 overflow-hidden shadow-lg bg-gray-100">
+                            <img id="avatarPreview" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="w-full h-full object-cover">
+                        </div>
+                        <div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                            <i class="fa-solid fa-camera text-white text-2xl"></i>
+                        </div>
+                        <input type="file" id="avatarInput" accept="image/*" class="hidden" onchange="handleAvatarUpload(event)">
+                    </label>
+                    <p class="text-[10px] text-gray-400 font-bold mt-2 uppercase">Toque para mudar foto</p>
+                </div>
+
+                <!-- Inputs -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-bold text-gray-400 ml-2 uppercase">Seu Apelido</label>
+                        <input type="text" id="usernameInput" maxlength="12" placeholder="Ex: MestreDosDesenhos" 
+                            class="w-full bg-gray-100 rounded-xl px-4 py-3 font-bold text-lg border-2 border-transparent focus:border-blue-500 focus:bg-white transition outline-none text-center uppercase">
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-bold text-gray-400 ml-2 uppercase">Escolha a Sala</label>
+                        <div class="grid grid-cols-2 gap-2 mb-2">
+                            <button onclick="selectRoom('sala_geral')" class="room-btn bg-blue-100 text-blue-600 py-2 rounded-lg font-bold text-sm hover:bg-blue-200 ring-2 ring-blue-500">Geral</button>
+                            <button onclick="selectRoom('sala_animais')" class="room-btn bg-green-100 text-green-600 py-2 rounded-lg font-bold text-sm hover:bg-green-200">Animais</button>
+                            <button onclick="selectRoom('sala_objetos')" class="room-btn bg-purple-100 text-purple-600 py-2 rounded-lg font-bold text-sm hover:bg-purple-200">Objetos</button>
+                            <button onclick="selectRoom('sala_vip')" class="room-btn bg-orange-100 text-orange-600 py-2 rounded-lg font-bold text-sm hover:bg-orange-200">VIP</button>
+                        </div>
+                        <input type="text" id="customRoomInput" placeholder="Ou digite o nome de uma sala..." 
+                            class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm font-semibold text-center focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+
+                    <!-- Cores do Tema -->
+                    <div>
+                        <label class="text-xs font-bold text-gray-400 ml-2 uppercase">Sua Cor</label>
+                        <div class="flex justify-center gap-2 mt-1">
+                            <button onclick="setTheme('#3b82f6')" class="w-8 h-8 rounded-full bg-blue-500 ring-offset-2 hover:ring-2 ring-blue-500 transition"></button>
+                            <button onclick="setTheme('#ef4444')" class="w-8 h-8 rounded-full bg-red-500 ring-offset-2 hover:ring-2 ring-red-500 transition"></button>
+                            <button onclick="setTheme('#10b981')" class="w-8 h-8 rounded-full bg-emerald-500 ring-offset-2 hover:ring-2 ring-emerald-500 transition"></button>
+                            <button onclick="setTheme('#f59e0b')" class="w-8 h-8 rounded-full bg-amber-500 ring-offset-2 hover:ring-2 ring-amber-500 transition"></button>
+                            <button onclick="setTheme('#8b5cf6')" class="w-8 h-8 rounded-full bg-violet-500 ring-offset-2 hover:ring-2 ring-violet-500 transition"></button>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="enterGame()" id="playBtn" class="w-full mt-6 bg-blue-600 text-white font-black py-4 rounded-xl text-xl shadow-[0_6px_0_rgb(29,78,216)] active:shadow-none active:translate-y-1 transition-all">
+                    JOGAR AGORA
+                </button>
             </div>
         </div>
-        
-        <div id="wordDisplay" class="text-xl font-black tracking-[0.2em] text-slate-700 uppercase truncate max-w-[150px] drop-shadow-sm">
-            AGUARDANDO
-        </div>
-
-        <button onclick="togglePlayerList()" class="relative text-blue-600 active:scale-90 transition">
-            <i class="fa-solid fa-users-viewfinder text-3xl"></i>
-            <span id="playerCountBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full h-5 w-5 flex items-center justify-center border-2 border-white font-black">0</span>
-        </button>
     </div>
 
-    <!-- ÁREA DE JOGO -->
-    <div id="gameArea" class="flex-1 relative hidden flex-col animate-fade">
+    <!-- 3. TELA DO JOGO -->
+    <div id="gameScreen" class="flex-1 flex flex-col hidden h-full bg-gray-100">
         
-        <!-- CANVAS -->
-        <div class="relative w-full aspect-square bg-white shadow-inner border-b-2 border-slate-200 overflow-hidden">
-            <canvas id="drawingCanvas" class="w-full h-full"></canvas>
+        <!-- Header -->
+        <header class="bg-white shadow-sm z-20">
+            <!-- Barra de Tempo Colorida -->
+            <div class="h-2 w-full bg-gray-200">
+                <div id="timeBar" class="h-full bg-green-500 transition-all duration-1000 ease-linear w-full"></div>
+            </div>
             
-            <!-- FERRAMENTAS DO DESENHISTA -->
-            <div id="drawerTools" class="absolute bottom-4 left-0 right-0 flex justify-center gap-4 px-4 hidden pointer-events-none">
-                <div class="flex gap-2 p-2 bg-white/90 backdrop-blur rounded-full shadow-2xl border border-slate-200 pointer-events-auto">
-                    <button onclick="setColor('#000000')" class="w-10 h-10 rounded-full bg-black border-2 border-white shadow-inner active:scale-90 transition"></button>
-                    <button onclick="setColor('#ef4444')" class="w-10 h-10 rounded-full bg-red-500 border-2 border-white shadow-inner active:scale-90 transition"></button>
-                    <button onclick="setColor('#3b82f6')" class="w-10 h-10 rounded-full bg-blue-500 border-2 border-white shadow-inner active:scale-90 transition"></button>
-                    <button onclick="setColor('#22c55e')" class="w-10 h-10 rounded-full bg-green-500 border-2 border-white shadow-inner active:scale-90 transition"></button>
-                    <div class="w-px h-10 bg-slate-200 mx-1"></div>
-                    <button onclick="clearCanvasAction()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-600 border-2 border-white shadow-inner flex items-center justify-center active:scale-90 transition">
-                        <i class="fa-solid fa-trash-can text-lg"></i>
+            <div class="flex items-center justify-between px-3 py-2">
+                <!-- Esquerda: Tempo e Rodada -->
+                <div class="flex items-center gap-3">
+                    <div class="flex flex-col items-center w-10">
+                        <span class="text-[9px] font-bold text-gray-400 uppercase">Tempo</span>
+                        <span id="timerText" class="text-xl font-black text-gray-700 leading-none">--</span>
+                    </div>
+                    <div class="w-px h-8 bg-gray-200"></div>
+                </div>
+
+                <!-- Centro: Palavra -->
+                <div id="wordDisplay" class="bg-gray-100 border border-gray-200 px-4 py-1.5 rounded-lg text-lg font-black tracking-widest text-gray-800 uppercase shadow-inner min-w-[140px] text-center truncate">
+                    AGUARDANDO
+                </div>
+
+                <!-- Direita: Botões -->
+                <div class="flex gap-2">
+                    <button id="skipBtn" onclick="skipTurn()" class="hidden bg-red-100 text-red-500 p-2 rounded-lg hover:bg-red-200 active:scale-95 transition" title="Pular Vez">
+                        <i class="fa-solid fa-forward"></i>
+                    </button>
+                    <button onclick="toggleMute()" id="muteBtn" class="p-2 text-gray-400 hover:text-blue-500 transition">
+                        <i class="fa-solid fa-volume-high"></i>
+                    </button>
+                    <button onclick="toggleSideMenu()" class="p-2 text-gray-500 hover:bg-gray-100 rounded-lg lg:hidden">
+                        <i class="fa-solid fa-bars text-xl"></i>
                     </button>
                 </div>
             </div>
+        </header>
 
-            <!-- OVERLAY DE STATUS -->
-            <div id="statusOverlay" class="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-                <span id="statusMessage" class="bg-black/70 text-white px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest hidden"></span>
-            </div>
-        </div>
-
-        <!-- CHAT -->
-        <div class="flex-1 bg-slate-50 flex flex-col overflow-hidden relative">
-            <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3 text-sm no-scrollbar">
-                <!-- Mensagens aqui -->
-            </div>
+        <!-- Corpo Principal -->
+        <div class="flex-1 flex overflow-hidden relative">
             
-            <div id="guessInputArea" class="p-3 bg-white border-t border-slate-200 flex gap-2 shadow-[0_-4px_15px_rgba(0,0,0,0.05)]">
-                <input type="text" id="chatInput" placeholder="QUAL É O DESENHO?" 
-                    class="flex-1 bg-slate-100 border-none rounded-2xl px-5 py-4 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 placeholder:text-slate-400 uppercase"
-                    onkeypress="handleChatKey(event)">
-                <button onclick="sendMessage()" id="sendBtn" class="bg-blue-600 text-white rounded-2xl w-14 h-14 flex items-center justify-center shadow-lg active:scale-90 transition shadow-blue-200">
-                    <i class="fa-solid fa-paper-plane text-xl"></i>
-                </button>
+            <!-- Sidebar Jogadores (Desktop: Esquerda / Mobile: Slide) -->
+            <div id="playersSidebar" class="absolute inset-y-0 left-0 w-64 bg-white shadow-xl transform -translate-x-full lg:relative lg:translate-x-0 lg:shadow-none lg:border-r border-gray-200 z-30 transition-transform duration-300 flex flex-col">
+                <div class="p-3 bg-gray-50 border-b border-gray-200 font-bold text-gray-500 text-xs flex justify-between items-center">
+                    <span>JOGADORES (<span id="playerCount">0</span>)</span>
+                    <button onclick="toggleSideMenu()" class="lg:hidden text-gray-400"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+                <div id="playersList" class="flex-1 overflow-y-auto p-2 space-y-2">
+                    <!-- Lista injetada via JS -->
+                </div>
             </div>
-        </div>
-    </div>
 
-    <!-- MODAL DE JOGADORES -->
-    <div id="playersModal" class="fixed inset-0 bg-slate-900/60 z-40 hidden flex items-end justify-center backdrop-blur-sm transition-all">
-        <div class="bg-white w-full rounded-t-[3rem] p-8 max-h-[80vh] flex flex-col shadow-2xl border-t-4 border-blue-500">
-            <div class="flex justify-between items-center mb-8">
-                <h3 class="font-black text-2xl text-slate-800 tracking-tighter uppercase">No Jogo (<span id="modalPlayerCount">0</span>)</h3>
-                <button onclick="togglePlayerList()" class="bg-slate-100 p-4 rounded-full text-slate-400 active:bg-slate-200 transition">
-                    <i class="fa-solid fa-xmark text-xl"></i>
-                </button>
+            <!-- Área Central (Canvas) -->
+            <div class="flex-1 flex flex-col relative bg-[#e0e5ec]">
+                <div class="flex-1 m-2 bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden relative touch-none cursor-crosshair">
+                    <canvas id="drawingCanvas" class="w-full h-full block"></canvas>
+
+                    <!-- Overlay de Vitória/Status -->
+                    <div id="gameOverlay" class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white hidden z-10 backdrop-blur-sm">
+                        <i class="fa-solid fa-trophy text-yellow-400 text-6xl mb-4 animate-bounce"></i>
+                        <h2 id="overlayTitle" class="text-3xl font-black mb-1 uppercase tracking-wider">Vencedor!</h2>
+                        <p id="overlaySub" class="text-xl font-bold text-gray-200">Fulano</p>
+                    </div>
+
+                    <!-- Ferramentas Flutuantes -->
+                    <div id="toolsPanel" class="absolute bottom-4 left-1/2 -translate-x-1/2 glass-panel border border-white/50 rounded-full px-5 py-2 shadow-2xl flex items-center gap-4 hidden z-20 animate-ring">
+                        <input type="color" id="colorPicker" class="w-9 h-9 rounded-full border-none cursor-pointer bg-transparent" value="#000000" onchange="setColor(this.value)">
+                        <div class="flex gap-1.5" id="quickColors"></div> <!-- Cores rápidas -->
+                        <div class="w-px h-6 bg-gray-300"></div>
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-circle text-[8px] text-gray-400"></i>
+                            <input type="range" min="2" max="20" value="4" class="w-16 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer" oninput="setLineWidth(this.value)">
+                            <i class="fa-solid fa-circle text-lg text-gray-400"></i>
+                        </div>
+                        <button onclick="clearCanvasAction()" class="w-9 h-9 rounded-full bg-red-100 text-red-500 hover:bg-red-200 flex items-center justify-center transition shadow-sm"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                </div>
             </div>
-            <div id="playersList" class="space-y-4 overflow-y-auto flex-1 no-scrollbar pb-10">
-                <!-- Lista de jogadores -->
+
+            <!-- Chat (Direita) -->
+            <div class="w-full lg:w-80 bg-white border-l border-gray-200 flex flex-col absolute inset-y-0 right-0 lg:static transition-transform transform translate-x-full lg:translate-x-0 z-30" id="chatSidebar">
+                <!-- Botão Flutuante Mobile para abrir Chat -->
+                <button onclick="toggleChat()" class="lg:hidden absolute -left-12 top-4 w-12 h-12 bg-blue-600 text-white rounded-l-xl shadow-lg flex items-center justify-center font-bold">
+                    <i class="fa-regular fa-comments text-xl"></i>
+                </button>
+
+                <div class="p-3 border-b border-gray-200 bg-gray-50 font-bold text-gray-500 text-xs uppercase flex justify-between">
+                    <span>Chat da Sala</span>
+                    <button onclick="toggleChat()" class="lg:hidden"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+                
+                <div id="chatMessages" class="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50 scroll-smooth"></div>
+                
+                <div class="p-3 bg-white border-t border-gray-200">
+                    <div class="relative">
+                        <input type="text" id="chatInput" placeholder="Escreva aqui..." 
+                            class="w-full bg-gray-100 border border-transparent focus:border-blue-500 focus:bg-white rounded-full pl-4 pr-12 py-3 font-bold outline-none transition uppercase text-sm"
+                            onkeypress="handleChatKey(event)">
+                        <button onclick="sendMessage()" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center hover:scale-105 active:scale-90 transition shadow-md">
+                            <i class="fa-solid fa-paper-plane text-xs"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -138,7 +242,9 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, collection, onSnapshot, setDoc, updateDoc, addDoc, serverTimestamp, increment, query, orderBy, limit, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // CONFIGURAÇÃO USANDO AS TUAS CHAVES ENVIADAS
+        // ==========================================
+        //  SUAS CHAVES (JÁ CONFIGURADAS)
+        // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyCXDfIO53oqtnRgs9jfApf-rZklp4SRbV8",
             authDomain: "gartic-51f3d.firebaseapp.com",
@@ -148,254 +254,466 @@
             appId: "1:844900784609:web:5fc7dbdf7e83035dee1aa0",
             measurementId: "G-98R6DCDDJS"
         };
+        // ==========================================
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = "gartic-v1"; // Identificador fixo para o teu jogo
+        const appId = "gartic-ultimate";
 
-        // Conectar Anónimo
-        signInAnonymously(auth).then(() => {
-            document.getElementById('authText').innerText = "LIGADO AO SERVIDOR ✅";
-            document.getElementById('authText').classList.replace('text-slate-300', 'text-green-500');
-            document.getElementById('connStatus').style.width = '100%';
-        }).catch(err => {
-            document.getElementById('authText').innerText = "ERRO: ATIVA O LOGIN ANÓNIMO NO FIREBASE ❌";
-            document.getElementById('authText').classList.replace('text-slate-300', 'text-red-500');
-            console.error(err);
-        });
-
-        const ROOM_ID = "brasil_global_01";
-        const ROUND_TIME = 60;
-        const WORDS = ["BOLA", "CASA", "SOL", "ARVORE", "GATO", "PEIXE", "CARRO", "FLOR", "LUA", "LIVRO", "MESA", "BOLO", "PIZZA", "AVIAO", "CHUVA", "FOGO", "MACA", "DADO", "GELO", "MOTO", "BOTA", "OVO", "DENTE", "UNHA", "PATO", "RATO"];
-
-        let currentUser = null, myName = "", currentDrawerId = null, secretWord = "", isMyTurn = false;
-        let canvas = document.getElementById('drawingCanvas'), ctx = canvas.getContext('2d'), isDrawing = false, lastPos = { x: 0, y: 0 }, currentColor = "#000000";
+        // Variáveis Globais
+        let currentUser = null;
+        let myProfile = { name: "", avatar: null, theme: "#3b82f6" };
+        let currentRoom = "sala_geral";
+        let isMyTurn = false;
+        let secretWord = "";
+        let audioEnabled = false;
         window.currentPlayersList = [];
 
-        onAuthStateChanged(auth, (user) => { if (user) currentUser = user; });
+        // Configurações do Jogo
+        const WORDS = ["BOLA", "CASA", "SOL", "ARVORE", "GATO", "PEIXE", "CARRO", "FLOR", "LUA", "LIVRO", "MESA", "BOLO", "PIZZA", "AVIAO", "CHUVA", "FOGO", "MACA", "DADO", "GELO", "MOTO", "BOTA", "OVO", "DENTE", "UNHA", "PATO", "RATO", "PRAIA", "VIOLAO", "CELULAR", "COMPUTADOR", "BANANA", "SAPATO", "CHAPEU", "OCULOS", "RELOGIO"];
+        const ROUND_TIME = 90; // segundos
+        const WIN_SCORE = 100; // Pontos para ganhar
+
+        // Canvas
+        let canvas = document.getElementById('drawingCanvas');
+        let ctx = canvas.getContext('2d');
+        let isDrawing = false, lastPos = {x:0, y:0}, currentColor = "#000000", currentWidth = 4;
+
+        // Sons
+        const sounds = {
+            bgm: document.getElementById('bgm'),
+            win: document.getElementById('sfx-win'),
+            correct: document.getElementById('sfx-correct'),
+            turn: document.getElementById('sfx-turn')
+        };
+        sounds.bgm.volume = 0.15; // Volume baixo
+
+        // --- INICIALIZAÇÃO ---
+        
+        // Ativar Áudio
+        document.getElementById('splashScreen').addEventListener('click', () => {
+            document.getElementById('splashScreen').classList.add('hidden');
+            document.getElementById('lobbyScreen').classList.remove('hidden');
+            audioEnabled = true;
+            sounds.bgm.play().catch(() => console.log("Autoplay blocked"));
+        });
+
+        // Login Anônimo
+        signInAnonymously(auth);
+        onAuthStateChanged(auth, (user) => { if(user) currentUser = user; });
+
+        // --- INTERFACE ---
+
+        // Upload Avatar (Reduzir tamanho da imagem)
+        window.handleAvatarUpload = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = new Image();
+                img.onload = () => {
+                    const el = document.createElement('canvas');
+                    el.width = 100; el.height = 100; // Thumbnail 100px
+                    const ctx = el.getContext('2d');
+                    ctx.drawImage(img, 0, 0, 100, 100);
+                    const dataUrl = el.toDataURL('image/jpeg', 0.8);
+                    myProfile.avatar = dataUrl;
+                    document.getElementById('avatarPreview').src = dataUrl;
+                }
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.selectRoom = (room) => {
+            document.querySelectorAll('.room-btn').forEach(b => b.classList.remove('ring-2', 'ring-blue-500'));
+            // Adiciona classe visual... (simplificado)
+            document.getElementById('customRoomInput').value = "";
+            currentRoom = room;
+        };
+
+        window.setTheme = (c) => { 
+            myProfile.theme = c; 
+            document.getElementById('playBtn').style.backgroundColor = c;
+            // Efeito visual no botão selecionado
+        };
 
         window.enterGame = async () => {
-            const input = document.getElementById('usernameInput');
-            if (input.value.trim().length < 2) return;
-            if (!currentUser) return alert("A aguardar ligação...");
+            const name = document.getElementById('usernameInput').value.trim();
+            if (name.length < 2) return Swal.fire('Ops', 'Nome muito curto!', 'error');
             
-            myName = input.value.trim().toUpperCase();
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('gameHeader').classList.remove('hidden');
-            document.getElementById('gameArea').classList.remove('hidden');
-            document.getElementById('gameArea').classList.add('flex');
+            // Definir Sala
+            const custom = document.getElementById('customRoomInput').value.trim();
+            if(custom) currentRoom = custom.toLowerCase().replace(/\s/g, '_');
+            
+            myProfile.name = name.toUpperCase();
+            if(!myProfile.avatar) myProfile.avatar = "https://api.dicebear.com/7.x/avataaars/svg?seed=" + currentUser.uid;
+
+            // Troca Tela
+            document.getElementById('lobbyScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            document.getElementById('gameScreen').classList.add('flex');
             
             resizeCanvas();
             await joinRoom();
         };
 
-        window.togglePlayerList = () => document.getElementById('playersModal').classList.toggle('hidden');
-        window.setColor = (c) => currentColor = c;
-        
-        window.clearCanvasAction = async () => {
-            if (!isMyTurn) return;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}`), { clearBoard: serverTimestamp() });
-        };
-
-        window.sendMessage = async () => {
-            const input = document.getElementById('chatInput');
-            const msg = input.value.trim().toUpperCase();
-            if (!msg) return;
-
-            if (isMyTurn && msg.includes(secretWord) && secretWord !== "") {
-                input.value = "";
-                return;
-            }
-
-            const chatRef = collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/messages`);
-            await addDoc(chatRef, { sender: myName, senderId: currentUser.uid, text: msg, timestamp: serverTimestamp() });
-
-            if (!isMyTurn && msg === secretWord && secretWord !== "") handleWin();
-            input.value = "";
-        };
-
-        window.handleChatKey = (e) => { if (e.key === 'Enter') window.sendMessage(); };
+        // --- LÓGICA JOGO ---
 
         async function joinRoom() {
-            try {
-                const roomRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}`);
-                const playerRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/players/${currentUser.uid}`);
-                
-                await setDoc(playerRef, { name: myName, score: 0, lastActive: serverTimestamp() });
-                
-                const snap = await getDoc(roomRef);
-                if (!snap.exists()) {
-                    await setDoc(roomRef, { status: 'waiting', drawerId: null, word: '', timerEnd: null });
-                }
-                
-                startListeners();
-                setupCanvas();
-            } catch (err) {
-                console.error("Erro ao entrar na sala:", err);
-                alert("Verifica se as regras do Firestore estão em 'Modo de Teste'!");
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}`);
+            const playerRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/players/${currentUser.uid}`);
+            
+            // Salvar Jogador
+            await setDoc(playerRef, {
+                name: myProfile.name,
+                avatar: myProfile.avatar,
+                theme: myProfile.theme,
+                score: 0,
+                lastActive: serverTimestamp()
+            });
+
+            // Criar sala se não existir
+            const snap = await getDoc(roomRef);
+            if (!snap.exists()) {
+                await setDoc(roomRef, {
+                    status: 'waiting',
+                    drawerIndex: 0,
+                    word: '',
+                    timerEnd: null
+                });
             }
+
+            startListeners();
+            setupCanvas();
         }
 
         function startListeners() {
-            // 1. Ouvir Estado da Sala
-            onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}`), (s) => {
+            // 1. Sala (Estado)
+            onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}`), (s) => {
                 const data = s.data(); if (!data) return;
-                currentDrawerId = data.drawerId; 
-                secretWord = data.word; 
-                isMyTurn = (currentUser.uid === currentDrawerId);
+                
+                // Verificar quem desenha
+                if (window.currentPlayersList.length > 0) {
+                    // Turno sequencial baseado no index
+                    const idx = (data.drawerIndex || 0) % window.currentPlayersList.length;
+                    const drawer = window.currentPlayersList[idx];
+                    
+                    if (drawer) {
+                        const wasMe = isMyTurn;
+                        isMyTurn = (currentUser.uid === drawer.id);
+                        
+                        // Som de "Sua Vez"
+                        if (!wasMe && isMyTurn && audioEnabled) {
+                            sounds.turn.play();
+                            Swal.fire({ 
+                                title: 'SUA VEZ!', 
+                                text: 'Desenhe: ' + data.word, 
+                                icon: 'info', 
+                                timer: 2000, 
+                                showConfirmButton: false,
+                                backdrop: `rgba(0,0,123,0.4)`
+                            });
+                        }
+                    }
+                }
+
+                secretWord = data.word;
                 updateUI(data);
+
                 if (data.clearBoard) ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                if (data.status === 'finished') showWinner(data.winnerName);
             });
 
-            // 2. Ouvir Jogadores
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/players`), (s) => {
-                const players = []; 
+            // 2. Jogadores
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/players`), (s) => {
+                const players = [];
                 s.forEach(d => players.push({ id: d.id, ...d.data() }));
+                // Ordenar por entrada (usando lastActive timestamp) para manter ordem fixa
+                players.sort((a,b) => (a.lastActive?.seconds || 0) - (b.lastActive?.seconds || 0));
+                
                 window.currentPlayersList = players;
                 renderPlayers(players);
-                // Iniciar se houver 2 e sala vazia
-                if (players.length >= 2 && !currentDrawerId) startRound();
+                checkGameLoop(players);
             });
 
-            // 3. Ouvir Desenho
-            const qLines = query(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/lines`), orderBy('timestamp', 'asc'));
+            // 3. Linhas (Desenho)
+            const qLines = query(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/lines`), orderBy('timestamp', 'asc'));
             onSnapshot(qLines, (s) => {
-                s.docChanges().forEach(c => { 
-                    if (c.type === "added") {
-                        const line = c.doc.data();
-                        if (line.senderId !== currentUser.uid) drawRemote(line.points, line.color); 
+                s.docChanges().forEach(c => {
+                    if (c.type === "added" && c.doc.data().senderId !== currentUser.uid) {
+                        drawRemote(c.doc.data());
                     }
                 });
             });
 
-            // 4. Ouvir Chat
-            const qChat = query(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/messages`), orderBy('timestamp', 'desc'), limit(40));
+            // 4. Chat
+            const qChat = query(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/messages`), orderBy('timestamp', 'desc'), limit(40));
             onSnapshot(qChat, (s) => {
                 const msgs = []; s.forEach(d => msgs.push(d.data()));
                 renderChat(msgs.reverse());
             });
         }
 
-        async function startRound() {
-            const players = window.currentPlayersList; 
+        // Lógica de "Servidor" (Host)
+        async function checkGameLoop(players) {
             if (players.length < 2) return;
+            // O primeiro jogador da lista age como servidor
+            if (players[0].id !== currentUser.uid) return;
+
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}`);
+            const snap = await getDoc(roomRef);
+            const data = snap.data();
+
+            // Se estiver esperando e tem gente, começa
+            if (data.status === 'waiting') {
+                startNewRound(players, data.drawerIndex || 0);
+            }
+        }
+
+        async function startNewRound(players, currentIdx) {
+            const nextIdx = (currentIdx + 1) % players.length;
+            const newWord = WORDS[Math.floor(Math.random() * WORDS.length)];
             
-            const drawer = players[Math.floor(Math.random() * players.length)].id;
-            const word = WORDS[Math.floor(Math.random() * WORDS.length)];
-            
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}`), {
-                status: 'playing', 
-                drawerId: drawer, 
-                word: word, 
-                timerEnd: new Date(Date.now() + ROUND_TIME * 1000), 
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}`), {
+                status: 'playing',
+                drawerIndex: nextIdx,
+                word: newWord,
+                timerEnd: new Date(Date.now() + ROUND_TIME * 1000),
                 clearBoard: serverTimestamp()
             });
 
-            // Limpar linhas antigas do banco para não pesar
-            // Em produção aqui usariamos um Cloud Function, aqui apenas marcamos o clear local
+            addSystemMsg("NOVA RODADA INICIADA!");
         }
 
-        async function handleWin() {
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/players/${currentUser.uid}`), { score: increment(10) });
+        async function endRound(reason) {
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}`);
+            await updateDoc(roomRef, { status: 'revealing', timerEnd: null });
             
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/messages`), {
-                sender: "SISTEMA",
-                text: `🏆 ${myName.toUpperCase()} ACERTOU!`,
+            addSystemMsg(`${reason}. A PALAVRA ERA: ${secretWord}`);
+
+            setTimeout(async () => {
+                // Checar Vitória
+                const players = window.currentPlayersList;
+                const winner = players.find(p => p.score >= WIN_SCORE);
+
+                if (winner) {
+                    await updateDoc(roomRef, { status: 'finished', winnerName: winner.name });
+                } else {
+                    const snap = await getDoc(roomRef);
+                    startNewRound(players, snap.data().drawerIndex);
+                }
+            }, 3000); // 3 segs de pausa
+        }
+
+        window.skipTurn = async () => {
+            if (!isMyTurn) return;
+            Swal.fire({
+                title: 'Pular vez?',
+                showCancelButton: true, confirmButtonText: 'Sim'
+            }).then((res) => {
+                if (res.isConfirmed) endRound("VEZ PULADA");
+            });
+        };
+
+        window.sendMessage = async () => {
+            const input = document.getElementById('chatInput');
+            const txt = input.value.trim().toUpperCase();
+            if (!txt) return;
+
+            if (isMyTurn && txt.includes(secretWord)) {
+                input.value = "";
+                Swal.fire("Ei!", "Não dê spoiler!", "warning");
+                return;
+            }
+
+            const ref = collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/messages`);
+            await addDoc(ref, {
+                sender: myProfile.name,
+                senderId: currentUser.uid,
+                avatar: myProfile.avatar,
+                theme: myProfile.theme,
+                text: txt,
                 timestamp: serverTimestamp()
             });
 
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}`), { status: 'end' });
-            setTimeout(() => startRound(), 3000);
+            // Acerto
+            if (!isMyTurn && txt === secretWord && secretWord !== "") {
+                if(audioEnabled) sounds.correct.play();
+                const pRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/players/${currentUser.uid}`);
+                await updateDoc(pRef, { score: increment(10) });
+                endRound(`${myProfile.name} ACERTOU`);
+            }
+            input.value = "";
+        };
+
+        window.handleChatKey = (e) => { if (e.key === 'Enter') window.sendMessage(); };
+
+        function addSystemMsg(txt) {
+            addDoc(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/messages`), {
+                sender: "SISTEMA", text: txt, timestamp: serverTimestamp()
+            });
         }
+
+        // --- RENDERIZAÇÃO ---
 
         function updateUI(data) {
             const wordEl = document.getElementById('wordDisplay');
-            const tools = document.getElementById('drawerTools');
+            const tools = document.getElementById('toolsPanel');
             const input = document.getElementById('chatInput');
-            const statusMsg = document.getElementById('statusMessage');
-            
+            const skip = document.getElementById('skipBtn');
+            const overlay = document.getElementById('gameOverlay');
+
             if (data.status === 'playing') {
-                statusMsg.classList.add('hidden');
+                overlay.classList.add('hidden');
                 wordEl.innerText = isMyTurn ? secretWord : secretWord.replace(/[A-Z]/g, "_ ");
-                wordEl.classList.toggle('text-blue-600', isMyTurn);
-                
+                wordEl.className = isMyTurn ? "text-blue-600 border-blue-200" : "text-gray-800 border-gray-200";
+                wordEl.classList.add('font-black', 'tracking-widest', 'border', 'px-4', 'py-1', 'rounded-lg', 'text-xl', 'bg-white');
+
                 if (isMyTurn) {
                     tools.classList.remove('hidden');
+                    skip.classList.remove('hidden');
                     input.disabled = true;
-                    input.placeholder = "TUA VEZ DE DESENHAR!";
+                    input.placeholder = "VOCÊ DESENHA: " + secretWord;
                 } else {
                     tools.classList.add('hidden');
+                    skip.classList.add('hidden');
                     input.disabled = false;
                     input.placeholder = "QUAL É O DESENHO?";
                 }
-            } else if (data.status === 'end') {
-                statusMsg.innerText = `RESPOSTA: ${secretWord}`;
-                statusMsg.classList.remove('hidden');
+            } else if (data.status === 'revealing') {
                 wordEl.innerText = secretWord;
                 tools.classList.add('hidden');
             }
 
+            // Barra de Tempo
             if (data.timerEnd) {
-                const timer = setInterval(() => {
-                    const left = Math.ceil((data.timerEnd.toMillis() - Date.now()) / 1000);
-                    const el = document.getElementById('timerDisplay');
-                    if (el) el.innerText = Math.max(0, left) + "S";
+                const updateTime = () => {
+                    const total = ROUND_TIME * 1000;
+                    const left = Math.max(0, data.timerEnd.toMillis() - Date.now());
+                    const pct = (left / total) * 100;
+                    
+                    const bar = document.getElementById('timeBar');
+                    bar.style.width = pct + "%";
+                    
+                    // Cores
+                    if(pct > 50) bar.className = "h-full bg-green-500 transition-all duration-300 ease-linear";
+                    else if(pct > 20) bar.className = "h-full bg-yellow-400 transition-all duration-300 ease-linear";
+                    else bar.className = "h-full bg-red-500 transition-all duration-300 ease-linear";
+
+                    document.getElementById('timerText').innerText = Math.ceil(left/1000);
+
                     if (left <= 0) {
-                        clearInterval(timer);
-                        if (isMyTurn && data.status === 'playing') startRound();
+                        if (isMyTurn && data.status === 'playing') endRound("TEMPO ESGOTADO");
+                        return;
                     }
-                }, 1000);
+                    requestAnimationFrame(updateTime);
+                };
+                requestAnimationFrame(updateTime);
+            } else {
+                document.getElementById('timeBar').style.width = "0%";
             }
         }
 
         function renderPlayers(players) {
-            document.getElementById('playerCountBadge').innerText = players.length;
-            document.getElementById('modalPlayerCount').innerText = players.length;
-            
-            document.getElementById('playersList').innerHTML = players.sort((a,b)=>b.score-a.score).map(p => {
+            document.getElementById('playerCount').innerText = players.length;
+            // Ordenar por score
+            players.sort((a,b) => b.score - a.score);
+
+            const list = document.getElementById('playersList');
+            list.innerHTML = players.map((p, i) => {
                 const isMe = p.id === currentUser.uid;
-                const isDrawer = p.id === currentDrawerId;
+                // Descobrir quem desenha baseado no drawerIndex do banco não é direto aqui,
+                // mas podemos inferir se isMyTurn for true e p.id == meu id. 
+                // Para simplificar a visualização alheia, precisaríamos passar o drawerID no room doc.
+                // Vou deixar simples: destaca apenas o usuário.
                 return `
-                    <div class="flex justify-between items-center bg-slate-50 p-5 rounded-3xl border-2 ${isMe ? 'border-blue-400' : 'border-transparent'}">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center font-black text-blue-600">
-                                ${p.name.charAt(0)}
-                            </div>
-                            <div>
-                                <span class="font-black text-slate-700 uppercase block leading-none">${p.name}</span>
-                                ${isDrawer ? '<span class="text-[10px] font-bold text-orange-500 uppercase">A desenhar...</span>' : ''}
-                            </div>
+                    <div class="flex items-center gap-2 p-2 rounded-xl mb-2 ${isMe ? 'bg-blue-50 border border-blue-200' : 'bg-white border border-gray-100'}">
+                        <span class="font-bold text-gray-300 w-4 text-center">${i+1}</span>
+                        <img src="${p.avatar}" class="w-8 h-8 rounded-full bg-gray-200 object-cover border border-gray-300">
+                        <div class="flex-1 min-w-0">
+                            <p class="font-bold text-xs truncate" style="color: ${p.theme}">${p.name}</p>
+                            <p class="text-[10px] font-bold text-gray-400">${p.score} PTS</p>
                         </div>
-                        <span class="bg-blue-600 text-white px-4 py-1 rounded-full text-xs font-black shadow-sm">${p.score} PTS</span>
-                    </div>`;
+                        ${p.score >= WIN_SCORE ? '👑' : ''}
+                    </div>
+                `;
             }).join('');
         }
 
         function renderChat(msgs) {
             const el = document.getElementById('chatMessages');
             el.innerHTML = msgs.map(m => {
-                if (m.sender === "SISTEMA") return `<div class="text-center"><span class="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-[10px] font-black uppercase border border-orange-200">${m.text}</span></div>`;
+                if(m.sender === "SISTEMA") {
+                    return `<div class="flex justify-center my-2"><span class="bg-gray-200 text-gray-500 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">${m.text}</span></div>`;
+                }
                 const isMe = m.senderId === currentUser.uid;
                 return `
-                    <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
-                        <span class="text-[9px] text-slate-400 font-black px-2 uppercase">${m.sender}</span>
-                        <div class="${isMe ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-700'} px-4 py-2 rounded-2xl font-bold shadow-sm max-w-[85%] break-words">
-                            ${m.text}
+                    <div class="flex gap-2 mb-2 ${isMe ? 'flex-row-reverse' : ''} items-end">
+                        <img src="${m.avatar || ''}" class="w-6 h-6 rounded-full bg-gray-200 border border-white shadow-sm">
+                        <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[85%]">
+                            <span class="text-[9px] text-gray-400 font-bold px-1 mb-0.5">${m.sender}</span>
+                            <div class="px-3 py-1.5 rounded-2xl text-xs font-bold shadow-sm ${isMe ? 'text-white rounded-br-none' : 'text-gray-700 bg-white border border-gray-100 rounded-bl-none'}" 
+                                 style="${isMe ? `background-color: ${m.theme}` : ''}">
+                                ${m.text}
+                            </div>
                         </div>
-                    </div>`;
+                    </div>
+                `;
             }).join('');
             el.scrollTop = el.scrollHeight;
         }
 
-        function resizeCanvas() { 
-            const p = canvas.parentElement; 
-            canvas.width = p.clientWidth; 
-            canvas.height = p.clientHeight; 
+        function showWinner(name) {
+            if(audioEnabled) sounds.win.play();
+            const overlay = document.getElementById('gameOverlay');
+            document.getElementById('overlaySub').innerText = name;
+            overlay.classList.remove('hidden');
+            
+            // Confetti
+            var duration = 5 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+            var interval = setInterval(function() {
+              var timeLeft = animationEnd - Date.now();
+              if (timeLeft <= 0) { return clearInterval(interval); }
+              var particleCount = 50 * (timeLeft / duration);
+              confetti(Object.assign({}, defaults, { particleCount, origin: { x: Math.random(), y: Math.random() - 0.2 } }));
+            }, 250);
         }
-        window.addEventListener('resize', resizeCanvas);
 
+        // --- Helpers UI ---
+        // Cores Rápidas
+        const colors = ['#000000', '#ffffff', '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#a855f7', '#ec4899', '#78350f'];
+        const quickC = document.getElementById('quickColors');
+        colors.forEach(c => {
+            const b = document.createElement('button');
+            b.className = "w-6 h-6 rounded-full border border-gray-200 shadow-sm active:scale-90 transition";
+            b.style.backgroundColor = c;
+            b.onclick = () => window.setColor(c);
+            quickC.appendChild(b);
+        });
+
+        window.setColor = (c) => { currentColor = c; document.getElementById('colorPicker').value = c; };
+        window.setLineWidth = (w) => currentWidth = w;
+        window.clearCanvasAction = async () => {
+            if(!isMyTurn) return;
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}`), { clearBoard: serverTimestamp() });
+        };
+        window.toggleMute = () => {
+            if(sounds.bgm.paused) { sounds.bgm.play(); document.getElementById('muteBtn').innerHTML='<i class="fa-solid fa-volume-high"></i>'; }
+            else { sounds.bgm.pause(); document.getElementById('muteBtn').innerHTML='<i class="fa-solid fa-volume-xmark"></i>'; }
+        };
+        window.toggleSideMenu = () => document.getElementById('playersSidebar').classList.toggle('-translate-x-full');
+        window.toggleChat = () => document.getElementById('chatSidebar').classList.toggle('translate-x-full');
+
+        // --- Canvas Drawing ---
+        function resizeCanvas() { const p = canvas.parentElement; canvas.width = p.clientWidth; canvas.height = p.clientHeight; }
+        window.addEventListener('resize', resizeCanvas);
+        
         function getPos(e) {
             const r = canvas.getBoundingClientRect();
             const cx = e.touches ? e.touches[0].clientX : e.clientX;
@@ -406,22 +724,25 @@
         function setupCanvas() {
             const start = (e) => { 
                 if (!isMyTurn) return; 
-                e.preventDefault(); 
+                if(e.cancelable) e.preventDefault(); 
                 isDrawing = true; 
                 lastPos = getPos(e); 
             };
             const move = (e) => {
                 if (!isDrawing || !isMyTurn) return;
-                e.preventDefault();
+                if(e.cancelable) e.preventDefault();
                 const p = getPos(e);
+                
                 ctx.beginPath(); 
                 ctx.strokeStyle = currentColor; 
-                ctx.lineWidth = 5; 
-                ctx.lineCap = 'round';
+                ctx.lineWidth = currentWidth; 
+                ctx.lineCap = 'round'; 
+                ctx.lineJoin = 'round';
                 ctx.moveTo(lastPos.x * canvas.width, lastPos.y * canvas.height); 
                 ctx.lineTo(p.x * canvas.width, p.y * canvas.height); 
                 ctx.stroke();
-                sendLine(lastPos, p); 
+
+                sendLine(lastPos, p);
                 lastPos = p;
             };
             const end = () => isDrawing = false;
@@ -435,23 +756,25 @@
         }
 
         async function sendLine(p1, p2) {
-            const p1o = {x: Number(p1.x.toFixed(4)), y: Number(p1.y.toFixed(4))};
-            const p2o = {x: Number(p2.x.toFixed(4)), y: Number(p2.y.toFixed(4))};
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/lines`), { 
+             const p1o = {x: Number(p1.x.toFixed(4)), y: Number(p1.y.toFixed(4))};
+             const p2o = {x: Number(p2.x.toFixed(4)), y: Number(p2.y.toFixed(4))};
+             await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${currentRoom}/lines`), { 
                 senderId: currentUser.uid, 
                 points: [p1o, p2o], 
                 color: currentColor, 
+                width: currentWidth,
                 timestamp: serverTimestamp() 
             });
         }
 
-        function drawRemote(pts, color) {
+        function drawRemote(line) {
             ctx.beginPath(); 
-            ctx.strokeStyle = color; 
-            ctx.lineWidth = 5; 
-            ctx.lineCap = 'round';
-            ctx.moveTo(pts[0].x * canvas.width, pts[0].y * canvas.height);
-            ctx.lineTo(pts[1].x * canvas.width, pts[1].y * canvas.height); 
+            ctx.strokeStyle = line.color; 
+            ctx.lineWidth = line.width || 4; 
+            ctx.lineCap = 'round'; 
+            ctx.lineJoin = 'round';
+            ctx.moveTo(line.points[0].x * canvas.width, line.points[0].y * canvas.height);
+            ctx.lineTo(line.points[1].x * canvas.width, line.points[1].y * canvas.height); 
             ctx.stroke();
         }
     </script>
