@@ -1,146 +1,111 @@
-/* --- RESET & BASE --- */
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
 
-* { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
-body { margin: 0; overflow: hidden; background: #080810; font-family: 'Rajdhani', sans-serif; color: white; touch-action: none; }
+* { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
+body { margin: 0; overflow: hidden; background: #0a0a12; font-family: 'Poppins', sans-serif; color: white; touch-action: none; }
 canvas { display: block; width: 100%; height: 100%; }
 
-/* --- BACKGROUND ANIMADO --- */
+/* FUNDO */
 .bg-animation {
     position: absolute; width: 100%; height: 100%;
-    background: radial-gradient(circle at center, #1a1a2e 0%, #000 100%);
-    z-index: -1;
+    background: radial-gradient(circle at center, #161625 0%, #050508 100%);
+    z-index: -2;
 }
 
-/* --- UI GERAL (GLASSMORPHISM) --- */
+/* UI LAYER */
 #uiLayer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
-button, input { pointer-events: auto; font-family: inherit; border: none; outline: none; }
+button, input { pointer-events: auto; font-family: inherit; }
 
-/* --- MENU PRINCIPAL --- */
-#mainMenu {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 30px; border-radius: 20px;
-    width: 90%; max-width: 400px;
-    text-align: center; pointer-events: auto;
-    box-shadow: 0 0 50px rgba(0, 210, 255, 0.1);
-    display: flex; flex-direction: column; gap: 20px;
-}
-
-.logo-glitch {
-    font-size: 48px; font-weight: 800; color: #fff;
-    text-shadow: 2px 2px #00d2ff, -2px -2px #ff0055;
-    letter-spacing: 4px;
-}
-.version { font-size: 12px; color: #666; letter-spacing: 2px; }
-
-/* PERFIL */
-#profileCard {
-    background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px;
-    display: flex; align-items: center; gap: 15px;
-}
-.avatar-container { position: relative; }
-#userAvatar { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #00d2ff; }
-.level-badge {
-    position: absolute; bottom: -5px; right: -5px;
-    background: #ff9900; color: black; font-weight: bold;
-    font-size: 10px; width: 20px; height: 20px;
-    display: flex; justify-content: center; align-items: center;
-    border-radius: 50%; border: 2px solid #fff;
-}
-.profile-info { flex: 1; text-align: left; }
-#userName { font-weight: bold; font-size: 18px; display: block; margin-bottom: 5px; }
-.xp-container { width: 100%; margin-bottom: 5px; }
-.xp-bar-bg { width: 100%; height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
-.xp-bar-fill { height: 100%; background: linear-gradient(90deg, #00d2ff, #0051ff); transition: width 0.5s; }
-.xp-text { font-size: 10px; color: #aaa; }
-.coin-pill { font-size: 12px; color: #ffd700; font-weight: bold; }
-
-/* INPUTS E BOTOES */
-input[type="text"] {
-    width: 100%; padding: 15px; background: rgba(0,0,0,0.4);
-    border: 1px solid #333; color: white; border-radius: 10px;
-    text-align: center; font-size: 16px; margin-bottom: 10px;
-}
-
-.btn {
-    padding: 15px; border-radius: 10px; font-weight: 700; font-size: 16px;
-    cursor: pointer; transition: 0.2s; text-transform: uppercase;
-    display: flex; justify-content: center; align-items: center; gap: 10px;
-}
-.btn:hover { transform: scale(1.02); filter: brightness(1.2); }
-.btn-google { background: white; color: #333; margin-bottom: 10px; width: 100%; font-size: 14px; }
-.btn-play { background: linear-gradient(45deg, #00d2ff, #0051ff); color: white; width: 100%; font-size: 20px; box-shadow: 0 4px 15px rgba(0, 81, 255, 0.4); }
-.btn-shop { background: #222; border: 1px solid #444; color: #aaa; width: 100%; margin-top: 10px; }
-.menu-actions { width: 100%; }
-
-/* --- HUD IN GAME --- */
-.hud-panel { position: absolute; pointer-events: auto; display: flex; flex-direction: column; gap: 10px; }
+/* PAINÉIS HUD */
+.hud-panel { position: absolute; display: flex; flex-direction: column; gap: 10px; pointer-events: auto; }
 .top-left { top: 15px; left: 15px; }
 .top-right { top: 15px; right: 15px; }
 
 .widget {
-    background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
-    padding: 8px 12px; border-radius: 20px; display: flex; align-items: center; gap: 10px;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
     border: 1px solid rgba(255,255,255,0.1);
+    padding: 10px; border-radius: 12px; display: flex; align-items: center; gap: 10px;
+    color: #ccc; transition: 0.3s;
 }
-#btnRadioToggle { background: none; color: #00d2ff; font-weight: bold; cursor: pointer; }
+.widget:hover { background: rgba(0,0,0,0.8); border-color: #00d2ff; }
 
-#leaderboard {
-    background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; width: 180px;
-    border: 1px solid rgba(255,255,255,0.1);
-}
-#leaderboard h3 { margin: 0 0 10px 0; font-size: 14px; color: #888; text-align: center; border-bottom: 1px solid #444; padding-bottom: 5px; }
-.lb-item { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+/* RÁDIO WIDGET */
+.radio-widget i { color: #ff0055; font-size: 20px; animation: pulse 2s infinite; }
+.radio-controls { display: flex; flex-direction: column; gap: 2px; }
+.radio-controls span { font-size: 10px; font-weight: bold; color: white; }
+.btn-mini { background: #00d2ff; border: none; border-radius: 4px; padding: 2px 8px; font-size: 10px; font-weight: bold; cursor: pointer; color: black; }
+#youtube-wrapper { width: 1px; height: 1px; opacity: 0; overflow: hidden; position: absolute; }
+
+/* LEADERBOARD */
+#leaderboard { background: rgba(0,0,0,0.7); padding: 10px; border-radius: 10px; width: 160px; backdrop-filter: blur(5px); }
+#leaderboard h3 { margin: 0 0 8px 0; font-size: 12px; text-align: center; color: #ffd700; border-bottom: 1px solid #333; padding-bottom: 5px; }
+.lb-item { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px; color: #ddd; }
 .lb-item.me { color: #00d2ff; font-weight: bold; }
 
-.bottom-stats {
-    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-    text-align: center; width: 300px; pointer-events: none;
-}
-.stat-box { font-size: 24px; text-shadow: 0 2px 4px black; margin-bottom: 5px; }
-.xp-hud { display: flex; align-items: center; gap: 10px; }
-.level-hud { font-weight: bold; font-size: 14px; text-shadow: 0 1px 2px black; }
-
-/* --- CONTROLES --- */
-#joystickZone {
-    position: absolute; bottom: 40px; left: 40px; width: 120px; height: 120px;
-    background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1);
-    border-radius: 50%; pointer-events: auto; touch-action: none;
-}
-#joystickStick {
-    position: absolute; top: 50%; left: 50%; width: 50px; height: 50px;
-    background: #00d2ff; border-radius: 50%; transform: translate(-50%, -50%);
-    box-shadow: 0 0 15px #00d2ff; pointer-events: none;
-}
-.action-buttons { position: absolute; bottom: 40px; right: 40px; display: flex; gap: 20px; pointer-events: auto; }
-.action-btn {
-    width: 70px; height: 70px; border-radius: 50%; font-size: 24px; color: white;
-    background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.2);
-    backdrop-filter: blur(4px); cursor: pointer;
-}
-.action-btn:active { transform: scale(0.9); }
-.split-btn { border-color: #00d2ff; color: #00d2ff; }
-.eject-btn { border-color: #ff0055; color: #ff0055; }
-
-/* MODAL LOJA */
-.modal { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); z-index: 100; pointer-events: auto; }
-.modal-content {
+/* MENU PRINCIPAL */
+#mainMenu {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    background: #1a1a2e; padding: 20px; border-radius: 15px; width: 300px; text-align: center;
-    border: 1px solid #00d2ff;
+    width: 90%; max-width: 380px;
+    background: rgba(20, 20, 35, 0.9); backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 20px; padding: 30px;
+    display: flex; flex-direction: column; gap: 20px; text-align: center;
+    box-shadow: 0 0 60px rgba(0, 80, 255, 0.15); pointer-events: auto;
 }
+
+.logo-glitch { font-size: 42px; margin: 0; color: white; text-shadow: 3px 3px 0px #00d2ff; letter-spacing: 2px; }
+.version { font-size: 10px; color: #666; letter-spacing: 3px; text-transform: uppercase; }
+
+/* PERFIL */
+#profileCard { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 12px; }
+.avatar-wrapper { position: relative; }
+#userAvatar { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #00d2ff; }
+.level-badge { position: absolute; bottom: -5px; right: -5px; background: #ffd700; color: black; font-weight: bold; font-size: 10px; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #111; }
+.profile-details { flex: 1; text-align: left; }
+#userName { font-weight: bold; display: block; font-size: 14px; }
+.xp-track { width: 100%; height: 4px; background: #333; border-radius: 2px; margin: 4px 0; }
+.xp-fill { height: 100%; background: #00d2ff; width: 50%; transition: width 0.3s; }
+.stats-row { display: flex; justify-content: space-between; font-size: 10px; color: #aaa; }
+.coin-pill { color: #ffd700; }
+.btn-logout { background: #ff4444; color: white; border: none; border-radius: 8px; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+/* INPUTS E BOTOES */
+input { width: 100%; padding: 12px; background: #111; border: 1px solid #333; color: white; border-radius: 8px; text-align: center; margin-bottom: 10px; }
+.btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 16px; transition: 0.2s; text-transform: uppercase; }
+.btn:hover { transform: translateY(-2px); }
+.btn-google { background: white; color: #333; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; }
+.btn-play { background: linear-gradient(135deg, #00d2ff, #0072ff); color: white; box-shadow: 0 4px 15px rgba(0,114,255,0.4); }
+.btn-shop { background: #222; color: #ccc; margin-top: 10px; font-size: 14px; }
+
+/* LOJA */
+.modal { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); z-index: 100; pointer-events: auto; }
+.modal-content { position: absolute; top:50%; left:50%; transform: translate(-50%,-50%); background: #151520; padding: 25px; border-radius: 15px; width: 320px; border: 1px solid #333; text-align: center; }
 .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
-.shop-item { background: #111; padding: 10px; border-radius: 8px; cursor: pointer; }
-.shop-item:hover { background: #222; }
+.shop-item { background: #0a0a10; padding: 10px; border-radius: 8px; cursor: pointer; border: 1px solid #333; transition: 0.2s; }
+.shop-item:hover { border-color: #00d2ff; background: #111; }
 .shop-item .icon { font-size: 24px; margin-bottom: 5px; }
-.shop-item button { background: #ff9900; color: black; padding: 5px; width: 100%; border-radius: 4px; margin-top: 5px; font-weight: bold; cursor: pointer; }
-.btn-close { background: #ff4444; width: 100%; padding: 10px; border-radius: 8px; color: white; cursor: pointer; }
+.buy-btn { width: 100%; background: #ffd700; color: black; border: none; padding: 4px; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 5px; }
+.btn-close { background: #ff4444; border:none; padding: 10px; width: 100%; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; }
+
+/* GAME HUD */
+.bottom-center { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); text-align: center; width: 200px; }
+.mass-counter { font-size: 20px; font-weight: 800; text-shadow: 0 2px 4px black; }
+.xp-hud { background: rgba(0,0,0,0.5); height: 16px; border-radius: 8px; position: relative; overflow: hidden; margin-top: 5px; border: 1px solid rgba(255,255,255,0.2); }
+.xp-hud .xp-fill { background: linear-gradient(90deg, #ff00cc, #3333ff); }
+.lvl-txt { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 9px; font-weight: bold; text-shadow: 0 1px 2px black; width: 100%; }
+
+/* CONTROLES */
+#joystickZone { position: absolute; bottom: 50px; left: 50px; width: 100px; height: 100px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; pointer-events: auto; }
+#joystickStick { position: absolute; top: 50%; left: 50%; width: 40px; height: 40px; background: #00d2ff; border-radius: 50%; transform: translate(-50%,-50%); box-shadow: 0 0 20px rgba(0,210,255,0.5); pointer-events: none; }
+.action-buttons { position: absolute; bottom: 50px; right: 50px; display: flex; gap: 20px; pointer-events: auto; }
+.action-btn { width: 65px; height: 65px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.6); color: white; font-size: 22px; font-weight: bold; cursor: pointer; backdrop-filter: blur(4px); }
+.split-btn { color: #00d2ff; border-color: #00d2ff; }
+.eject-btn { color: #ff0055; border-color: #ff0055; }
+
+@keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
 
 @media (max-width: 700px) {
-    #joystickZone { bottom: 20px; left: 20px; width: 100px; height: 100px; }
-    .action-buttons { bottom: 20px; right: 20px; gap: 10px; }
+    #joystickZone { bottom: 20px; left: 20px; width: 90px; height: 90px; }
+    .action-buttons { bottom: 20px; right: 20px; gap: 15px; }
+    .action-btn { width: 55px; height: 55px; font-size: 18px; }
     #mainMenu { width: 95%; padding: 20px; }
 }
