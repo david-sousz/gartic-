@@ -11,26 +11,11 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Configuração Mobile -->
     <style>
-        /* Previne refresh ao puxar a tela no mobile */
-        body {
-            overscroll-behavior-y: contain;
-            touch-action: pan-x pan-y;
-        }
-        /* Canvas não permite scroll */
-        canvas {
-            touch-action: none;
-            background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        body { overscroll-behavior-y: contain; touch-action: pan-x pan-y; }
+        canvas { touch-action: none; background-image: radial-gradient(#e5e7eb 1px, transparent 1px); background-size: 20px 20px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-blue-50 text-gray-800 h-screen w-screen overflow-hidden flex flex-col font-sans">
@@ -39,18 +24,24 @@
     <div id="loginScreen" class="fixed inset-0 z-50 bg-blue-500 flex flex-col items-center justify-center p-6">
         <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm text-center">
             <h1 class="text-4xl font-bold text-blue-600 mb-2">Gart<span class="text-orange-500">ic</span></h1>
+            
+            <!-- Aviso de Configuração -->
+            <div id="configWarning" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 text-xs text-left">
+                <strong class="font-bold">Erro de Configuração!</strong><br>
+                Você precisa editar o código HTML e colocar suas chaves do Firebase na variável `YOUR_FIREBASE_CONFIG` lá embaixo.
+            </div>
+
             <p class="text-gray-500 mb-6">Desenhe e adivinhe com amigos!</p>
             
             <input type="text" id="usernameInput" maxlength="12" placeholder="Seu Apelido" 
                 class="w-full bg-gray-100 border-2 border-gray-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-blue-500 transition mb-4 text-center font-bold text-gray-700">
             
-            <button onclick="enterGame()" 
+            <button onclick="enterGame()" id="enterBtn"
                 class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 rounded-xl text-xl shadow-lg transform active:scale-95 transition">
                 JOGAR AGORA
             </button>
             <p id="loginError" class="text-red-500 mt-2 text-sm hidden">Digite um nome válido.</p>
         </div>
-        <p class="text-white/60 mt-8 text-sm">Versão Mobile • Máx 15 Players</p>
     </div>
 
     <!-- CABEÇALHO DO JOGO -->
@@ -63,12 +54,9 @@
                 Rodada <span id="roundDisplay">1</span>
             </div>
         </div>
-        
-        <!-- A PALAVRA (Ou traços) -->
         <div id="wordDisplay" class="text-xl font-bold tracking-widest text-gray-800 uppercase truncate max-w-[150px]">
             AGUARDANDO
         </div>
-
         <button onclick="togglePlayerList()" class="p-2 text-gray-500 hover:text-blue-500 relative">
             <i class="fa-solid fa-users text-xl"></i>
             <span id="playerCountBadge" class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">0</span>
@@ -77,17 +65,11 @@
 
     <!-- AREA DO JOGO -->
     <div id="gameArea" class="flex-1 relative hidden flex-col">
-        
-        <!-- AVISO DE STATUS -->
         <div id="statusOverlay" class="absolute top-2 left-1/2 transform -translate-x-1/2 bg-yellow-100 text-yellow-800 px-4 py-1 rounded-full text-xs font-bold shadow-sm z-20 hidden">
             Esperando jogadores...
         </div>
-
-        <!-- CANVAS (Área de Desenho) -->
         <div class="relative w-full aspect-square bg-white shadow-inner border-b border-gray-200">
             <canvas id="drawingCanvas" class="w-full h-full cursor-crosshair"></canvas>
-            
-            <!-- Ferramentas (Apenas para o desenhista) -->
             <div id="drawerTools" class="absolute bottom-2 left-2 right-2 flex justify-center gap-2 hidden">
                 <button onclick="setColor('#000000')" class="w-8 h-8 rounded-full bg-black border-2 border-white shadow-md ring-2 ring-gray-200"></button>
                 <button onclick="setColor('#ef4444')" class="w-8 h-8 rounded-full bg-red-500 border-2 border-white shadow-md"></button>
@@ -100,15 +82,10 @@
                 </button>
             </div>
         </div>
-
-        <!-- CHAT E MENSAGENS -->
         <div class="flex-1 bg-gray-50 overflow-hidden flex flex-col relative">
             <div id="chatMessages" class="flex-1 overflow-y-auto p-3 space-y-2 text-sm">
-                <!-- Mensagens aparecerão aqui -->
                 <div class="text-center text-gray-400 text-xs italic my-2">Bem-vindo à sala!</div>
             </div>
-
-            <!-- Input do Chat (Adivinhação) -->
             <div id="guessInputArea" class="p-2 bg-white border-t border-gray-200 flex gap-2">
                 <input type="text" id="chatInput" placeholder="Escreva sua resposta aqui..." 
                     class="flex-1 bg-gray-100 border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:border-blue-500 transition disabled:opacity-50"
@@ -127,38 +104,61 @@
                 <h3 class="font-bold text-lg">Jogadores (<span id="modalPlayerCount">0</span>)</h3>
                 <button onclick="togglePlayerList()" class="text-gray-500 p-2"><i class="fa-solid fa-xmark fa-lg"></i></button>
             </div>
-            <div id="playersList" class="space-y-2 overflow-y-auto flex-1">
-                <!-- Lista injetada via JS -->
-            </div>
+            <div id="playersList" class="space-y-2 overflow-y-auto flex-1"></div>
         </div>
     </div>
 
-    <!-- Scripts Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, collection, onSnapshot, setDoc, updateDoc, addDoc, serverTimestamp, runTransaction, deleteDoc, getDoc, query, orderBy, limit, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, collection, onSnapshot, setDoc, updateDoc, addDoc, serverTimestamp, increment, query, orderBy, limit, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Configuração Firebase (Do Ambiente)
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = __app_id || 'gartic-app';
+        // =================================================================================
+        // ÁREA DE CONFIGURAÇÃO (COLE SUA CONFIGURAÇÃO DO FIREBASE AQUI)
+        // =================================================================================
+        
+        // Substitua o objeto vazio abaixo {} pelo que você copiou do Console do Firebase
+        const YOUR_FIREBASE_CONFIG = {}; 
 
-        // Constantes do Jogo
-        const ROOM_ID = "sala-global-01"; // Sala única para demo
-        const MAX_PLAYERS = 15;
-        const ROUND_TIME = 60; // segundos
-        const WORDS = [
-            "CASA", "SOL", "ARVORE", "CARRO", "GATO", "BOLA", "FLOR", "LUA", 
-            "PEIXE", "BARCO", "AVIAO", "MACA", "BANANA", "RELOGIO", "OCULOS",
-            "ESTRELA", "CORACAO", "LIVRO", "LAPIS", "MESA", "CADEIRA", "TELEFONE",
-            "COMPUTADOR", "RATO", "QUEIJO", "SAPATO", "MEIA", "CHAPEU", "BOLO",
-            "SORVETE", "PIZZA", "HAMBURGUER", "VIOLAO", "TAMBOR", "ESPADA"
-        ];
+        // =================================================================================
+        
+        let app, auth, db, appId;
 
-        // Estado Local
+        // Verifica se a config foi preenchida ou se está no ambiente de teste
+        let firebaseConfig = null;
+        if (Object.keys(YOUR_FIREBASE_CONFIG).length > 0) {
+             // Usuário colocou a config
+             firebaseConfig = YOUR_FIREBASE_CONFIG;
+             appId = 'gartic-prod';
+        } else if (typeof __firebase_config !== 'undefined') {
+             // Ambiente de teste (Canvas)
+             firebaseConfig = JSON.parse(__firebase_config);
+             appId = __app_id || 'gartic-app';
+        }
+
+        if (!firebaseConfig) {
+            document.getElementById('configWarning').classList.remove('hidden');
+            document.getElementById('enterBtn').disabled = true;
+            document.getElementById('enterBtn').classList.add('bg-gray-400', 'cursor-not-allowed');
+            throw new Error("Firebase Config faltando! Edite o arquivo HTML.");
+        } else {
+            // Inicializa Firebase
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            
+            // Autenticação Anônima
+            signInAnonymously(auth).catch((error) => {
+                console.error("Erro no Login Anônimo:", error);
+                alert("Erro ao conectar no Firebase. Verifique se 'Anonymous Auth' está ativado no Console.");
+            });
+        }
+
+        // Variáveis Globais
+        const ROOM_ID = "sala-global-01";
+        const ROUND_TIME = 60;
+        const WORDS = ["CASA", "SOL", "ARVORE", "CARRO", "GATO", "BOLA", "FLOR", "LUA", "PEIXE", "BARCO", "AVIAO", "MACA", "BANANA", "RELOGIO", "OCULOS", "ESTRELA", "CORACAO", "LIVRO", "LAPIS", "MESA", "CADEIRA", "TELEFONE", "COMPUTADOR", "RATO", "QUEIJO"];
+
         let currentUser = null;
         let myName = "";
         let currentDrawerId = null;
@@ -169,77 +169,40 @@
         let lastPos = { x: 0, y: 0 };
         let currentColor = "#000000";
         let currentWidth = 3;
-        let unsubscribeRoom = null;
-        let unsubscribeLines = null;
-        let unsubscribePlayers = null;
-        let unsubscribeChat = null;
-        
-        // Referências DOM
+        window.currentPlayersList = [];
+
         canvas = document.getElementById('drawingCanvas');
         ctx = canvas.getContext('2d');
-        
-        // Setup Inicial Auth
-        async function initAuth() {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
-            }
-        }
-        initAuth();
 
         onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                console.log("Logado como:", user.uid);
-            }
+            if (user) currentUser = user;
         });
 
-        // --- Funções Globais (Expostas para o HTML) ---
+        // --- Funções Expostas ---
         window.enterGame = async () => {
             const nameInput = document.getElementById('usernameInput');
             const name = nameInput.value.trim().toUpperCase();
+            if (name.length < 2) return document.getElementById('loginError').classList.remove('hidden');
             
-            if (name.length < 2) {
-                document.getElementById('loginError').classList.remove('hidden');
-                return;
-            }
-
             myName = name;
-            
-            // UI Transition
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('gameHeader').classList.remove('hidden');
             document.getElementById('gameHeader').classList.add('flex');
             document.getElementById('gameArea').classList.remove('hidden');
             document.getElementById('gameArea').classList.add('flex');
-
+            
             resizeCanvas();
             await joinRoom();
         };
 
-        window.togglePlayerList = () => {
-            const modal = document.getElementById('playersModal');
-            if (modal.classList.contains('hidden')) {
-                modal.classList.remove('hidden');
-            } else {
-                modal.classList.add('hidden');
-            }
-        };
-
-        window.setColor = (color) => {
-            currentColor = color;
-            currentWidth = 3;
-        };
-
+        window.togglePlayerList = () => document.getElementById('playersModal').classList.toggle('hidden');
+        window.setColor = (color) => { currentColor = color; currentWidth = 3; };
+        
         window.clearCanvasAction = async () => {
             if (!isMyTurn) return;
-            // Limpa localmente e avisa o servidor
             clearCanvas();
             const roomRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}`);
-            await updateDoc(roomRef, {
-                clearBoard: serverTimestamp() // Gatilho para limpar
-            });
+            await updateDoc(roomRef, { clearBoard: serverTimestamp() });
         };
 
         window.sendMessage = async () => {
@@ -247,152 +210,96 @@
             const msg = input.value.trim();
             if (!msg) return;
 
-            // Se for a vez do desenhista, ele não pode dar dica da palavra exata
             if (isMyTurn && msg.toUpperCase().includes(secretWord)) {
                 addSystemMessage("Você não pode falar a palavra secreta!");
                 input.value = "";
                 return;
             }
 
-            // Envia mensagem
             const chatRef = collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/messages`);
-            await addDoc(chatRef, {
-                sender: myName,
-                senderId: currentUser.uid,
-                text: msg,
-                type: 'chat',
-                timestamp: serverTimestamp()
-            });
+            await addDoc(chatRef, { sender: myName, senderId: currentUser.uid, text: msg, type: 'chat', timestamp: serverTimestamp() });
 
-            // Verifica acerto (Lógica Otimista + Servidor valida depois se quiser, mas aqui faremos no cliente)
-            if (!isMyTurn && currentDrawerId && secretWord && msg.toUpperCase() === secretWord) {
-                handleCorrectGuess();
-            }
-
+            if (!isMyTurn && currentDrawerId && secretWord && msg.toUpperCase() === secretWord) handleCorrectGuess();
             input.value = "";
         };
 
-        window.handleChatKey = (e) => {
-            if (e.key === 'Enter') window.sendMessage();
-        };
+        window.handleChatKey = (e) => { if (e.key === 'Enter') window.sendMessage(); };
 
-        // --- Lógica do Jogo ---
-
+        // --- Lógica Principal ---
         async function joinRoom() {
             if (!currentUser) return;
-
             const roomRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}`);
             const playerRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/players/${currentUser.uid}`);
 
-            // Adicionar jogador
-            await setDoc(playerRef, {
-                name: myName,
-                score: 0,
-                joinedAt: serverTimestamp(),
-                lastActive: serverTimestamp()
-            });
+            await setDoc(playerRef, { name: myName, score: 0, joinedAt: serverTimestamp(), lastActive: serverTimestamp() });
 
-            // Inicializar ou ler Sala
             const roomSnap = await getDoc(roomRef);
             if (!roomSnap.exists()) {
-                await setDoc(roomRef, {
-                    status: 'waiting',
-                    round: 1,
-                    createdAt: serverTimestamp(),
-                    drawerId: null,
-                    word: null,
-                    timerEnd: null
-                });
+                await setDoc(roomRef, { status: 'waiting', round: 1, createdAt: serverTimestamp(), drawerId: null, word: null, timerEnd: null });
             }
-
             setupListeners();
             setupCanvasEvents();
         }
 
         function setupListeners() {
             const roomRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}`);
-            
-            // 1. Ouvir estado da Sala
-            unsubscribeRoom = onSnapshot(roomRef, (snap) => {
+            onSnapshot(roomRef, (snap) => {
                 if (!snap.exists()) return;
                 const data = snap.data();
                 handleGameState(data);
-                
-                // Gatilho de Limpar Tela
                 if (data.clearBoard && data.clearBoard.toMillis && (!window.lastClear || data.clearBoard.toMillis() > window.lastClear)) {
                     clearCanvas();
                     window.lastClear = data.clearBoard.toMillis();
                 }
             });
 
-            // 2. Ouvir Jogadores
             const playersRef = collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/players`);
-            unsubscribePlayers = onSnapshot(playersRef, (snap) => {
+            onSnapshot(playersRef, (snap) => {
                 const players = [];
                 snap.forEach(doc => players.push({ id: doc.id, ...doc.data() }));
                 updatePlayerList(players);
                 checkGameStartConditions(players);
             });
 
-            // 3. Ouvir Desenho (Linhas)
-            // IMPORTANTE: Limitar para não carregar histórico antigo demais se a sala for velha
-            // Mas aqui vamos ouvir tudo e filtrar pelo "round" se implementado complexo.
-            // Simplificação: Ouvimos apenas novos adicionados.
             const linesRef = collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/lines`);
-            const qLines = query(linesRef, orderBy('timestamp', 'asc')); // Sem limit para desenhar tudo da rodada
-            
-            unsubscribeLines = onSnapshot(qLines, (snap) => {
+            const qLines = query(linesRef, orderBy('timestamp', 'asc'));
+            onSnapshot(qLines, (snap) => {
                 snap.docChanges().forEach((change) => {
                     if (change.type === "added") {
                         const line = change.doc.data();
-                        // Só desenha se NÃO fui eu que mandei (para evitar traço duplo ou lag)
-                        if (line.drawerId !== currentUser.uid) {
-                            drawLine(line.points, line.color, line.width);
-                        }
+                        if (line.drawerId !== currentUser.uid) drawLine(line.points, line.color, line.width);
                     }
                 });
             });
 
-            // 4. Ouvir Chat
             const chatRef = collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/messages`);
             const qChat = query(chatRef, orderBy('timestamp', 'desc'), limit(50));
-            
-            unsubscribeChat = onSnapshot(qChat, (snap) => {
+            onSnapshot(qChat, (snap) => {
                 const msgs = [];
                 snap.forEach(doc => msgs.push(doc.data()));
                 renderChat(msgs.reverse());
             });
         }
 
-        // --- Core Game Loop ---
-
         function handleGameState(data) {
             currentDrawerId = data.drawerId;
-            secretWord = data.word; // Note: In a real secure app, this would be hidden via Firestore Rules or Cloud Functions
-            
-            isMyTurn = (currentUser.uid === currentDrawerId);
-            
-            // Atualiza UI baseada no turno
+            secretWord = data.word;
+            isMyTurn = (currentUser?.uid === currentDrawerId);
+
             const wordDisplay = document.getElementById('wordDisplay');
             const tools = document.getElementById('drawerTools');
             const input = document.getElementById('chatInput');
             const sendBtn = document.getElementById('sendBtn');
             const statusOverlay = document.getElementById('statusOverlay');
 
-            // Timer Logic
             if (data.timerEnd) {
                 const timeLeft = Math.max(0, Math.ceil((data.timerEnd.toMillis() - Date.now()) / 1000));
                 document.getElementById('timerDisplay').innerText = timeLeft + "s";
-                
-                // Mestre do Tempo (Quem desenha controla o fim do tempo para evitar conflitos, ou qualquer um se desenhista caiu)
-                if (isMyTurn && timeLeft <= 0 && data.status === 'playing') {
-                    endRound("tempo");
-                }
+                if (isMyTurn && timeLeft <= 0 && data.status === 'playing') endRound("tempo");
             } else {
                 document.getElementById('timerDisplay').innerText = "--";
             }
 
-            // UI Changes
             if (data.status === 'waiting') {
                 wordDisplay.innerText = "AGUARDANDO";
                 statusOverlay.innerText = "Esperando mais jogadores...";
@@ -400,16 +307,14 @@
                 tools.classList.add('hidden');
             } else if (data.status === 'playing') {
                 statusOverlay.classList.add('hidden');
-                
                 if (isMyTurn) {
                     wordDisplay.innerText = "DESENHE: " + secretWord;
                     wordDisplay.classList.add('text-blue-600');
                     tools.classList.remove('hidden');
                     input.disabled = true;
-                    input.placeholder = "É a sua vez de desenhar!";
+                    input.placeholder = "É a sua vez!";
                     sendBtn.disabled = true;
                 } else {
-                    // Mascara a palavra
                     const masked = secretWord ? secretWord.replace(/[A-Z]/g, "_ ") : "";
                     wordDisplay.innerText = masked;
                     wordDisplay.classList.remove('text-blue-600');
@@ -419,80 +324,32 @@
                     sendBtn.disabled = false;
                 }
             } else if (data.status === 'round_end') {
-                wordDisplay.innerText = secretWord; // Revela
-                statusOverlay.innerText = `Rodada acabou! A palavra era ${secretWord}`;
+                wordDisplay.innerText = secretWord;
+                statusOverlay.innerText = `Fim! Era ${secretWord}`;
                 statusOverlay.classList.remove('hidden');
                 tools.classList.add('hidden');
-                
-                // Iniciar nova rodada após delay (Responsabilidade do desenhista anterior ou aleatório)
-                if (isMyTurn) {
-                    setTimeout(() => startNewRound(), 3000);
-                }
+                if (isMyTurn) setTimeout(() => startNewRound(), 3000);
             }
         }
 
-        // Lógica para verificar e iniciar o jogo
-        async function checkGameStartConditions(players) {
-            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}`);
-            const roomSnap = await getDoc(roomRef);
-            const roomData = roomSnap.data();
-
-            // Se tem 2+ jogadores e está 'waiting', começa
-            if (players.length >= 2 && roomData.status === 'waiting') {
-                // Apenas um cliente precisa disparar isso. Usamos determinismo simples:
-                // Se eu sou o jogador com ID alfabeticamente menor (ou mais antigo), eu começo.
+        function checkGameStartConditions(players) {
+            // Se tem 2+ jogadores e ninguem jogando ainda
+            if (players.length >= 2 && (!currentDrawerId)) {
+                // Apenas o 'dono' ou primeiro da lista dispara
                 const sortedIds = players.map(p => p.id).sort();
-                if (currentUser.uid === sortedIds[0]) {
-                    startNewRound(players);
-                }
+                if (currentUser.uid === sortedIds[0]) startNewRound(players);
             }
         }
 
         async function startNewRound(playersList = null) {
-            // Se não passou lista, busca de novo (otimização seria passar)
-            let players = playersList;
-            if (!players) {
-                const pRef = collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/players`);
-                const snap = await getDoc(pRef.parent); // Hack para pegar coleção? Não, precisa query.
-                // Simplificação: apenas pega IDs da sala atual
-                 // Nota: Firestore Client SDK não lista collection.
-                 // Vamos assumir que quem chamou sabe o que faz ou a query roda rapido.
-                 // Para garantir, vamos apenas resetar.
-            }
+            // Busca IDs se necessário
+            let ids = playersList ? playersList.map(p => p.id) : window.currentPlayersList.map(p => p.id);
+            if (ids.length < 2) return;
 
-            // Seleciona nova palavra e desenhista
-            const newWord = WORDS[Math.floor(Math.random() * WORDS.length)];
-            
-            // Precisamos pegar a lista de players ativa para escolher um aleatório
-            // Como é um ambiente distribuído, vamos pegar todos os players ativos recentemente
-            // Query complexa? Não, pega todos e filtra no cliente quem atualizou 'lastActive' (se tivéssemos heartbeat).
-            // Para Demo: Pega todos os players da coleção.
-            // **IMPORTANTE**: Para evitar leituras extras, vamos confiar que quem chama essa função tem autoridade.
-            
-            // Vamos fazer uma query rápida para pegar IDs
-            const qP = query(collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/players`));
-            /* Não podemos fazer getDocs aqui dentro sem importar. Assumindo que temos acesso a lista atualizada no escopo global ou recarregamos */
-            
-            // Hack para Demo: Escolhe um ID aleatório baseado no timestamp se não tivermos a lista perfeita,
-            // ou melhor, atribui a "null" e deixa o cliente reivindicar? Não, gera race condition.
-            
-            // Solução Robusta Simples:
-            // O cliente que inicia a rodada define tudo.
-            // Para pegar ids:
-            // Usar a lista local 'currentPlayersList' que é mantida pelo onSnapshot
-            
-            const ids = window.currentPlayersList.map(p => p.id);
-            if (ids.length < 2) return; // Não dá pra jogar sozinho
-            
             const nextDrawer = ids[Math.floor(Math.random() * ids.length)];
-            
+            const newWord = WORDS[Math.floor(Math.random() * WORDS.length)];
             const roomRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}`);
-            
-            // Limpa linhas antigas?
-            // Firestore não deleta coleção inteira facilmente.
-            // Workaround: incrementar um ID de "quadro" ou "gameId".
-            // Vamos apenas marcar 'clearBoard' e ignorar linhas com timestamp antigo no cliente.
-            
+
             await updateDoc(roomRef, {
                 status: 'playing',
                 drawerId: nextDrawer,
@@ -501,55 +358,30 @@
                 clearBoard: serverTimestamp()
             });
 
-            // Adiciona aviso no chat
             const chatRef = collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/messages`);
-            await addDoc(chatRef, {
-                type: 'system',
-                text: `Nova rodada iniciada!`,
-                timestamp: serverTimestamp()
-            });
+            await addDoc(chatRef, { type: 'system', text: `Nova rodada!`, timestamp: serverTimestamp() });
         }
 
         async function handleCorrectGuess() {
-            // 1. Dar pontos
             const myPlayerRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/players/${currentUser.uid}`);
-            await updateDoc(myPlayerRef, {
-                score: increment(10)
-            });
+            await updateDoc(myPlayerRef, { score: increment(10) });
 
-            // 2. Avisar chat
             const chatRef = collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/messages`);
-            await addDoc(chatRef, {
-                type: 'system',
-                text: `${myName} ACERTOU! A palavra era ${secretWord}.`,
-                timestamp: serverTimestamp()
-            });
+            await addDoc(chatRef, { type: 'system', text: `${myName} ACERTOU!`, timestamp: serverTimestamp() });
 
-            // 3. Encerrar rodada
             const roomRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}`);
-            await updateDoc(roomRef, {
-                status: 'round_end',
-                timerEnd: null // Para timer
-            });
+            await updateDoc(roomRef, { status: 'round_end', timerEnd: null });
         }
 
         async function endRound(reason) {
             const roomRef = doc(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}`);
-            await updateDoc(roomRef, {
-                status: 'round_end',
-                timerEnd: null
-            });
+            await updateDoc(roomRef, { status: 'round_end', timerEnd: null });
             
             const chatRef = collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/messages`);
-            await addDoc(chatRef, {
-                type: 'system',
-                text: reason === "tempo" ? `O tempo acabou! A palavra era ${secretWord}.` : "Fim da rodada!",
-                timestamp: serverTimestamp()
-            });
+            await addDoc(chatRef, { type: 'system', text: reason === "tempo" ? `Tempo esgotado! era ${secretWord}` : "Fim da rodada!", timestamp: serverTimestamp() });
         }
 
-        // --- Canvas & Drawing Logic ---
-
+        // --- Canvas e Helpers ---
         function resizeCanvas() {
             const container = canvas.parentElement;
             canvas.width = container.clientWidth;
@@ -558,48 +390,30 @@
         window.addEventListener('resize', resizeCanvas);
 
         function setupCanvasEvents() {
-            // Mouse
             canvas.addEventListener('mousedown', startDraw);
             canvas.addEventListener('mousemove', draw);
             canvas.addEventListener('mouseup', endDraw);
             canvas.addEventListener('mouseout', endDraw);
-
-            // Touch
             canvas.addEventListener('touchstart', (e) => {
-                e.preventDefault(); // Previne scroll
-                const touch = e.touches[0];
-                const mouseEvent = new MouseEvent('mousedown', {
-                    clientX: touch.clientX,
-                    clientY: touch.clientY
-                });
-                canvas.dispatchEvent(mouseEvent);
+                e.preventDefault();
+                const t = e.touches[0];
+                canvas.dispatchEvent(new MouseEvent('mousedown', { clientX: t.clientX, clientY: t.clientY }));
             }, { passive: false });
-
             canvas.addEventListener('touchmove', (e) => {
                 e.preventDefault();
-                const touch = e.touches[0];
-                const mouseEvent = new MouseEvent('mousemove', {
-                    clientX: touch.clientX,
-                    clientY: touch.clientY
-                });
-                canvas.dispatchEvent(mouseEvent);
+                const t = e.touches[0];
+                canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: t.clientX, clientY: t.clientY }));
             }, { passive: false });
-
             canvas.addEventListener('touchend', (e) => {
                 e.preventDefault();
-                const mouseEvent = new MouseEvent('mouseup', {});
-                canvas.dispatchEvent(mouseEvent);
+                canvas.dispatchEvent(new MouseEvent('mouseup', {}));
             }, { passive: false });
         }
 
         let currentPathPoints = [];
-
         function getPos(e) {
             const rect = canvas.getBoundingClientRect();
-            return {
-                x: (e.clientX - rect.left) / canvas.width, // Normaliza 0-1
-                y: (e.clientY - rect.top) / canvas.height
-            };
+            return { x: (e.clientX - rect.left) / canvas.width, y: (e.clientY - rect.top) / canvas.height };
         }
 
         function startDraw(e) {
@@ -607,8 +421,6 @@
             isDrawing = true;
             lastPos = getPos(e);
             currentPathPoints = [lastPos];
-            
-            // Desenha ponto inicial
             ctx.beginPath();
             ctx.arc(lastPos.x * canvas.width, lastPos.y * canvas.height, currentWidth / 2, 0, Math.PI * 2);
             ctx.fillStyle = currentColor;
@@ -618,8 +430,6 @@
         function draw(e) {
             if (!isDrawing || !isMyTurn) return;
             const newPos = getPos(e);
-            
-            // Desenha localmente (Feedback imediato)
             ctx.beginPath();
             ctx.moveTo(lastPos.x * canvas.width, lastPos.y * canvas.height);
             ctx.lineTo(newPos.x * canvas.width, newPos.y * canvas.height);
@@ -627,7 +437,6 @@
             ctx.lineWidth = currentWidth;
             ctx.lineCap = 'round';
             ctx.stroke();
-
             currentPathPoints.push(newPos);
             lastPos = newPos;
         }
@@ -635,111 +444,62 @@
         async function endDraw() {
             if (!isDrawing || !isMyTurn) return;
             isDrawing = false;
-
-            // Envia traço para Firestore
             if (currentPathPoints.length > 0) {
-                // Simplificação extrema para evitar estourar cotas de escrita
-                // Em app real, agruparíamos ou usaríamos Realtime Database
                 const linesRef = collection(db, 'artifacts', appId, 'public', 'data', `rooms/${ROOM_ID}/lines`);
-                
-                // Reduz precisão para economizar espaço
-                const optimizedPoints = currentPathPoints.map(p => ({
-                    x: Number(p.x.toFixed(4)),
-                    y: Number(p.y.toFixed(4))
-                }));
-
-                await addDoc(linesRef, {
-                    drawerId: currentUser.uid,
-                    points: optimizedPoints,
-                    color: currentColor,
-                    width: currentWidth,
-                    timestamp: serverTimestamp()
-                });
+                const optimizedPoints = currentPathPoints.map(p => ({ x: Number(p.x.toFixed(4)), y: Number(p.y.toFixed(4)) }));
+                await addDoc(linesRef, { drawerId: currentUser.uid, points: optimizedPoints, color: currentColor, width: currentWidth, timestamp: serverTimestamp() });
             }
             currentPathPoints = [];
         }
 
         function drawLine(points, color, width) {
             if (!points || points.length < 1) return;
-            
             ctx.beginPath();
             ctx.strokeStyle = color;
             ctx.lineWidth = width;
             ctx.lineCap = 'round';
-
-            // Mover para o primeiro ponto
             ctx.moveTo(points[0].x * canvas.width, points[0].y * canvas.height);
-
-            // Se só tem um ponto, desenha bolinha
             if (points.length === 1) {
                 ctx.lineTo(points[0].x * canvas.width, points[0].y * canvas.height);
                 ctx.stroke();
                 return;
             }
-
-            for (let i = 1; i < points.length; i++) {
-                ctx.lineTo(points[i].x * canvas.width, points[i].y * canvas.height);
-            }
+            for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x * canvas.width, points[i].y * canvas.height);
             ctx.stroke();
         }
 
-        function clearCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-
-        // --- UI Updates ---
-
-        window.currentPlayersList = []; // Global para lógica
+        function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
         function updatePlayerList(players) {
             window.currentPlayersList = players;
-            const list = document.getElementById('playersList');
-            const badge = document.getElementById('playerCountBadge');
-            const modalCount = document.getElementById('modalPlayerCount');
-            
-            badge.innerText = players.length;
-            modalCount.innerText = players.length;
-            
-            // Ordena por Score
+            document.getElementById('playerCountBadge').innerText = players.length;
+            document.getElementById('modalPlayerCount').innerText = players.length;
             players.sort((a, b) => b.score - a.score);
-
-            list.innerHTML = players.map(p => {
+            document.getElementById('playersList').innerHTML = players.map(p => {
                 const isMe = p.id === currentUser?.uid;
                 const isDrawer = p.id === currentDrawerId;
-                return `
-                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border ${isMe ? 'border-blue-300' : 'border-gray-200'}">
-                        <div class="flex items-center gap-2">
-                            ${isDrawer ? '<i class="fa-solid fa-pencil text-orange-500 animate-pulse"></i>' : ''}
-                            <span class="font-bold ${isMe ? 'text-blue-600' : 'text-gray-700'}">${p.name} ${isMe ? '(Eu)' : ''}</span>
-                        </div>
-                        <span class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-xs font-bold">${p.score} pts</span>
+                return `<div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border ${isMe ? 'border-blue-300' : 'border-gray-200'}">
+                    <div class="flex items-center gap-2">
+                        ${isDrawer ? '<i class="fa-solid fa-pencil text-orange-500 animate-pulse"></i>' : ''}
+                        <span class="font-bold ${isMe ? 'text-blue-600' : 'text-gray-700'}">${p.name} ${isMe ? '(Eu)' : ''}</span>
                     </div>
-                `;
+                    <span class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-xs font-bold">${p.score} pts</span>
+                </div>`;
             }).join('');
         }
 
         function renderChat(messages) {
             const chatEl = document.getElementById('chatMessages');
-            
             chatEl.innerHTML = messages.map(msg => {
-                if (msg.type === 'system') {
-                    return `<div class="text-center text-xs font-bold text-orange-500 my-1 bg-orange-50 py-1 rounded">${msg.text}</div>`;
-                }
+                if (msg.type === 'system') return `<div class="text-center text-xs font-bold text-orange-500 my-1 bg-orange-50 py-1 rounded">${msg.text}</div>`;
                 const isMe = msg.senderId === currentUser?.uid;
-                return `
-                    <div class="mb-1 text-sm ${isMe ? 'text-right' : 'text-left'}">
-                        <span class="font-bold text-xs text-gray-500 block">${msg.sender}</span>
-                        <span class="inline-block px-3 py-1 rounded-lg ${isMe ? 'bg-blue-100 text-blue-800' : 'bg-gray-200 text-gray-800'}">
-                            ${msg.text}
-                        </span>
-                    </div>
-                `;
+                return `<div class="mb-1 text-sm ${isMe ? 'text-right' : 'text-left'}">
+                    <span class="font-bold text-xs text-gray-500 block">${msg.sender}</span>
+                    <span class="inline-block px-3 py-1 rounded-lg ${isMe ? 'bg-blue-100 text-blue-800' : 'bg-gray-200 text-gray-800'}">${msg.text}</span>
+                </div>`;
             }).join('');
-
-            // Scroll para baixo se não estiver lendo histórico
             chatEl.scrollTop = chatEl.scrollHeight;
         }
-
         function addSystemMessage(text) {
             const chatEl = document.getElementById('chatMessages');
             const div = document.createElement('div');
@@ -748,7 +508,6 @@
             chatEl.appendChild(div);
             chatEl.scrollTop = chatEl.scrollHeight;
         }
-
     </script>
 </body>
 </html>
