@@ -1,0 +1,86 @@
+body {
+    margin: 0; padding: 0; overflow: hidden;
+    background-color: #050510;
+    font-family: 'Segoe UI', sans-serif;
+    touch-action: none; user-select: none;
+}
+canvas { display: block; }
+
+/* UI Layer */
+#uiLayer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+
+/* Menus */
+#mainMenu, #storeModal {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: rgba(15, 15, 25, 0.95);
+    padding: 30px; border-radius: 16px;
+    border: 1px solid #333; box-shadow: 0 0 60px rgba(0,0,0,0.8);
+    text-align: center; pointer-events: auto; min-width: 320px;
+    display: flex; flex-direction: column; gap: 15px;
+}
+#storeModal { display: none; z-index: 100; border-color: #ff9900; }
+
+h1 { margin: 0; color: white; font-size: 32px; letter-spacing: 2px; }
+h2 { color: #ff9900; margin-top: 0; }
+
+/* Inputs e Botões */
+input[type="text"] {
+    padding: 12px; border-radius: 8px; border: 1px solid #444;
+    background: #0b0b14; color: white; text-align: center; width: 100%; box-sizing: border-box;
+}
+.btn {
+    padding: 12px; border-radius: 8px; border: none; cursor: pointer;
+    font-weight: bold; color: white; transition: 0.2s; width: 100%; font-size: 16px;
+}
+.btn:hover { filter: brightness(1.2); transform: scale(1.02); }
+.btn-play { background: linear-gradient(90deg, #00c6ff, #0072ff); box-shadow: 0 4px 15px rgba(0, 114, 255, 0.4); }
+.btn-store { background: #333; border: 1px solid #555; }
+.btn-google { background: white; color: #444; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 14px; }
+.btn-close { background: #ff4444; margin-top: 10px; }
+
+/* User Profile */
+#userProfile { display: flex; align-items: center; justify-content: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 50px; }
+#userAvatar { width: 30px; height: 30px; border-radius: 50%; }
+#userNameDisplay { color: white; font-weight: bold; }
+
+/* Store Grid */
+.store-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.store-item { background: #1a1a2e; padding: 10px; border-radius: 8px; cursor: pointer; border: 1px solid transparent; }
+.store-item:hover { border-color: #00d2ff; }
+.store-item span { display: block; color: white; font-weight: bold; font-size: 14px; }
+.store-item small { display: block; color: #888; font-size: 10px; margin-bottom: 5px; }
+.btn-buy { background: #ff9900; border: none; border-radius: 4px; color: black; font-weight: bold; cursor: pointer; padding: 4px 10px; }
+
+/* HUD e Controles */
+#hud { display: none; width: 100%; height: 100%; position: relative; }
+#leaderboard { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; color: white; width: 180px; font-size: 12px; }
+.lb-header { border-bottom: 1px solid #555; padding-bottom: 5px; margin-bottom: 5px; text-align: center; color: #aaa; }
+
+#stats { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); color: white; font-weight: bold; text-shadow: 1px 1px 2px black; font-size: 18px; pointer-events: none; }
+
+/* Mobile Controls */
+#joystickZone { position: absolute; bottom: 50px; left: 50px; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%; pointer-events: auto; display: none; }
+#joystickKnob { position: absolute; top: 50%; left: 50%; width: 50px; height: 50px; background: #00d2ff; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; }
+
+.action-container { position: absolute; bottom: 40px; right: 40px; display: flex; gap: 20px; pointer-events: auto; }
+.action-btn { width: 70px; height: 70px; border-radius: 50%; background: rgba(0,0,0,0.6); color: white; font-size: 24px; display: flex; justify-content: center; align-items: center; cursor: pointer; border: 2px solid rgba(255,255,255,0.2); user-select: none; }
+.action-btn:active { background: rgba(255,255,255,0.2); }
+.split { color: #00d2ff; border-color: #00d2ff; }
+.eject { color: #ff0055; border-color: #ff0055; }
+
+/* Lofi Widget */
+#lofiPlayerWidget {
+    position: absolute; top: 10px; left: 10px;
+    background: rgba(0,0,0,0.7); padding: 8px; border-radius: 8px;
+    pointer-events: auto; color: white; display: flex; flex-direction: column; gap: 5px;
+    width: 200px; backdrop-filter: blur(5px); border: 1px solid #333;
+}
+.lofi-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: bold; }
+#toggleRadioBtn { background: none; border: none; cursor: pointer; font-size: 16px; }
+#volumeSlider { width: 100%; height: 4px; accent-color: #a29bfe; }
+.controls-hint { font-size: 12px; color: #666; margin-top: 10px; }
+
+@media (max-width: 900px) {
+    #joystickZone { display: block; }
+    .controls-hint { display: none; }
+}
