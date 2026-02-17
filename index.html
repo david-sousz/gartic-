@@ -3,194 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nebulo.io Ultimate</title>
+    <title>Nebulo.io - Ultimate Edition</title>
     <style>
-        /* --- ESTILOS GERAIS --- */
+        /* --- CSS GERAL --- */
         body {
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background-color: #050510;
+            background-color: #0b0b14;
             font-family: 'Segoe UI', sans-serif;
-            touch-action: none;
+            touch-action: none; /* Impede scroll e zoom no mobile */
             user-select: none;
+            -webkit-user-select: none;
         }
 
-        #gameCanvas {
+        canvas {
             display: block;
         }
 
-        /* --- UI OVERLAY --- */
+        /* --- UI CONTAINER --- */
         #uiLayer {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
             z-index: 10;
         }
 
         /* TELA DE LOGIN */
         #loginPanel {
-            background: rgba(15, 15, 25, 0.95);
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 20, 35, 0.95);
             padding: 30px;
             border-radius: 20px;
             text-align: center;
             pointer-events: auto;
             border: 2px solid #00d2ff;
-            box-shadow: 0 0 40px rgba(0, 210, 255, 0.2);
+            box-shadow: 0 0 50px rgba(0, 210, 255, 0.3);
             width: 90%;
             max-width: 350px;
-            animation: float 4s ease-in-out infinite;
+            z-index: 100;
         }
 
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
-
-        h1 { margin: 0 0 20px 0; color: #fff; font-size: 2rem; letter-spacing: 2px; text-transform: uppercase; text-shadow: 0 0 10px #00d2ff; }
+        h1 { margin: 0 0 20px 0; color: white; text-transform: uppercase; text-shadow: 0 0 10px #00d2ff; }
         
         input {
-            width: 100%; padding: 12px; margin-bottom: 15px;
-            border-radius: 8px; border: 1px solid #333;
-            background: #222; color: white; font-size: 1.1rem;
+            width: 100%; padding: 15px; margin-bottom: 15px;
+            border-radius: 10px; border: 1px solid #444;
+            background: #111; color: white; font-size: 1.1rem;
             box-sizing: border-box; outline: none; text-align: center;
         }
-        input:focus { border-color: #00d2ff; background: #2a2a2a; }
 
-        .btn-primary {
-            width: 100%; padding: 12px; border-radius: 8px; border: none;
+        .btn-start {
+            width: 100%; padding: 15px; border-radius: 10px; border: none;
             background: linear-gradient(90deg, #00d2ff, #0051ff);
-            color: white; font-size: 1.1rem; font-weight: bold; cursor: pointer;
-            text-transform: uppercase; box-shadow: 0 4px 15px rgba(0, 81, 255, 0.4);
-            transition: 0.2s;
+            color: white; font-size: 1.2rem; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 81, 255, 0.5);
         }
-        .btn-primary:active { transform: scale(0.96); }
 
-        /* HUD DO JOGO */
+        /* HUD JOGO */
         #hud {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; display: none;
-        }
-
-        #leaderboard {
-            position: absolute; top: 10px; right: 10px;
-            background: rgba(0,0,0,0.5); padding: 10px;
-            border-radius: 8px; color: white; width: 180px;
-        }
-        .lb-item { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
-        .lb-name { color: #eee; }
-        .lb-score { color: #00d2ff; font-weight: bold; }
-
-        #stats {
-            position: absolute; bottom: 10px; left: 10px;
-            color: white; font-size: 14px; text-shadow: 1px 1px 2px black;
+            width: 100%; height: 100%; position: relative; display: none;
         }
 
         /* MOD MENU (ADMIN) */
         #modMenu {
             position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-            background: rgba(75, 0, 130, 0.9); border: 2px solid #ff00ff;
-            padding: 10px; border-radius: 10px; pointer-events: auto;
-            display: none; display: flex; gap: 10px; z-index: 100;
+            background: rgba(138, 43, 226, 0.8); border: 1px solid #fff;
+            padding: 5px 15px; border-radius: 20px; pointer-events: auto;
+            display: none; gap: 10px; align-items: center;
         }
         .mod-btn {
-            background: #ff00ff; color: white; border: none; padding: 5px 10px;
-            border-radius: 5px; font-size: 10px; cursor: pointer; font-weight: bold;
+            background: white; color: purple; border: none; border-radius: 4px;
+            font-weight: bold; cursor: pointer; padding: 2px 8px; font-size: 12px;
         }
 
-        /* CONTROLES MOBILE */
-        .mobile-controls {
-            position: absolute; bottom: 20px; right: 20px;
-            display: flex; gap: 15px; pointer-events: auto;
+        /* JOYSTICK VIRTUAL */
+        #joystickZone {
+            position: absolute;
+            bottom: 50px; left: 50px;
+            width: 120px; height: 120px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            pointer-events: auto;
+            display: none; /* Ativado via JS no mobile */
+            touch-action: none;
         }
+
+        #joystickKnob {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 50px; height: 50px;
+            background: rgba(0, 210, 255, 0.8);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px #00d2ff;
+            pointer-events: none;
+        }
+
+        /* BOTÕES DE AÇÃO (DIREITA) */
+        .action-container {
+            position: absolute;
+            bottom: 40px; right: 40px;
+            display: flex; gap: 20px;
+            pointer-events: auto;
+        }
+
         .action-btn {
-            width: 60px; height: 60px; border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.3);
-            background: rgba(0,0,0,0.5); color: white;
-            font-size: 24px; display: flex; justify-content: center; align-items: center;
-            touch-action: manipulation; cursor: pointer;
+            width: 70px; height: 70px; border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.3);
+            background: rgba(0,0,0,0.6); color: white;
+            font-size: 28px; display: flex; justify-content: center; align-items: center;
+            cursor: pointer; user-select: none;
+            backdrop-filter: blur(4px);
         }
-        .action-btn:active { background: rgba(255,255,255,0.2); }
-        .split-btn { border-color: #00d2ff; color: #00d2ff; }
-        .eject-btn { border-color: #ff0055; color: #ff0055; }
+        .action-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.2); }
+        .split { border-color: #00d2ff; color: #00d2ff; }
+        .eject { border-color: #ff0055; color: #ff0055; }
 
-        #exitBtn {
-            position: absolute; top: 10px; left: 10px;
-            background: rgba(255,0,0,0.6); color: white;
-            border: none; padding: 8px 15px; border-radius: 5px;
-            pointer-events: auto; cursor: pointer; font-weight: bold;
+        /* PLACAR E STATUS */
+        #leaderboard {
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(0,0,0,0.5); padding: 10px;
+            border-radius: 8px; color: white; width: 150px; font-size: 12px;
+        }
+        #stats {
+            position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+            color: rgba(255,255,255,0.7); font-size: 14px; text-shadow: 1px 1px 2px black;
         }
 
-        /* RADIO */
-        #radioPlayer {
-            position: absolute; bottom: 50px; left: 10px;
-            pointer-events: auto; opacity: 0.7;
+        /* LOFI RADIO */
+        #radioControl {
+            position: absolute; top: 10px; left: 10px; pointer-events: auto;
         }
-        #radioPlayer button {
-            background: #333; color: #fff; border: 1px solid #555;
-            padding: 5px 10px; border-radius: 4px; font-size: 10px; cursor: pointer;
+        #radioBtn {
+            background: rgba(0,0,0,0.6); color: white; border: 1px solid #555;
+            padding: 5px 10px; border-radius: 15px; cursor: pointer; font-size: 12px;
         }
-        
-        @media (min-width: 768px) {
-            .mobile-controls { display: none; } /* Esconde botões mobile no PC */
+
+        /* MEDIA QUERIES PARA LANDSCAPE (Deitado) */
+        @media (max-width: 900px) and (orientation: landscape) {
+            #joystickZone { bottom: 20px; left: 20px; width: 100px; height: 100px; }
+            #joystickKnob { width: 40px; height: 40px; }
+            .action-container { bottom: 20px; right: 20px; gap: 15px; }
+            .action-btn { width: 55px; height: 55px; font-size: 20px; }
+            h1 { font-size: 1.5rem; }
         }
     </style>
 </head>
 <body>
 
     <div id="uiLayer">
-        <!-- LOGIN -->
+        <!-- TELA INICIAL -->
         <div id="loginPanel">
-            <h1>Nebulo.io <span style="font-size: 0.5em; color:#00d2ff">ULTIMATE</span></h1>
-            <input type="text" id="nickname" placeholder="Seu Apelido" maxlength="12">
-            <button class="btn-primary" id="playBtn">JOGAR</button>
-            <div style="margin-top: 15px; font-size: 0.8rem; color: #aaa;">
-                <p>PC: Mouse move, <b>Espaço</b> divide, <b>W</b> ejeta</p>
-                <p>Mobile: Toque move, Botões na tela</p>
-            </div>
+            <h1>Nebulo.io</h1>
+            <input type="text" id="nickname" placeholder="Seu Nick" maxlength="12">
+            <button class="btn-start" id="btnPlay">JOGAR AGORA</button>
+            <p style="color:#aaa; font-size:12px; margin-top:10px;">
+                Use o Joystick para mover.<br>Botão Raio separa, Botão W ejeta.
+            </p>
         </div>
 
         <!-- HUD -->
         <div id="hud">
-            <button id="exitBtn">SAIR</button>
-            
+            <!-- Admin Menu -->
             <div id="modMenu">
-                <span style="color:white; font-size:10px; line-height:24px; margin-right:5px;">ADMIN:</span>
-                <button class="mod-btn" onclick="cheatMass(1000)">+1000 MASS</button>
-                <button class="mod-btn" onclick="cheatSpeed()">SPEED BOOST</button>
-                <button class="mod-btn" onclick="cheatReset()">RESET ME</button>
+                <span style="color:white; font-weight:bold;">MOD:</span>
+                <button class="mod-btn" onclick="adminMass()">+MASS</button>
+                <button class="mod-btn" onclick="adminReset()">RESET</button>
             </div>
 
+            <!-- Radio -->
+            <div id="radioControl">
+                <button id="radioBtn">🎵 Lofi Radio: OFF</button>
+            </div>
+
+            <!-- Leaderboard -->
             <div id="leaderboard">
-                <div style="text-align: center; border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 5px;">TOP JOGADORES</div>
-                <div id="lb-list"></div>
+                <div style="border-bottom:1px solid #555; margin-bottom:5px; text-align:center;">TOP PLAYERS</div>
+                <div id="lb-content"></div>
             </div>
 
-            <div id="stats">
-                Score: <span id="scoreDisplay">0</span> | FPS: <span id="fpsDisplay">60</span>
+            <!-- Joystick (Esquerda) -->
+            <div id="joystickZone">
+                <div id="joystickKnob"></div>
             </div>
 
-            <div id="radioPlayer">
-                <button id="toggleRadio">🎵 Lofi Radio: OFF</button>
+            <!-- Botões (Direita) -->
+            <div class="action-container">
+                <div class="action-btn eject" id="btnEject">W</div>
+                <div class="action-btn split" id="btnSplit">⚡</div>
             </div>
 
-            <div class="mobile-controls">
-                <div class="action-btn eject-btn" id="btnEject">W</div>
-                <div class="action-btn split-btn" id="btnSplit">⚡</div>
-            </div>
+            <!-- Stats -->
+            <div id="stats">Massa: <span id="massDisplay">0</span></div>
         </div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
-    <!-- FIREBASE & GAME LOGIC -->
+    <!-- FIREBASE SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, onSnapshot, deleteDoc, serverTimestamp, query, where } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, onSnapshot, deleteDoc, serverTimestamp, query } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-        // --- CONFIG ---
+        // CONFIGURAÇÃO
         const firebaseConfig = {
             apiKey: "AIzaSyCXDfIO53oqtnRgs9jfApf-rZklp4SRbV8",
             authDomain: "gartic-51f3d.firebaseapp.com",
@@ -203,744 +225,630 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        let myUserId = null;
 
-        // --- GAME CONSTANTS ---
-        const MAP_W = 4000;
-        const MAP_H = 4000;
-        const CAM_ZOOM_SPEED = 0.05;
-        const FOOD_COUNT = 400;
-        const VIRUS_COUNT = 30;
+        signInAnonymously(auth).then(cred => {
+            myUserId = cred.user.uid;
+            console.log("Conectado ID:", myUserId);
+        }).catch(e => console.error(e));
+
+        // --- MOTOR DO JOGO ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Constantes
+        const MAP_SIZE = 4000;
+        const FOOD_COUNT = 500;
         const BOT_COUNT = 15;
-        const GALAXY_CHANCE = 0.005; // Chance por frame de spawnar se não houver
-        const BASE_MASS = 30; // Raio ao inves de massa para simplificar calculos visuais
+        const MERGE_TIME = 15000; // 15 segundos para juntar
 
-        // --- STATE ---
-        let canvas = document.getElementById('gameCanvas');
-        let ctx = canvas.getContext('2d');
-        let userId = null;
-        let gameActive = false;
+        // Estado do Jogo
+        let gameRunning = false;
         let isAdmin = false;
-        let lastTime = 0;
-        let fps = 60;
-        
-        // Entidades
-        let myCells = []; // Array de {x, y, r, vx, vy, color}
-        let otherPlayers = {}; // id -> { cells: [], name: '', ... }
-        let foods = [];
-        let viruses = [];
-        let galaxies = [];
-        let bots = [];
-        let ejectedMass = [];
-
-        // Inputs
-        let mouse = { x: 0, y: 0 };
+        let myName = "";
         let cam = { x: 0, y: 0, zoom: 1 };
         
-        // Audio Synth
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        const audioCtx = new AudioContext();
+        // Entidades
+        let myCells = [];
+        let otherPlayers = {};
+        let foods = [];
+        let viruses = [];
+        let bots = [];
+        let galaxies = [];
+        let ejected = [];
 
-        // --- SETUP ---
+        // Input Joystick
+        let joystickVector = { x: 0, y: 0 };
+        let isJoystickActive = false;
+
+        // --- INICIALIZAÇÃO ---
         function resize() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            // Se for mobile, mostrar joystick
+            if('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+                document.getElementById('joystickZone').style.display = 'block';
+            }
         }
         window.addEventListener('resize', resize);
         resize();
 
-        // --- AUDIO SYSTEM (SINTETIZADOR) ---
-        function playSound(type) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
+        // --- CONTROLE: JOYSTICK VIRTUAL ---
+        const joyZone = document.getElementById('joystickZone');
+        const joyKnob = document.getElementById('joystickKnob');
+        let joyCenter = { x: 0, y: 0 };
 
-            const now = audioCtx.currentTime;
-            
-            if (type === 'eat') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(400, now);
-                osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                osc.start(now);
-                osc.stop(now + 0.1);
-            } else if (type === 'split') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(200, now);
-                osc.frequency.linearRampToValueAtTime(100, now + 0.2);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
-                osc.start(now);
-                osc.stop(now + 0.2);
-            } else if (type === 'explode') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(100, now);
-                osc.frequency.exponentialRampToValueAtTime(10, now + 0.5);
-                gain.gain.setValueAtTime(0.2, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
-                osc.start(now);
-                osc.stop(now + 0.5);
-            } else if (type === 'galaxy') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(400, now);
-                osc.frequency.linearRampToValueAtTime(1200, now + 1);
-                gain.gain.setValueAtTime(0.05, now);
-                gain.gain.linearRampToValueAtTime(0, now + 1);
-                osc.start(now);
-                osc.stop(now + 1);
-            }
-        }
+        joyZone.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isJoystickActive = true;
+            const rect = joyZone.getBoundingClientRect();
+            joyCenter = { x: rect.left + rect.width/2, y: rect.top + rect.height/2 };
+            updateJoystick(e.touches[0]);
+        }, {passive: false});
 
-        // Lofi Radio
-        let isRadioPlaying = false;
-        const radioUrl = 'https://stream.zeno.fm/0r0xa792kwzuv'; // Stream de Lofi genérica
-        const radioAudio = new Audio(radioUrl);
-        radioAudio.volume = 0.3;
+        joyZone.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if(isJoystickActive) updateJoystick(e.touches[0]);
+        }, {passive: false});
 
-        document.getElementById('toggleRadio').onclick = () => {
-            isRadioPlaying = !isRadioPlaying;
-            if (isRadioPlaying) {
-                radioAudio.play().catch(e => alert("O navegador bloqueou o áudio. Interaja com a página e tente de novo."));
-                document.getElementById('toggleRadio').innerText = "🎵 Lofi Radio: ON";
-                document.getElementById('toggleRadio').style.color = "#00ff00";
-            } else {
-                radioAudio.pause();
-                document.getElementById('toggleRadio').innerText = "🎵 Lofi Radio: OFF";
-                document.getElementById('toggleRadio').style.color = "white";
-            }
+        const endJoystick = (e) => {
+            e.preventDefault();
+            isJoystickActive = false;
+            joystickVector = { x: 0, y: 0 };
+            joyKnob.style.transform = `translate(-50%, -50%)`;
         };
+        joyZone.addEventListener('touchend', endJoystick);
+        joyZone.addEventListener('touchcancel', endJoystick);
 
-        // --- FIREBASE AUTH & SYNC ---
-        signInAnonymously(auth).then(cred => {
-            userId = cred.user.uid;
-            console.log("Logado como:", userId);
-        });
-
-        // Ouvir outros jogadores
-        const playersRef = collection(db, "players");
-        const q = query(playersRef);
-        onSnapshot(q, (snapshot) => {
-            snapshot.docChanges().forEach((change) => {
-                const data = change.doc.data();
-                const pid = change.doc.id;
-                if (pid === userId) return;
-
-                if (change.type === "removed") {
-                    delete otherPlayers[pid];
-                } else {
-                    // Interpolação simples
-                    otherPlayers[pid] = data; 
-                }
-            });
-        });
-
-        function sendUpdate() {
-            if (!userId || !gameActive) return;
+        function updateJoystick(touch) {
+            const maxDist = joyZone.clientWidth / 2;
+            let dx = touch.clientX - joyCenter.x;
+            let dy = touch.clientY - joyCenter.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
             
-            // Mapeia células para formato leve
-            const simpleCells = myCells.map(c => ({
-                x: Math.round(c.x),
-                y: Math.round(c.y),
-                r: Math.round(c.r),
-                c: c.color
-            }));
-
-            // Calcula massa total para ranking
-            const totalMass = Math.floor(myCells.reduce((acc, c) => acc + c.r, 0));
-
-            setDoc(doc(db, "players", userId), {
-                n: myName,
-                cells: simpleCells,
-                mass: totalMass,
-                t: serverTimestamp()
-            }, { merge: true }).catch(e => {}); // Ignora erros de rede pra não travar
-        }
-
-        setInterval(sendUpdate, 100); // 10 updates/sec
-
-        // --- GAME LOGIC ---
-
-        let myName = "Player";
-        const COLORS = ['#FF0055', '#00FF55', '#5500FF', '#FFFF00', '#00FFFF', '#FF00FF', '#FF5500'];
-
-        function initGame() {
-            // Gerar comida localmente
-            foods = [];
-            for(let i=0; i<FOOD_COUNT; i++) spawnFood();
-            
-            // Gerar Virus
-            viruses = [];
-            for(let i=0; i<VIRUS_COUNT; i++) {
-                viruses.push({
-                    x: Math.random() * MAP_W,
-                    y: Math.random() * MAP_H,
-                    r: 45 // Tamanho do virus
-                });
+            // Normalizar
+            if (dist > maxDist) {
+                dx = (dx / dist) * maxDist;
+                dy = (dy / dist) * maxDist;
             }
 
-            // Bots
-            bots = [];
-            for(let i=0; i<BOT_COUNT; i++) spawnBot();
+            // Mover visual
+            joyKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
 
-            galaxies = [];
-            ejectedMass = [];
-
-            // Jogador Inicial
-            myCells = [{
-                x: Math.random() * (MAP_W-200)+100,
-                y: Math.random() * (MAP_H-200)+100,
-                r: BASE_MASS,
-                vx: 0, vy: 0,
-                color: COLORS[Math.floor(Math.random()*COLORS.length)]
-            }];
+            // Vetor de saída (-1 a 1)
+            joystickVector = {
+                x: dx / maxDist,
+                y: dy / maxDist
+            };
         }
 
-        function spawnFood() {
-            foods.push({
-                x: Math.random() * MAP_W,
-                y: Math.random() * MAP_H,
-                r: Math.random() * 3 + 2,
-                c: `hsl(${Math.random()*360}, 80%, 60%)`
-            });
-        }
+        // --- CONTROLE: BOTÕES ---
+        document.getElementById('btnSplit').addEventListener('touchstart', (e)=>{ e.preventDefault(); splitAction(); });
+        document.getElementById('btnEject').addEventListener('touchstart', (e)=>{ e.preventDefault(); ejectAction(); });
+        
+        // PC Controls
+        window.addEventListener('keydown', (e) => {
+            if(e.code === 'Space') splitAction();
+            if(e.code === 'KeyW') ejectAction();
+        });
+        window.addEventListener('mousemove', (e) => {
+            if(!isJoystickActive) {
+                // Mouse logic relative to center
+                const cx = window.innerWidth / 2;
+                const cy = window.innerHeight / 2;
+                const dx = e.clientX - cx;
+                const dy = e.clientY - cy;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                const max = Math.min(cx, cy);
+                joystickVector = { x: dx/max, y: dy/max };
+            }
+        });
 
-        function spawnBot() {
-            bots.push({
-                x: Math.random() * MAP_W,
-                y: Math.random() * MAP_H,
-                r: Math.random() * 30 + 20,
-                vx: 0, vy: 0,
-                color: '#'+Math.floor(Math.random()*16777215).toString(16),
-                name: "Bot " + Math.floor(Math.random()*100),
-                state: 'wander',
-                target: null
-            });
-        }
+        // --- LÓGICA DO JOGO ---
 
-        // --- INPUTS ---
-        document.getElementById('playBtn').onclick = () => {
-            const nick = document.getElementById('nickname').value;
-            myName = nick || "Anônimo";
-            
-            // Admin Check
-            if (myName.toLowerCase() === 'david') {
+        document.getElementById('btnPlay').onclick = startGame;
+
+        function startGame() {
+            const nickInput = document.getElementById('nickname').value.trim();
+            myName = nickInput || "Cell";
+
+            // David Admin Logic
+            if (myName.toLowerCase() === "david") {
                 isAdmin = true;
                 document.getElementById('modMenu').style.display = 'flex';
-                // Efeito especial
-                myCells[0].color = "#000000"; // Black hole skin?
+                myName = "👑 DAVID";
             } else {
                 isAdmin = false;
                 document.getElementById('modMenu').style.display = 'none';
             }
 
+            // Setup
             document.getElementById('loginPanel').style.display = 'none';
             document.getElementById('hud').style.display = 'block';
             
-            initGame();
-            gameActive = true;
+            initWorld();
+            
+            // Spawn Player
+            myCells = [{
+                x: Math.random() * (MAP_SIZE - 500) + 250,
+                y: Math.random() * (MAP_SIZE - 500) + 250,
+                r: 30, // Massa inicial
+                color: getRandomColor(),
+                vx: 0, vy: 0,
+                birth: Date.now() // Para merge logic
+            }];
+
+            gameRunning = true;
             requestAnimationFrame(gameLoop);
-        };
+        }
 
-        document.getElementById('exitBtn').onclick = () => {
-            gameActive = false;
-            document.getElementById('hud').style.display = 'none';
-            document.getElementById('loginPanel').style.display = 'block';
-            if(userId) deleteDoc(doc(db, "players", userId));
-        };
+        function initWorld() {
+            // Comida
+            foods = [];
+            for(let i=0; i<FOOD_COUNT; i++) spawnFood();
+            
+            // Virus
+            viruses = [];
+            for(let i=0; i<30; i++) {
+                viruses.push({x: rand(MAP_SIZE), y: rand(MAP_SIZE), r: 45});
+            }
 
-        window.addEventListener('keydown', e => {
-            if (!gameActive) return;
-            if (e.code === 'Space') splitCells();
-            if (e.code === 'KeyW') ejectMass();
-        });
+            // Galaxias
+            galaxies = []; // spawnam random no loop
 
-        // Mobile Binds
-        document.getElementById('btnSplit').addEventListener('touchstart', (e) => { e.preventDefault(); splitCells(); });
-        document.getElementById('btnEject').addEventListener('touchstart', (e) => { e.preventDefault(); ejectMass(); });
+            // Bots
+            bots = [];
+            for(let i=0; i<BOT_COUNT; i++) spawnBot();
+        }
 
-        canvas.addEventListener('mousemove', e => {
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
-        });
-        
-        canvas.addEventListener('touchmove', e => {
-            e.preventDefault();
-            mouse.x = e.touches[0].clientX;
-            mouse.y = e.touches[0].clientY;
-        }, { passive: false });
+        function spawnFood() {
+            foods.push({
+                x: rand(MAP_SIZE), y: rand(MAP_SIZE),
+                r: Math.random() * 3 + 2,
+                c: `hsl(${Math.random()*360}, 100%, 60%)`
+            });
+        }
 
+        function spawnBot() {
+            bots.push({
+                x: rand(MAP_SIZE), y: rand(MAP_SIZE),
+                r: rand(30) + 20,
+                c: getRandomColor(),
+                name: "Bot " + Math.floor(Math.random()*99),
+                target: {x: rand(MAP_SIZE), y: rand(MAP_SIZE)},
+                state: 'wander' // wander, flee, chase
+            });
+        }
 
-        // --- ACTIONS ---
-        function splitCells() {
-            playSound('split');
-            const newCells = [];
-            // Limite de células para não crashar
-            if (myCells.length >= 16) return;
-
+        // --- AÇÕES ---
+        function splitAction() {
+            if(myCells.length >= 16) return;
+            let newCells = [];
+            
             myCells.forEach(cell => {
-                if (cell.r < 30) { // Muito pequeno não divide
+                if(cell.r < 35) {
                     newCells.push(cell);
                     return;
                 }
-
-                // Nova massa (Area / 2)
+                
+                // Dividir area por 2
                 const newArea = (Math.PI * cell.r * cell.r) / 2;
                 const newR = Math.sqrt(newArea / Math.PI);
-
-                cell.r = newR;
                 
-                // Calcula direção do mouse
-                const dx = (mouse.x - canvas.width/2);
-                const dy = (mouse.y - canvas.height/2);
-                const angle = Math.atan2(dy, dx);
+                // Angulo baseado no joystickVector
+                const angle = Math.atan2(joystickVector.y, joystickVector.x);
+                const boost = 15;
 
-                // Celula original fica (com pequeno recuo)
+                // Celula original fica
+                cell.r = newR;
                 newCells.push(cell);
 
                 // Celula projetada
-                const splitSpeed = 15;
                 newCells.push({
-                    x: cell.x + Math.cos(angle) * cell.r,
-                    y: cell.y + Math.sin(angle) * cell.r,
+                    x: cell.x + Math.cos(angle)*cell.r,
+                    y: cell.y + Math.sin(angle)*cell.r,
                     r: newR,
-                    vx: Math.cos(angle) * splitSpeed,
-                    vy: Math.sin(angle) * splitSpeed,
-                    color: cell.color
+                    color: cell.color,
+                    vx: Math.cos(angle) * boost,
+                    vy: Math.sin(angle) * boost,
+                    birth: Date.now()
                 });
             });
             myCells = newCells;
         }
 
-        function ejectMass() {
+        function ejectAction() {
             myCells.forEach(cell => {
-                if (cell.r < 30) return;
-                
-                // Perde massa
+                if(cell.r < 30) return;
+                const loss = 15; // Massa visual perdida
+                // Reduz massa
                 const area = Math.PI * cell.r * cell.r;
-                const massLoss = 100; // Valor da massa ejetada (area)
-                cell.r = Math.sqrt((area - massLoss) / Math.PI);
+                cell.r = Math.sqrt((area - 200) / Math.PI); // -200 area aprox
 
-                // Cria projétil
-                const dx = (mouse.x - canvas.width/2);
-                const dy = (mouse.y - canvas.height/2);
-                const angle = Math.atan2(dy, dx);
-                
-                ejectedMass.push({
-                    x: cell.x + Math.cos(angle) * cell.r,
-                    y: cell.y + Math.sin(angle) * cell.r,
-                    vx: Math.cos(angle) * 20,
-                    vy: Math.sin(angle) * 20,
-                    r: 6, // raio visual da massa
-                    color: cell.color
+                const angle = Math.atan2(joystickVector.y, joystickVector.x);
+                ejected.push({
+                    x: cell.x + Math.cos(angle)*cell.r,
+                    y: cell.y + Math.sin(angle)*cell.r,
+                    vx: Math.cos(angle) * 12,
+                    vy: Math.sin(angle) * 12,
+                    r: 8,
+                    c: cell.color
                 });
             });
         }
 
-        function explodeCell(cellIndex) {
-            playSound('explode');
-            const cell = myCells[cellIndex];
-            const pieces = 8;
-            const newArea = (Math.PI * cell.r * cell.r) / pieces;
-            const newR = Math.sqrt(newArea / Math.PI);
-            
-            // Remove a celula grande
-            myCells.splice(cellIndex, 1);
+        // --- GAME LOOP ---
+        function gameLoop() {
+            if(!gameRunning) return;
 
-            // Cria os pedaços
-            for(let i=0; i<pieces; i++) {
-                if (myCells.length >= 16) break;
-                const angle = (Math.PI * 2 / pieces) * i;
-                myCells.push({
-                    x: cell.x,
-                    y: cell.y,
-                    r: newR,
-                    vx: Math.cos(angle) * 10,
-                    vy: Math.sin(angle) * 10,
-                    color: cell.color
-                });
-            }
+            updatePhysics();
+            drawGame();
+            
+            // Rede (Sync com Firebase a 5hz para economizar)
+            if(Date.now() % 200 < 20) syncNetwork();
+
+            requestAnimationFrame(gameLoop);
         }
 
-        // --- ADMIN FUNCTIONS ---
-        window.cheatMass = (amount) => {
-            if(!isAdmin || !gameActive) return;
-            myCells.forEach(c => c.r += Math.sqrt(amount));
-        };
-        window.cheatSpeed = () => {
-             // Speed é calculado dinamicamente, vamos apenas reduzir a massa visualmente mas manter raio
-             // Na verdade, speed é baseada no tamanho. Vamos fazer um boost de empurrão
-             myCells.forEach(c => { c.vx += 50; c.vy += 50; });
-        };
-        window.cheatReset = () => {
-            if(!isAdmin) return;
-            myCells = [{x: Math.random()*MAP_W, y: Math.random()*MAP_H, r: BASE_MASS, vx:0, vy:0, color: '#000'}];
-        };
+        function updatePhysics() {
+            // 1. Minhas Células
+            let cx=0, cy=0, totalMass=0;
+            const now = Date.now();
 
-
-        // --- UPDATE LOOP ---
-        function update() {
-            // Galaxy Spawn Logic
-            if (galaxies.length < 3 && Math.random() < GALAXY_CHANCE) {
-                galaxies.push({
-                    x: Math.random() * MAP_W,
-                    y: Math.random() * MAP_H,
-                    angle: 0
-                });
-            }
-
-            // Física das minhas células
-            // Centro de massa para camera
-            let cx = 0, cy = 0, totalR = 0;
-
-            myCells.forEach((cell, idx) => {
-                // Input Movement
-                const dx = (mouse.x - canvas.width/2);
-                const dy = (mouse.y - canvas.height/2);
-                const dist = Math.sqrt(dx*dx + dy*dy) || 1;
-                
-                // Velocidade base (maior = mais lento)
-                let speed = 40 * Math.pow(cell.r, -0.4);
-                if (isAdmin) speed *= 1.5;
-
-                // Normaliza e aplica
-                // Se tiver inercia (vx/vy), usa ela. Se não, usa input.
-                if (Math.abs(cell.vx) > 0.1 || Math.abs(cell.vy) > 0.1) {
-                    cell.x += cell.vx;
-                    cell.y += cell.vy;
-                    cell.vx *= 0.9; // Atrito
-                    cell.vy *= 0.9;
-                } else {
-                    cell.x += (dx/dist) * speed;
-                    cell.y += (dy/dist) * speed;
-                }
-
-                // Colisão Mapa
-                cell.x = Math.max(cell.r, Math.min(MAP_W-cell.r, cell.x));
-                cell.y = Math.max(cell.r, Math.min(MAP_H-cell.r, cell.y));
-
-                // Colisão entre células (Soft separation)
-                for(let j=idx+1; j<myCells.length; j++) {
-                    const other = myCells[j];
-                    const d = Math.hypot(cell.x - other.x, cell.y - other.y);
-                    const minDist = cell.r + other.r;
-                    if (d < minDist && d > 0) {
-                        const push = (minDist - d) / 2;
-                        const ang = Math.atan2(cell.y - other.y, cell.x - other.x);
-                        cell.x += Math.cos(ang) * push * 0.1;
-                        cell.y += Math.sin(ang) * push * 0.1;
-                        other.x -= Math.cos(ang) * push * 0.1;
-                        other.y -= Math.sin(ang) * push * 0.1;
+            // Reagrupamento (Merge)
+            for(let i=0; i<myCells.length; i++) {
+                for(let j=i+1; j<myCells.length; j++) {
+                    let c1 = myCells[i];
+                    let c2 = myCells[j];
+                    const dist = Math.hypot(c1.x - c2.x, c1.y - c2.y);
+                    
+                    // Colisão Soft (Repelir se não puder juntar)
+                    const canMerge = (now - c1.birth > MERGE_TIME) && (now - c2.birth > MERGE_TIME);
+                    
+                    if(dist < c1.r + c2.r) {
+                        if(canMerge) {
+                            // Juntar!
+                            const newArea = Math.PI*c1.r*c1.r + Math.PI*c2.r*c2.r;
+                            c1.r = Math.sqrt(newArea/Math.PI);
+                            c1.x = (c1.x*c1.r + c2.x*c2.r)/(c1.r+c2.r); // Posição ponderada
+                            c1.y = (c1.y*c1.r + c2.y*c2.r)/(c1.r+c2.r);
+                            myCells.splice(j, 1);
+                            j--;
+                            continue;
+                        } else {
+                            // Empurrar
+                            const overlap = (c1.r + c2.r - dist) / 2;
+                            const ang = Math.atan2(c1.y - c2.y, c1.x - c2.x);
+                            c1.x += Math.cos(ang) * overlap * 0.1;
+                            c1.y += Math.sin(ang) * overlap * 0.1;
+                            c2.x -= Math.cos(ang) * overlap * 0.1;
+                            c2.y -= Math.sin(ang) * overlap * 0.1;
+                        }
                     }
                 }
+            }
+
+            myCells.forEach((cell, idx) => {
+                // Movimento
+                // Speed formula: Baseado no tamanho (Nebulous style)
+                let speed = 8 * Math.pow(cell.r, -0.4) * 8; 
+                if(isAdmin) speed *= 1.5;
+
+                // Input + Inercia
+                if(Math.abs(cell.vx) > 0.1 || Math.abs(cell.vy) > 0.1) {
+                    cell.x += cell.vx; cell.y += cell.vy;
+                    cell.vx *= 0.92; cell.vy *= 0.92; // Atrito
+                } else {
+                    cell.x += joystickVector.x * speed;
+                    cell.y += joystickVector.y * speed;
+                }
+
+                // Limites Mapa
+                cell.x = Math.max(cell.r, Math.min(MAP_SIZE-cell.r, cell.x));
+                cell.y = Math.max(cell.r, Math.min(MAP_SIZE-cell.r, cell.y));
 
                 // Comer Comida
                 for(let i=foods.length-1; i>=0; i--) {
-                    if (Math.hypot(cell.x - foods[i].x, cell.y - foods[i].y) < cell.r) {
-                        const gain = 5; // Area ganha
-                        cell.r = Math.sqrt((Math.PI*cell.r*cell.r + gain) / Math.PI);
+                    if(dist(cell, foods[i]) < cell.r) {
+                        cell.r = Math.sqrt((Math.PI*cell.r*cell.r + 30)/Math.PI); // +area
                         foods.splice(i, 1);
-                        playSound('eat');
                         spawnFood();
                     }
                 }
 
-                // Comer Galaxia
-                for(let i=galaxies.length-1; i>=0; i--) {
-                    if (Math.hypot(cell.x - galaxies[i].x, cell.y - galaxies[i].y) < cell.r + 50) {
-                        cell.r += 30; // ~500 mass visual increase approx
-                        galaxies.splice(i, 1);
-                        playSound('galaxy');
-                    }
-                }
-
-                // Comer Ejected Mass
-                for(let i=ejectedMass.length-1; i>=0; i--) {
-                    if (Math.hypot(cell.x - ejectedMass[i].x, cell.y - ejectedMass[i].y) < cell.r) {
-                        cell.r += 2;
-                        ejectedMass.splice(i, 1);
+                // Comer Bots (simples)
+                for(let i=bots.length-1; i>=0; i--) {
+                    if(dist(cell, bots[i]) < cell.r && cell.r > bots[i].r * 1.2) {
+                        const gain = Math.PI*bots[i].r*bots[i].r;
+                        cell.r = Math.sqrt((Math.PI*cell.r*cell.r + gain)/Math.PI);
+                        bots.splice(i, 1);
+                        setTimeout(spawnBot, 3000); // Respawn delay
                     }
                 }
 
                 // Colisão Virus
                 viruses.forEach(v => {
-                    const d = Math.hypot(cell.x - v.x, cell.y - v.y);
-                    if (d < cell.r && cell.r > v.r * 1.2) {
-                        explodeCell(idx);
+                    if(dist(cell, v) < cell.r && cell.r > v.r * 1.15) {
+                        // Explodir
+                        explode(idx);
                     }
                 });
 
-                // Comer Bots (Logica simples: se cobrir o centro do bot)
-                for (let i=bots.length-1; i>=0; i--) {
-                    const b = bots[i];
-                    if (Math.hypot(cell.x - b.x, cell.y - b.y) < cell.r && cell.r > b.r * 1.2) {
-                        cell.r = Math.sqrt((Math.PI*cell.r*cell.r + Math.PI*b.r*b.r)/Math.PI);
-                        bots.splice(i, 1);
-                        spawnBot();
-                        playSound('eat');
+                cx += cell.x; cy += cell.y;
+                totalMass += Math.floor(cell.r);
+            });
+
+            // 2. Bots AI (Inteligente)
+            bots.forEach(bot => {
+                let targetX = bot.target.x;
+                let targetY = bot.target.y;
+                let speed = 3;
+
+                // Detectar perigo ou comida
+                let nearestBig = null;
+                let nearestSmall = null;
+                let minDist = 400;
+
+                myCells.forEach(c => {
+                    let d = dist(bot, c);
+                    if(d < minDist) {
+                        if(c.r > bot.r * 1.2) nearestBig = c; // Perigo
+                        else if(bot.r > c.r * 1.2) nearestSmall = c; // Comida
+                    }
+                });
+
+                if(nearestBig) {
+                    // Fugir (Flee)
+                    let ang = Math.atan2(bot.y - nearestBig.y, bot.x - nearestBig.x);
+                    targetX = bot.x + Math.cos(ang) * 200;
+                    targetY = bot.y + Math.sin(ang) * 200;
+                    speed = 5; // Corre
+                } else if (nearestSmall) {
+                    // Perseguir
+                    targetX = nearestSmall.x;
+                    targetY = nearestSmall.y;
+                } else {
+                    // Vagar (Wander)
+                    if(dist(bot, bot.target) < 50) {
+                        bot.target = {x: rand(MAP_SIZE), y: rand(MAP_SIZE)};
                     }
                 }
 
-                // Acumula para camera
-                cx += cell.x;
-                cy += cell.y;
-                totalR += cell.r;
+                let ang = Math.atan2(targetY - bot.y, targetX - bot.x);
+                bot.x += Math.cos(ang) * speed;
+                bot.y += Math.sin(ang) * speed;
+                
+                // Limites
+                bot.x = Math.max(20, Math.min(MAP_SIZE-20, bot.x));
+                bot.y = Math.max(20, Math.min(MAP_SIZE-20, bot.y));
             });
 
-            // Camera Setup
-            if (myCells.length > 0) {
+            // 3. Camera
+            if(myCells.length > 0) {
                 cx /= myCells.length;
                 cy /= myCells.length;
+                // Zoom dinâmico
+                const idealZoom = 1 / Math.pow(totalMass/50, 0.4); 
+                cam.zoom += (Math.max(0.15, Math.min(1.5, idealZoom)) - cam.zoom) * 0.05;
+                cam.x = cx - (canvas.width/2)/cam.zoom;
+                cam.y = cy - (canvas.height/2)/cam.zoom;
                 
-                // Zoom out based on total area approximation
-                const desiredZoom = Math.max(0.1, 1 / Math.pow(totalR * 0.02, 0.5));
-                cam.zoom += (desiredZoom - cam.zoom) * CAM_ZOOM_SPEED;
-                
-                cam.x = cx - (canvas.width/2) / cam.zoom;
-                cam.y = cy - (canvas.height/2) / cam.zoom;
+                document.getElementById('massDisplay').innerText = totalMass;
             } else {
-                // Game Over state logic here usually
-                // Respawn automatico
+                // Game Over
+                alert("Você foi comido!");
+                location.reload();
+            }
+
+            // Ejetados physics
+            ejected.forEach(e => {
+                e.x += e.vx; e.y += e.vy;
+                e.vx *= 0.9; e.vy *= 0.9;
+            });
+        }
+
+        function explode(idx) {
+            const cell = myCells[idx];
+            if(!cell) return;
+            
+            // Remove original
+            myCells.splice(idx, 1);
+            
+            // Cria pedaços
+            const pieces = 8;
+            const area = Math.PI*cell.r*cell.r;
+            const pieceArea = area / pieces;
+            const pieceR = Math.sqrt(pieceArea/Math.PI);
+
+            for(let i=0; i<pieces; i++) {
+                if(myCells.length >= 16) break;
+                const ang = (Math.PI*2/pieces)*i;
                 myCells.push({
-                    x: Math.random()*MAP_W,
-                    y: Math.random()*MAP_H,
-                    r: BASE_MASS, vx:0, vy:0, color: COLORS[0]
+                    x: cell.x + Math.cos(ang)*cell.r,
+                    y: cell.y + Math.sin(ang)*cell.r,
+                    r: pieceR,
+                    vx: Math.cos(ang)*20,
+                    vy: Math.sin(ang)*20,
+                    color: cell.color,
+                    birth: Date.now()
                 });
             }
-
-            // Update Bots (AI)
-            bots.forEach(bot => {
-                // Comportamento simples
-                let targetX = bot.x;
-                let targetY = bot.y;
-                let speed = 2;
-
-                // Procura jogador perto
-                let nearestPlayer = null;
-                let minD = 500;
-                
-                // Checa contra player real
-                myCells.forEach(c => {
-                    const d = Math.hypot(bot.x - c.x, bot.y - c.y);
-                    if (d < minD) { minD = d; nearestPlayer = c; }
-                });
-
-                if (nearestPlayer) {
-                    if (nearestPlayer.r > bot.r * 1.2) {
-                        // Flee
-                        const ang = Math.atan2(bot.y - nearestPlayer.y, bot.x - nearestPlayer.x);
-                        targetX = bot.x + Math.cos(ang) * 100;
-                        targetY = bot.y + Math.sin(ang) * 100;
-                        speed = 4;
-                    } else if (bot.r > nearestPlayer.r * 1.2) {
-                        // Chase
-                        targetX = nearestPlayer.x;
-                        targetY = nearestPlayer.y;
-                    }
-                } else {
-                    // Wander random
-                    if (Math.random() < 0.02) {
-                        bot.target = { x: Math.random()*MAP_W, y: Math.random()*MAP_H };
-                    }
-                    if (bot.target) {
-                        targetX = bot.target.x;
-                        targetY = bot.target.y;
-                    }
-                }
-
-                const dx = targetX - bot.x;
-                const dy = targetY - bot.y;
-                const dist = Math.sqrt(dx*dx + dy*dy) || 1;
-                
-                bot.x += (dx/dist) * speed;
-                bot.y += (dy/dist) * speed;
-
-                // Limites
-                bot.x = Math.max(0, Math.min(MAP_W, bot.x));
-                bot.y = Math.max(0, Math.min(MAP_H, bot.y));
-            });
-
-            // Update Ejected Mass physics
-            ejectedMass.forEach(m => {
-                m.x += m.vx;
-                m.y += m.vy;
-                m.vx *= 0.9;
-                m.vy *= 0.9;
-            });
-            
-            // HUD Updates
-            document.getElementById('scoreDisplay').innerText = Math.floor(totalR);
-            updateLeaderboard(totalR);
         }
 
-        function updateLeaderboard(myScore) {
-            let list = [{n: myName, s: Math.floor(myScore), me: true}];
-            
-            // Add online players
-            for(let pid in otherPlayers) {
-                list.push({n: otherPlayers[pid].n || "Desconhecido", s: otherPlayers[pid].mass || 0});
-            }
-            // Add top bots fake
-            list.push({n: "Bot Alpha", s: 400});
-
-            list.sort((a,b) => b.s - a.s);
-
-            const el = document.getElementById('lb-list');
-            el.innerHTML = list.slice(0, 5).map((p, i) => 
-                `<div class="lb-item" style="color:${p.me?'#00d2ff':'#eee'}">
-                    <span>${i+1}. ${p.n.substring(0,10)}</span>
-                    <span class="lb-score">${p.s}</span>
-                </div>`
-            ).join('');
-        }
-
-        // --- DRAWING ---
-        function draw() {
+        function drawGame() {
             // Fundo
-            ctx.fillStyle = '#050510';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+            ctx.fillStyle = '#0b0b14';
+            ctx.fillRect(0,0, canvas.width, canvas.height);
+            
             ctx.save();
             ctx.scale(cam.zoom, cam.zoom);
             ctx.translate(-cam.x, -cam.y);
 
             // Grid
+            ctx.lineWidth = 1;
             ctx.strokeStyle = '#1a1a2e';
-            ctx.lineWidth = 2;
-            const gridSize = 100;
-            const startX = Math.floor(cam.x/gridSize)*gridSize;
-            const startY = Math.floor(cam.y/gridSize)*gridSize;
-            const endX = startX + (canvas.width/cam.zoom) + gridSize;
-            const endY = startY + (canvas.height/cam.zoom) + gridSize;
-
+            const gs = 100;
+            const startX = Math.floor(cam.x/gs)*gs;
+            const startY = Math.floor(cam.y/gs)*gs;
+            const endX = startX + (canvas.width/cam.zoom) + gs;
+            const endY = startY + (canvas.height/cam.zoom) + gs;
+            
             ctx.beginPath();
-            for(let x=startX; x<endX; x+=gridSize) {
-                if(x<0 || x>MAP_W) continue;
-                ctx.moveTo(x, 0); ctx.lineTo(x, MAP_H);
-            }
-            for(let y=startY; y<endY; y+=gridSize) {
-                if(y<0 || y>MAP_H) continue;
-                ctx.moveTo(0, y); ctx.lineTo(MAP_W, y);
-            }
+            for(let x=startX; x<endX; x+=gs) { ctx.moveTo(x,0); ctx.lineTo(x, MAP_SIZE); }
+            for(let y=startY; y<endY; y+=gs) { ctx.moveTo(0,y); ctx.lineTo(MAP_SIZE, y); }
             ctx.stroke();
 
             // Bordas
-            ctx.strokeStyle = '#ff0055';
-            ctx.lineWidth = 10;
-            ctx.strokeRect(0,0,MAP_W, MAP_H);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 20;
+            ctx.strokeRect(0,0, MAP_SIZE, MAP_SIZE);
 
-            // Ejected Mass
-            ejectedMass.forEach(m => {
-                ctx.beginPath();
-                ctx.arc(m.x, m.y, m.r, 0, Math.PI*2);
-                ctx.fillStyle = m.color;
-                ctx.fill();
-            });
-
-            // Food
+            // Comida
             foods.forEach(f => {
-                if(f.x < cam.x - 50 || f.x > cam.x + canvas.width/cam.zoom + 50) return; // Culling
+                // Otimização: Só desenha se estiver na tela
+                if(f.x < cam.x - 50 || f.x > endX) return;
                 ctx.beginPath();
                 ctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
                 ctx.fillStyle = f.c;
                 ctx.fill();
             });
 
-            // Galaxies
-            galaxies.forEach(g => {
-                g.angle += 0.05;
-                ctx.save();
-                ctx.translate(g.x, g.y);
-                ctx.rotate(g.angle);
-                // Draw Spiral
-                ctx.beginPath();
-                for(let i=0; i<3; i++) {
-                    ctx.rotate(Math.PI*2/3);
-                    ctx.moveTo(0,0);
-                    ctx.quadraticCurveTo(50, 50, 0, 100);
-                }
-                ctx.strokeStyle = `hsl(${g.angle*100}, 100%, 70%)`;
-                ctx.lineWidth = 5;
-                ctx.stroke();
-                // Glow
-                ctx.shadowBlur = 20;
-                ctx.shadowColor = 'white';
-                ctx.fillStyle = 'white';
-                ctx.fill();
-                ctx.shadowBlur = 0;
-                ctx.restore();
+            // Ejected
+            ejected.forEach(e => {
+                ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI*2);
+                ctx.fillStyle = e.c; ctx.fill();
             });
 
-            // Viruses
+            // Virus
             ctx.fillStyle = '#33ff33';
-            ctx.strokeStyle = '#22aa22';
-            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#228822';
+            ctx.lineWidth = 4;
             viruses.forEach(v => {
                 ctx.beginPath();
-                const spikes = 20;
+                const spikes = 16;
                 for(let i=0; i<spikes*2; i++) {
-                    const angle = (Math.PI*2 / (spikes*2)) * i;
-                    const r = (i%2===0) ? v.r : v.r - 5;
-                    const x = v.x + Math.cos(angle) * r;
-                    const y = v.y + Math.sin(angle) * r;
-                    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+                    const a = (Math.PI*2/(spikes*2))*i;
+                    const r = i%2===0 ? v.r : v.r-5;
+                    ctx.lineTo(v.x + Math.cos(a)*r, v.y + Math.sin(a)*r);
                 }
                 ctx.closePath();
+                ctx.fill(); ctx.stroke();
+            });
+
+            // Desenhar Entidades (Ordenado por tamanho para z-index)
+            let allEntities = [
+                ...bots.map(b => ({...b, type:'bot'})),
+                ...myCells.map(c => ({...c, type:'me', name: myName})),
+                ...Object.values(otherPlayers).flatMap(p => (p.cells || []).map(c => ({...c, type:'other', name: p.n})))
+            ];
+            
+            allEntities.sort((a,b) => a.r - b.r);
+
+            allEntities.forEach(ent => {
+                ctx.beginPath();
+                ctx.arc(ent.x, ent.y, ent.r, 0, Math.PI*2);
+                ctx.fillStyle = ent.color || ent.c;
                 ctx.fill();
+                
+                // Glow
+                ctx.shadowBlur = 10; ctx.shadowColor = ent.color || ent.c;
+                ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 2;
                 ctx.stroke();
-            });
+                ctx.shadowBlur = 0;
 
-            // Bots
-            bots.forEach(b => {
-                drawCell(b.x, b.y, b.r, b.color, b.name);
-            });
-
-            // Outros Players
-            for(let pid in otherPlayers) {
-                const p = otherPlayers[pid];
-                if(p.cells) {
-                    p.cells.forEach(c => drawCell(c.x, c.y, c.r, c.c, p.n));
+                // Nome
+                if(ent.r > 15) {
+                    ctx.fillStyle = 'white';
+                    ctx.font = `bold ${Math.max(10, ent.r/2)}px Arial`;
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.strokeStyle = 'black'; ctx.lineWidth = 2;
+                    ctx.strokeText(ent.name || "", ent.x, ent.y);
+                    ctx.fillText(ent.name || "", ent.x, ent.y);
                 }
-            }
-
-            // Eu
-            myCells.forEach(c => {
-                drawCell(c.x, c.y, c.r, c.color, myName);
             });
 
             ctx.restore();
         }
 
-        function drawCell(x, y, r, c, name) {
-            ctx.beginPath();
-            ctx.arc(x, y, r, 0, Math.PI*2);
-            ctx.fillStyle = c;
-            ctx.fill();
-            ctx.lineWidth = 3;
-            ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-            ctx.stroke();
-
-            if(r > 15) {
-                ctx.fillStyle = 'white';
-                ctx.font = `bold ${Math.max(10, r/2.5)}px Arial`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.shadowColor = 'black';
-                ctx.shadowBlur = 4;
-                ctx.fillText(name || "", x, y);
-                ctx.shadowBlur = 0;
-            }
+        // --- UTILITÁRIOS ---
+        function rand(max) { return Math.random() * max; }
+        function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+        function getRandomColor() {
+            const colors = ['#FF0055', '#00FF55', '#5500FF', '#FFFF00', '#00FFFF', '#FF00FF', '#FF5500'];
+            return colors[Math.floor(Math.random() * colors.length)];
         }
 
-        function loop() {
-            if(gameActive) {
-                update();
-                draw();
-            }
-            requestAnimationFrame(loop);
+        // --- REDE (FIREBASE) ---
+        const playersRef = collection(db, "players");
+        
+        // Receber dados
+        onSnapshot(query(playersRef), (snap) => {
+            snap.docChanges().forEach(change => {
+                const pid = change.doc.id;
+                if(pid === myUserId) return;
+                
+                if(change.type === 'removed') delete otherPlayers[pid];
+                else otherPlayers[pid] = change.doc.data();
+            });
+            updateLeaderboard();
+        });
+
+        // Enviar dados
+        function syncNetwork() {
+            if(!myUserId) return;
+            const simpleCells = myCells.map(c => ({
+                x: Math.round(c.x), y: Math.round(c.y),
+                r: Math.round(c.r), c: c.color
+            }));
+            const total = myCells.reduce((a,b)=>a+b.r, 0);
+
+            setDoc(doc(db, "players", myUserId), {
+                n: myName,
+                cells: simpleCells,
+                mass: Math.floor(total),
+                t: serverTimestamp()
+            }, {merge:true}).catch(()=>{});
         }
-        loop();
+
+        function updateLeaderboard() {
+            let list = [];
+            // Eu
+            const myMass = myCells.reduce((a,b)=>a+b.r, 0);
+            list.push({n: myName, s: Math.floor(myMass), me: true});
+            
+            // Outros
+            for(let id in otherPlayers) {
+                list.push({n: otherPlayers[id].n, s: otherPlayers[id].mass || 0});
+            }
+            // Bots fake highscore
+            list.push({n: "Bot Alpha", s: 450});
+
+            list.sort((a,b) => b.s - a.s);
+            
+            const html = list.slice(0, 5).map((p,i) => 
+                `<div style="color:${p.me ? '#00d2ff' : '#eee'}; display:flex; justify-content:space-between;">
+                    <span>${i+1}. ${p.n.substring(0,8)}</span><span>${p.s}</span>
+                </div>`
+            ).join('');
+            document.getElementById('lb-content').innerHTML = html;
+        }
+
+        // --- ADMIN WINDOW FUNCS ---
+        window.adminMass = () => { 
+            if(isAdmin) myCells.forEach(c => c.r += 20); 
+        };
+        window.adminReset = () => {
+            if(isAdmin) myCells = [{x:rand(MAP_SIZE), y:rand(MAP_SIZE), r:50, color:'#000', vx:0, vy:0, birth:Date.now()}];
+        };
+
+        // --- RADIO ---
+        let radioPlaying = false;
+        const audio = new Audio("https://stream.zeno.fm/0r0xa792kwzuv");
+        document.getElementById('radioBtn').onclick = () => {
+            if(radioPlaying) { audio.pause(); document.getElementById('radioBtn').innerText = "🎵 Lofi: OFF"; }
+            else { audio.play(); document.getElementById('radioBtn').innerText = "🎵 Lofi: ON"; }
+            radioPlaying = !radioPlaying;
+        }
 
     </script>
 </body>
