@@ -3,203 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nebulo.io - Ultimate Edition</title>
+    <title>Nebulo.io - Ultimate Edition V2</title>
     <style>
         /* --- CSS GERAL --- */
         body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background-color: #0b0b14;
+            margin: 0; padding: 0; overflow: hidden;
+            background-color: #050510;
             font-family: 'Segoe UI', sans-serif;
-            touch-action: none; /* Impede scroll e zoom no mobile */
-            user-select: none;
+            touch-action: none; user-select: none;
             -webkit-user-select: none;
         }
+        canvas { display: block; }
 
-        canvas {
-            display: block;
-        }
-
-        /* --- UI CONTAINER --- */
+        /* --- UI LAYER --- */
         #uiLayer {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            z-index: 10;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; display: flex; flex-direction: column; z-index: 10;
         }
 
-        /* TELA DE LOGIN */
-        #loginPanel {
-            position: absolute;
-            top: 50%; left: 50%;
+        /* PAINEL PRINCIPAL (LOGIN/LOJA) */
+        #mainMenu {
+            position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             background: rgba(20, 20, 35, 0.95);
-            padding: 30px;
-            border-radius: 20px;
-            text-align: center;
-            pointer-events: auto;
+            padding: 25px; border-radius: 15px;
+            text-align: center; pointer-events: auto;
             border: 2px solid #00d2ff;
-            box-shadow: 0 0 50px rgba(0, 210, 255, 0.3);
-            width: 90%;
-            max-width: 350px;
-            z-index: 100;
+            box-shadow: 0 0 50px rgba(0, 210, 255, 0.2);
+            width: 90%; max-width: 400px;
+            display: flex; flex-direction: column; gap: 10px;
         }
 
-        h1 { margin: 0 0 20px 0; color: white; text-transform: uppercase; text-shadow: 0 0 10px #00d2ff; }
+        h1 { margin: 0; color: white; text-transform: uppercase; text-shadow: 0 0 10px #00d2ff; font-size: 24px; }
         
+        .input-group { position: relative; width: 100%; }
         input {
-            width: 100%; padding: 15px; margin-bottom: 15px;
-            border-radius: 10px; border: 1px solid #444;
-            background: #111; color: white; font-size: 1.1rem;
-            box-sizing: border-box; outline: none; text-align: center;
+            width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444;
+            background: #111; color: white; font-size: 16px; box-sizing: border-box;
+            outline: none; text-align: center;
         }
-
-        .btn-start {
-            width: 100%; padding: 15px; border-radius: 10px; border: none;
-            background: linear-gradient(90deg, #00d2ff, #0051ff);
-            color: white; font-size: 1.2rem; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 81, 255, 0.5);
+        
+        .btn {
+            padding: 12px; border-radius: 8px; border: none; font-weight: bold;
+            cursor: pointer; color: white; font-size: 16px; transition: 0.2s;
+            text-transform: uppercase;
         }
+        .btn-play { background: linear-gradient(90deg, #00d2ff, #0051ff); box-shadow: 0 4px 15px rgba(0, 81, 255, 0.4); }
+        .btn-play:active { transform: scale(0.96); }
+        
+        .btn-store { background: #ff9900; box-shadow: 0 4px 15px rgba(255, 153, 0, 0.4); }
+        
+        /* STORE MODAL */
+        #storeModal {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 200; pointer-events: auto;
+            justify-content: center; align-items: center;
+        }
+        .store-content {
+            background: #1a1a2e; padding: 20px; border-radius: 10px; border: 1px solid #ff9900;
+            width: 300px; text-align: center; color: white;
+        }
+        .store-item {
+            background: #2a2a40; margin: 10px 0; padding: 10px; border-radius: 5px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .coin-display { color: #ffd700; font-weight: bold; margin-bottom: 10px; font-size: 18px; }
 
         /* HUD JOGO */
-        #hud {
-            width: 100%; height: 100%; position: relative; display: none;
-        }
+        #hud { width: 100%; height: 100%; position: relative; display: none; }
 
-        /* MOD MENU (ADMIN) */
-        #modMenu {
-            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-            background: rgba(138, 43, 226, 0.8); border: 1px solid #fff;
-            padding: 5px 15px; border-radius: 20px; pointer-events: auto;
-            display: none; gap: 10px; align-items: center;
-        }
-        .mod-btn {
-            background: white; color: purple; border: none; border-radius: 4px;
-            font-weight: bold; cursor: pointer; padding: 2px 8px; font-size: 12px;
-        }
-
-        /* JOYSTICK VIRTUAL */
+        /* JOYSTICK */
         #joystickZone {
-            position: absolute;
-            bottom: 50px; left: 50px;
+            position: absolute; bottom: 50px; left: 50px;
             width: 120px; height: 120px;
             background: rgba(255, 255, 255, 0.1);
             border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            pointer-events: auto;
-            display: none; /* Ativado via JS no mobile */
-            touch-action: none;
+            border-radius: 50%; pointer-events: auto;
+            display: none; touch-action: none;
         }
-
         #joystickKnob {
-            position: absolute;
-            top: 50%; left: 50%;
-            width: 50px; height: 50px;
-            background: rgba(0, 210, 255, 0.8);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 10px #00d2ff;
+            position: absolute; top: 50%; left: 50%;
+            width: 50px; height: 50px; background: rgba(0, 210, 255, 0.8);
+            border-radius: 50%; transform: translate(-50%, -50%);
             pointer-events: none;
         }
 
-        /* BOTÕES DE AÇÃO (DIREITA) */
+        /* ACTION BUTTONS */
         .action-container {
-            position: absolute;
-            bottom: 40px; right: 40px;
-            display: flex; gap: 20px;
-            pointer-events: auto;
+            position: absolute; bottom: 40px; right: 40px;
+            display: flex; gap: 20px; pointer-events: auto;
         }
-
         .action-btn {
             width: 70px; height: 70px; border-radius: 50%;
             border: 3px solid rgba(255,255,255,0.3);
             background: rgba(0,0,0,0.6); color: white;
             font-size: 28px; display: flex; justify-content: center; align-items: center;
-            cursor: pointer; user-select: none;
-            backdrop-filter: blur(4px);
+            cursor: pointer; backdrop-filter: blur(4px);
         }
-        .action-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.2); }
         .split { border-color: #00d2ff; color: #00d2ff; }
         .eject { border-color: #ff0055; color: #ff0055; }
 
-        /* PLACAR E STATUS */
-        #leaderboard {
-            position: absolute; top: 10px; right: 10px;
-            background: rgba(0,0,0,0.5); padding: 10px;
-            border-radius: 8px; color: white; width: 150px; font-size: 12px;
-        }
-        #stats {
-            position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
-            color: rgba(255,255,255,0.7); font-size: 14px; text-shadow: 1px 1px 2px black;
-        }
+        /* UTILS */
+        #stats { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); color: white; text-shadow: 1px 1px 2px black; font-size: 14px; }
+        #leaderboard { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; color: white; width: 160px; font-size: 12px; }
+        #modMenu { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: purple; padding: 5px 15px; border-radius: 20px; display: none; gap: 10px; pointer-events: auto; }
+        .mod-btn { font-size: 10px; cursor: pointer; background: white; border: none; border-radius: 4px; padding: 2px 5px; }
 
-        /* LOFI RADIO */
-        #radioControl {
-            position: absolute; top: 10px; left: 10px; pointer-events: auto;
-        }
-        #radioBtn {
-            background: rgba(0,0,0,0.6); color: white; border: 1px solid #555;
-            padding: 5px 10px; border-radius: 15px; cursor: pointer; font-size: 12px;
-        }
-
-        /* MEDIA QUERIES PARA LANDSCAPE (Deitado) */
         @media (max-width: 900px) and (orientation: landscape) {
-            #joystickZone { bottom: 20px; left: 20px; width: 100px; height: 100px; }
+            #joystickZone { bottom: 20px; left: 20px; width: 90px; height: 90px; }
             #joystickKnob { width: 40px; height: 40px; }
-            .action-container { bottom: 20px; right: 20px; gap: 15px; }
-            .action-btn { width: 55px; height: 55px; font-size: 20px; }
-            h1 { font-size: 1.5rem; }
+            .action-container { bottom: 20px; right: 20px; }
+            .action-btn { width: 55px; height: 55px; }
         }
     </style>
 </head>
 <body>
 
     <div id="uiLayer">
-        <!-- TELA INICIAL -->
-        <div id="loginPanel">
-            <h1>Nebulo.io</h1>
-            <input type="text" id="nickname" placeholder="Seu Nick" maxlength="12">
-            <button class="btn-start" id="btnPlay">JOGAR AGORA</button>
-            <p style="color:#aaa; font-size:12px; margin-top:10px;">
-                Use o Joystick para mover.<br>Botão Raio separa, Botão W ejeta.
-            </p>
+        <!-- STORE MODAL -->
+        <div id="storeModal">
+            <div class="store-content">
+                <h2>LOJA DE ITENS</h2>
+                <div class="coin-display">💰 <span id="storeCoins">0</span></div>
+                
+                <div class="store-item">
+                    <span>Começar Grande (+50 Mass)</span>
+                    <button class="btn" style="background:#444; font-size:12px;" onclick="buyItem('startMass', 100)">100 💰</button>
+                </div>
+                <div class="store-item">
+                    <span>Skin Neon Premium</span>
+                    <button class="btn" style="background:#444; font-size:12px;" onclick="buyItem('neonSkin', 500)">500 💰</button>
+                </div>
+                
+                <button class="btn" style="background:#ff5555; width:100%; margin-top:10px;" onclick="closeStore()">FECHAR</button>
+            </div>
+        </div>
+
+        <!-- MAIN MENU -->
+        <div id="mainMenu">
+            <h1>Nebulo.io <span style="font-size:12px; color:#ff9900">V2</span></h1>
+            
+            <div class="coin-display" style="font-size:14px;">Minhas Moedas: <span id="menuCoins">0</span></div>
+            
+            <input type="text" id="nickname" placeholder="Digite seu Nick" maxlength="12">
+            
+            <button class="btn btn-play" id="btnPlay">JOGAR AGORA</button>
+            <button class="btn btn-store" onclick="openStore()">LOJA</button>
+            
+            <div style="font-size: 10px; color: #888; margin-top: 5px;">
+                Dica: Junte 100 moedas para começar maior.<br>
+                Admin? Digite "david" para menu secreto.
+            </div>
         </div>
 
         <!-- HUD -->
         <div id="hud">
-            <!-- Admin Menu -->
             <div id="modMenu">
-                <span style="color:white; font-weight:bold;">MOD:</span>
-                <button class="mod-btn" onclick="adminMass()">+MASS</button>
-                <button class="mod-btn" onclick="adminReset()">RESET</button>
+                <b style="color:white; margin-right:5px;">ADMIN:</b>
+                <button class="mod-btn" onclick="cheat('mass')">+MASS</button>
+                <button class="mod-btn" onclick="cheat('speed')">SPEED</button>
+                <button class="mod-btn" onclick="cheat('reset')">RESET</button>
             </div>
 
-            <!-- Radio -->
-            <div id="radioControl">
-                <button id="radioBtn">🎵 Lofi Radio: OFF</button>
-            </div>
-
-            <!-- Leaderboard -->
             <div id="leaderboard">
-                <div style="border-bottom:1px solid #555; margin-bottom:5px; text-align:center;">TOP PLAYERS</div>
+                <div style="text-align:center; border-bottom:1px solid #555; margin-bottom:5px;">TOP PLAYERS</div>
                 <div id="lb-content"></div>
             </div>
 
-            <!-- Joystick (Esquerda) -->
-            <div id="joystickZone">
-                <div id="joystickKnob"></div>
-            </div>
-
-            <!-- Botões (Direita) -->
+            <div id="joystickZone"><div id="joystickKnob"></div></div>
+            
             <div class="action-container">
                 <div class="action-btn eject" id="btnEject">W</div>
                 <div class="action-btn split" id="btnSplit">⚡</div>
             </div>
 
-            <!-- Stats -->
             <div id="stats">Massa: <span id="massDisplay">0</span></div>
         </div>
     </div>
@@ -212,7 +189,6 @@
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, onSnapshot, deleteDoc, serverTimestamp, query } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-        // CONFIGURAÇÃO
         const firebaseConfig = {
             apiKey: "AIzaSyCXDfIO53oqtnRgs9jfApf-rZklp4SRbV8",
             authDomain: "gartic-51f3d.firebaseapp.com",
@@ -227,628 +203,516 @@
         const db = getFirestore(app);
         let myUserId = null;
 
-        signInAnonymously(auth).then(cred => {
-            myUserId = cred.user.uid;
-            console.log("Conectado ID:", myUserId);
-        }).catch(e => console.error(e));
+        signInAnonymously(auth).then(c => myUserId = c.user.uid);
 
-        // --- MOTOR DO JOGO ---
+        // --- GAME ENGINE ---
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Constantes
-        const MAP_SIZE = 4000;
-        const FOOD_COUNT = 500;
-        const BOT_COUNT = 15;
-        const MERGE_TIME = 15000; // 15 segundos para juntar
+        // Configurações Globais
+        const MAP_SIZE = 8000; // Mapa Gigante
+        const FOOD_COUNT = 1000;
+        const BOT_COUNT = 20;
+        const MERGE_DELAY = 15000; // 15s para juntar
+        const DECAY_THRESHOLD = 2000; // Começa a perder massa
 
-        // Estado do Jogo
+        // Variaveis de Estado
         let gameRunning = false;
         let isAdmin = false;
-        let myName = "";
+        let myName = "Player";
         let cam = { x: 0, y: 0, zoom: 1 };
         
+        // Dados do Jogador (Salvos)
+        let userStats = {
+            coins: parseInt(localStorage.getItem('nebulo_coins') || 0),
+            items: JSON.parse(localStorage.getItem('nebulo_items') || '[]')
+        };
+
         // Entidades
         let myCells = [];
         let otherPlayers = {};
         let foods = [];
         let viruses = [];
         let bots = [];
-        let galaxies = [];
         let ejected = [];
 
-        // Input Joystick
+        // Input
         let joystickVector = { x: 0, y: 0 };
-        let isJoystickActive = false;
+        let activeJoystick = false;
 
-        // --- INICIALIZAÇÃO ---
+        // --- INICIALIZAÇÃO E UI ---
+        function updateCoinsUI() {
+            document.getElementById('menuCoins').innerText = userStats.coins;
+            document.getElementById('storeCoins').innerText = userStats.coins;
+        }
+        updateCoinsUI();
+
+        window.openStore = () => document.getElementById('storeModal').style.display = 'flex';
+        window.closeStore = () => document.getElementById('storeModal').style.display = 'none';
+        
+        window.buyItem = (item, price) => {
+            if(userStats.coins >= price) {
+                userStats.coins -= price;
+                userStats.items.push(item);
+                localStorage.setItem('nebulo_coins', userStats.coins);
+                localStorage.setItem('nebulo_items', JSON.stringify(userStats.items));
+                updateCoinsUI();
+                alert("Comprado com sucesso!");
+            } else {
+                alert("Moedas insuficientes!");
+            }
+        };
+
         function resize() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            // Se for mobile, mostrar joystick
-            if('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-                document.getElementById('joystickZone').style.display = 'block';
-            }
+            if('ontouchstart' in window) document.getElementById('joystickZone').style.display = 'block';
         }
         window.addEventListener('resize', resize);
         resize();
 
-        // --- CONTROLE: JOYSTICK VIRTUAL ---
+        // --- JOYSTICK LOGIC ---
         const joyZone = document.getElementById('joystickZone');
         const joyKnob = document.getElementById('joystickKnob');
-        let joyCenter = { x: 0, y: 0 };
+        let joyCenter = {x:0, y:0};
 
-        joyZone.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            isJoystickActive = true;
-            const rect = joyZone.getBoundingClientRect();
-            joyCenter = { x: rect.left + rect.width/2, y: rect.top + rect.height/2 };
-            updateJoystick(e.touches[0]);
-        }, {passive: false});
+        joyZone.addEventListener('touchstart', e => {
+            e.preventDefault(); activeJoystick = true;
+            const r = joyZone.getBoundingClientRect();
+            joyCenter = {x: r.left+r.width/2, y: r.top+r.height/2};
+            moveJoy(e.touches[0]);
+        }, {passive:false});
+        
+        joyZone.addEventListener('touchmove', e => { e.preventDefault(); if(activeJoystick) moveJoy(e.touches[0]); }, {passive:false});
+        
+        const resetJoy = e => { e.preventDefault(); activeJoystick = false; joystickVector = {x:0,y:0}; joyKnob.style.transform='translate(-50%,-50%)'; };
+        joyZone.addEventListener('touchend', resetJoy);
 
-        joyZone.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            if(isJoystickActive) updateJoystick(e.touches[0]);
-        }, {passive: false});
-
-        const endJoystick = (e) => {
-            e.preventDefault();
-            isJoystickActive = false;
-            joystickVector = { x: 0, y: 0 };
-            joyKnob.style.transform = `translate(-50%, -50%)`;
-        };
-        joyZone.addEventListener('touchend', endJoystick);
-        joyZone.addEventListener('touchcancel', endJoystick);
-
-        function updateJoystick(touch) {
-            const maxDist = joyZone.clientWidth / 2;
+        function moveJoy(touch) {
+            const max = joyZone.clientWidth/2;
             let dx = touch.clientX - joyCenter.x;
             let dy = touch.clientY - joyCenter.y;
-            const dist = Math.sqrt(dx*dx + dy*dy);
-            
-            // Normalizar
-            if (dist > maxDist) {
-                dx = (dx / dist) * maxDist;
-                dy = (dy / dist) * maxDist;
-            }
-
-            // Mover visual
+            const dist = Math.sqrt(dx*dx+dy*dy);
+            if(dist>max) { dx = (dx/dist)*max; dy = (dy/dist)*max; }
             joyKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-
-            // Vetor de saída (-1 a 1)
-            joystickVector = {
-                x: dx / maxDist,
-                y: dy / maxDist
-            };
+            joystickVector = {x: dx/max, y: dy/max};
         }
 
-        // --- CONTROLE: BOTÕES ---
-        document.getElementById('btnSplit').addEventListener('touchstart', (e)=>{ e.preventDefault(); splitAction(); });
-        document.getElementById('btnEject').addEventListener('touchstart', (e)=>{ e.preventDefault(); ejectAction(); });
-        
-        // PC Controls
-        window.addEventListener('keydown', (e) => {
-            if(e.code === 'Space') splitAction();
-            if(e.code === 'KeyW') ejectAction();
+        // --- CONTROLS PC ---
+        window.addEventListener('keydown', e => {
+            if(e.code==='Space') split();
+            if(e.code==='KeyW') eject();
         });
-        window.addEventListener('mousemove', (e) => {
-            if(!isJoystickActive) {
-                // Mouse logic relative to center
-                const cx = window.innerWidth / 2;
-                const cy = window.innerHeight / 2;
-                const dx = e.clientX - cx;
-                const dy = e.clientY - cy;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                const max = Math.min(cx, cy);
-                joystickVector = { x: dx/max, y: dy/max };
+        window.addEventListener('mousemove', e => {
+            if(!activeJoystick) {
+                const cx = window.innerWidth/2, cy = window.innerHeight/2;
+                const dx = e.clientX-cx, dy = e.clientY-cy;
+                const max = Math.min(cx,cy);
+                joystickVector = {x: dx/max, y: dy/max};
             }
         });
 
-        // --- LÓGICA DO JOGO ---
+        // --- GAME START ---
+        document.getElementById('btnPlay').onclick = () => {
+            const nick = document.getElementById('nickname').value.trim();
+            myName = nick || "Player";
 
-        document.getElementById('btnPlay').onclick = startGame;
-
-        function startGame() {
-            const nickInput = document.getElementById('nickname').value.trim();
-            myName = nickInput || "Cell";
-
-            // David Admin Logic
-            if (myName.toLowerCase() === "david") {
+            // ADMIN CHECK (Estrito)
+            if(myName.toLowerCase() === "david") {
                 isAdmin = true;
                 document.getElementById('modMenu').style.display = 'flex';
-                myName = "👑 DAVID";
+                myName = "👑 ADMIN";
             } else {
                 isAdmin = false;
                 document.getElementById('modMenu').style.display = 'none';
             }
 
-            // Setup
-            document.getElementById('loginPanel').style.display = 'none';
+            document.getElementById('mainMenu').style.display = 'none';
             document.getElementById('hud').style.display = 'block';
+
+            startGame();
+        };
+
+        function startGame() {
+            gameRunning = true;
             
-            initWorld();
+            // World Gen
+            foods = []; for(let i=0; i<FOOD_COUNT; i++) spawnFood();
+            viruses = []; for(let i=0; i<40; i++) viruses.push({x:rand(MAP_SIZE), y:rand(MAP_SIZE), r:50});
+            bots = []; for(let i=0; i<BOT_COUNT; i++) spawnBot();
             
-            // Spawn Player
+            // Player Spawn (Bonus Store Item)
+            let initialMass = 30;
+            if(userStats.items.includes('startMass')) initialMass = 50; // Bonus visual
+
             myCells = [{
-                x: Math.random() * (MAP_SIZE - 500) + 250,
-                y: Math.random() * (MAP_SIZE - 500) + 250,
-                r: 30, // Massa inicial
-                color: getRandomColor(),
+                x: rand(MAP_SIZE), y: rand(MAP_SIZE),
+                r: initialMass,
+                c: userStats.items.includes('neonSkin') ? '#00ff00' : getRandomColor(),
                 vx: 0, vy: 0,
-                birth: Date.now() // Para merge logic
+                birth: Date.now(),
+                id: Math.random() // Unique ID para cada celula
             }];
 
-            gameRunning = true;
-            requestAnimationFrame(gameLoop);
+            loop();
         }
 
-        function initWorld() {
-            // Comida
-            foods = [];
-            for(let i=0; i<FOOD_COUNT; i++) spawnFood();
-            
-            // Virus
-            viruses = [];
-            for(let i=0; i<30; i++) {
-                viruses.push({x: rand(MAP_SIZE), y: rand(MAP_SIZE), r: 45});
-            }
+        // --- ACTIONS ---
+        document.getElementById('btnSplit').addEventListener('touchstart', (e)=>{e.preventDefault(); split()});
+        document.getElementById('btnEject').addEventListener('touchstart', (e)=>{e.preventDefault(); eject()});
 
-            // Galaxias
-            galaxies = []; // spawnam random no loop
-
-            // Bots
-            bots = [];
-            for(let i=0; i<BOT_COUNT; i++) spawnBot();
-        }
-
-        function spawnFood() {
-            foods.push({
-                x: rand(MAP_SIZE), y: rand(MAP_SIZE),
-                r: Math.random() * 3 + 2,
-                c: `hsl(${Math.random()*360}, 100%, 60%)`
-            });
-        }
-
-        function spawnBot() {
-            bots.push({
-                x: rand(MAP_SIZE), y: rand(MAP_SIZE),
-                r: rand(30) + 20,
-                c: getRandomColor(),
-                name: "Bot " + Math.floor(Math.random()*99),
-                target: {x: rand(MAP_SIZE), y: rand(MAP_SIZE)},
-                state: 'wander' // wander, flee, chase
-            });
-        }
-
-        // --- AÇÕES ---
-        function splitAction() {
+        function split() {
             if(myCells.length >= 16) return;
-            let newCells = [];
-            
+            let toAdd = [];
             myCells.forEach(cell => {
-                if(cell.r < 35) {
-                    newCells.push(cell);
-                    return;
-                }
+                if(cell.r < 35) return; // Mínimo para split
                 
-                // Dividir area por 2
-                const newArea = (Math.PI * cell.r * cell.r) / 2;
-                const newR = Math.sqrt(newArea / Math.PI);
-                
-                // Angulo baseado no joystickVector
-                const angle = Math.atan2(joystickVector.y, joystickVector.x);
-                const boost = 15;
-
-                // Celula original fica
+                // Reduz pela metade a area
+                let newR = cell.r / 1.414; 
                 cell.r = newR;
-                newCells.push(cell);
+                
+                // Calcula direção do tiro
+                let angle = Math.atan2(joystickVector.y, joystickVector.x);
+                // Se joystick parado, usa direção aleatoria ou frente
+                if(joystickVector.x === 0 && joystickVector.y === 0) angle = 0;
 
-                // Celula projetada
-                newCells.push({
+                toAdd.push({
                     x: cell.x + Math.cos(angle)*cell.r,
                     y: cell.y + Math.sin(angle)*cell.r,
                     r: newR,
-                    color: cell.color,
-                    vx: Math.cos(angle) * boost,
-                    vy: Math.sin(angle) * boost,
-                    birth: Date.now()
+                    c: cell.c,
+                    vx: Math.cos(angle) * 25, // Força do Split
+                    vy: Math.sin(angle) * 25,
+                    birth: Date.now(),
+                    id: Math.random()
                 });
             });
-            myCells = newCells;
+            myCells = myCells.concat(toAdd);
         }
 
-        function ejectAction() {
+        function eject() {
             myCells.forEach(cell => {
                 if(cell.r < 30) return;
-                const loss = 15; // Massa visual perdida
-                // Reduz massa
-                const area = Math.PI * cell.r * cell.r;
-                cell.r = Math.sqrt((area - 200) / Math.PI); // -200 area aprox
+                let angle = Math.atan2(joystickVector.y, joystickVector.x);
+                // Perde massa
+                let massLoss = 15;
+                let area = Math.PI*cell.r*cell.r - 200; // perda fixa
+                cell.r = Math.sqrt(area/Math.PI);
 
-                const angle = Math.atan2(joystickVector.y, joystickVector.x);
                 ejected.push({
                     x: cell.x + Math.cos(angle)*cell.r,
                     y: cell.y + Math.sin(angle)*cell.r,
-                    vx: Math.cos(angle) * 12,
-                    vy: Math.sin(angle) * 12,
                     r: 8,
-                    c: cell.color
+                    c: cell.c,
+                    vx: Math.cos(angle)*15,
+                    vy: Math.sin(angle)*15
                 });
             });
         }
 
-        // --- GAME LOOP ---
-        function gameLoop() {
+        // --- PHYSICS LOOP ---
+        function loop() {
             if(!gameRunning) return;
-
-            updatePhysics();
-            drawGame();
-            
-            // Rede (Sync com Firebase a 5hz para economizar)
-            if(Date.now() % 200 < 20) syncNetwork();
-
-            requestAnimationFrame(gameLoop);
+            update();
+            draw();
+            requestAnimationFrame(loop);
         }
 
-        function updatePhysics() {
-            // 1. Minhas Células
-            let cx=0, cy=0, totalMass=0;
+        let lastDecay = 0;
+
+        function update() {
             const now = Date.now();
+            let totalMass = 0;
 
-            // Reagrupamento (Merge)
+            // 1. Minhas Células
             for(let i=0; i<myCells.length; i++) {
-                for(let j=i+1; j<myCells.length; j++) {
-                    let c1 = myCells[i];
-                    let c2 = myCells[j];
-                    const dist = Math.hypot(c1.x - c2.x, c1.y - c2.y);
-                    
-                    // Colisão Soft (Repelir se não puder juntar)
-                    const canMerge = (now - c1.birth > MERGE_TIME) && (now - c2.birth > MERGE_TIME);
-                    
-                    if(dist < c1.r + c2.r) {
-                        if(canMerge) {
-                            // Juntar!
-                            const newArea = Math.PI*c1.r*c1.r + Math.PI*c2.r*c2.r;
-                            c1.r = Math.sqrt(newArea/Math.PI);
-                            c1.x = (c1.x*c1.r + c2.x*c2.r)/(c1.r+c2.r); // Posição ponderada
-                            c1.y = (c1.y*c1.r + c2.y*c2.r)/(c1.r+c2.r);
-                            myCells.splice(j, 1);
-                            j--;
-                            continue;
-                        } else {
-                            // Empurrar
-                            const overlap = (c1.r + c2.r - dist) / 2;
-                            const ang = Math.atan2(c1.y - c2.y, c1.x - c2.x);
-                            c1.x += Math.cos(ang) * overlap * 0.1;
-                            c1.y += Math.sin(ang) * overlap * 0.1;
-                            c2.x -= Math.cos(ang) * overlap * 0.1;
-                            c2.y -= Math.sin(ang) * overlap * 0.1;
-                        }
-                    }
-                }
-            }
+                let cell = myCells[i];
 
-            myCells.forEach((cell, idx) => {
-                // Movimento
-                // Speed formula: Baseado no tamanho (Nebulous style)
-                let speed = 8 * Math.pow(cell.r, -0.4) * 8; 
+                // Movimento (Física de Nebulous: Lento se grande)
+                let baseSpeed = 8;
+                let speed = baseSpeed * Math.pow(cell.r, -0.44) * 5; 
                 if(isAdmin) speed *= 1.5;
 
-                // Input + Inercia
+                // Inercia do Split
                 if(Math.abs(cell.vx) > 0.1 || Math.abs(cell.vy) > 0.1) {
-                    cell.x += cell.vx; cell.y += cell.vy;
-                    cell.vx *= 0.92; cell.vy *= 0.92; // Atrito
+                    cell.x += cell.vx;
+                    cell.y += cell.vy;
+                    cell.vx *= 0.85; // Desacelera rápido
+                    cell.vy *= 0.85;
                 } else {
                     cell.x += joystickVector.x * speed;
                     cell.y += joystickVector.y * speed;
                 }
 
-                // Limites Mapa
+                // Limites
                 cell.x = Math.max(cell.r, Math.min(MAP_SIZE-cell.r, cell.x));
                 cell.y = Math.max(cell.r, Math.min(MAP_SIZE-cell.r, cell.y));
 
-                // Comer Comida
-                for(let i=foods.length-1; i>=0; i--) {
-                    if(dist(cell, foods[i]) < cell.r) {
-                        cell.r = Math.sqrt((Math.PI*cell.r*cell.r + 30)/Math.PI); // +area
-                        foods.splice(i, 1);
-                        spawnFood();
-                    }
-                }
-
-                // Comer Bots (simples)
-                for(let i=bots.length-1; i>=0; i--) {
-                    if(dist(cell, bots[i]) < cell.r && cell.r > bots[i].r * 1.2) {
-                        const gain = Math.PI*bots[i].r*bots[i].r;
-                        cell.r = Math.sqrt((Math.PI*cell.r*cell.r + gain)/Math.PI);
-                        bots.splice(i, 1);
-                        setTimeout(spawnBot, 3000); // Respawn delay
-                    }
-                }
-
-                // Colisão Virus
-                viruses.forEach(v => {
-                    if(dist(cell, v) < cell.r && cell.r > v.r * 1.15) {
-                        // Explodir
-                        explode(idx);
-                    }
-                });
-
-                cx += cell.x; cy += cell.y;
                 totalMass += Math.floor(cell.r);
-            });
 
-            // 2. Bots AI (Inteligente)
+                // Colisão entre minhas células (Merge Logic)
+                for(let j=i+1; j<myCells.length; j++) {
+                    let other = myCells[j];
+                    let d = Math.hypot(cell.x - other.x, cell.y - other.y);
+                    let minDist = cell.r + other.r;
+
+                    // Verifica se pode juntar
+                    let canMerge = (now - cell.birth > MERGE_DELAY) && (now - other.birth > MERGE_DELAY);
+
+                    if(d < minDist) {
+                        if(canMerge) {
+                            // MAGNÉTICO: Puxa suavemente para o centro
+                            let lerpFactor = 0.05;
+                            cell.x += (other.x - cell.x) * lerpFactor;
+                            cell.y += (other.y - cell.y) * lerpFactor;
+                            
+                            // Se estiver MUITO perto, funde
+                            if(d < (cell.r + other.r) * 0.3) {
+                                let newArea = Math.PI*cell.r*cell.r + Math.PI*other.r*other.r;
+                                cell.r = Math.sqrt(newArea/Math.PI);
+                                myCells.splice(j, 1);
+                                j--;
+                                continue;
+                            }
+                        } else {
+                            // COLISÃO RÍGIDA (Não deixa sobrepor)
+                            let overlap = minDist - d;
+                            let ang = Math.atan2(cell.y - other.y, cell.x - other.x);
+                            let force = 0.5; // Rigidez
+                            cell.x += Math.cos(ang) * overlap * force;
+                            cell.y += Math.sin(ang) * overlap * force;
+                            other.x -= Math.cos(ang) * overlap * force;
+                            other.y -= Math.sin(ang) * overlap * force;
+                        }
+                    }
+                }
+
+                // Comer Comida
+                for(let f=foods.length-1; f>=0; f--) {
+                    if(dist(cell, foods[f]) < cell.r) {
+                        let gain = 3; // area gain
+                        cell.r = Math.sqrt((Math.PI*cell.r*cell.r + gain)/Math.PI);
+                        foods.splice(f, 1);
+                        spawnFood();
+                        // Ganha moeda raramente
+                        if(Math.random() < 0.05) {
+                            userStats.coins++;
+                            localStorage.setItem('nebulo_coins', userStats.coins);
+                        }
+                    }
+                }
+
+                // Comer Bots (Colisão Real)
+                for(let b=bots.length-1; b>=0; b--) {
+                    let bot = bots[b];
+                    let d = dist(cell, bot);
+                    
+                    if(d < cell.r && cell.r > bot.r * 1.2) {
+                        // Comi o bot
+                        let gain = Math.PI*bot.r*bot.r;
+                        cell.r = Math.sqrt((Math.PI*cell.r*cell.r + gain)/Math.PI);
+                        bots.splice(b, 1);
+                        spawnBot();
+                        userStats.coins += 5; // Recompensa
+                    } else if (d < bot.r && bot.r > cell.r * 1.2) {
+                        // Fui comido pelo bot (GAME OVER PARCIAL)
+                        myCells.splice(i, 1);
+                        i--;
+                        checkGameOver();
+                        break;
+                    }
+                }
+
+                // Virus
+                for(let v=0; v<viruses.length; v++) {
+                    if(dist(cell, viruses[v]) < cell.r) {
+                        if(cell.r > viruses[v].r * 1.1) {
+                            // Explode
+                            myCells.splice(i, 1);
+                            let pieces = 8;
+                            let newR = Math.sqrt((Math.PI*cell.r*cell.r/pieces)/Math.PI);
+                            for(let k=0; k<pieces; k++) {
+                                if(myCells.length >= 16) break;
+                                let a = (Math.PI*2/pieces)*k;
+                                myCells.push({
+                                    x: cell.x, y: cell.y, r: newR, c: cell.c,
+                                    vx: Math.cos(a)*20, vy: Math.sin(a)*20,
+                                    birth: Date.now(), id: Math.random()
+                                });
+                            }
+                            viruses.splice(v, 1);
+                            viruses.push({x:rand(MAP_SIZE), y:rand(MAP_SIZE), r:50}); // Respawn virus
+                            break;
+                        }
+                    }
+                }
+            } // Fim loop myCells
+
+            // Decaimento de Massa
+            if(totalMass > DECAY_THRESHOLD && now - lastDecay > 1000) {
+                lastDecay = now;
+                myCells.forEach(c => {
+                    if(c.r > 30) c.r *= 0.99; // Perde 1% por segundo
+                });
+            }
+
+            // Update Bots (IA Melhorada)
             bots.forEach(bot => {
-                let targetX = bot.target.x;
-                let targetY = bot.target.y;
-                let speed = 3;
+                let targetX = bot.target.x, targetY = bot.target.y;
+                let threat = null;
 
-                // Detectar perigo ou comida
-                let nearestBig = null;
-                let nearestSmall = null;
-                let minDist = 400;
-
+                // Foge do player se player for maior
                 myCells.forEach(c => {
                     let d = dist(bot, c);
-                    if(d < minDist) {
-                        if(c.r > bot.r * 1.2) nearestBig = c; // Perigo
-                        else if(bot.r > c.r * 1.2) nearestSmall = c; // Comida
-                    }
+                    if(d < 400 && c.r > bot.r * 1.2) threat = c;
                 });
 
-                if(nearestBig) {
-                    // Fugir (Flee)
-                    let ang = Math.atan2(bot.y - nearestBig.y, bot.x - nearestBig.x);
-                    targetX = bot.x + Math.cos(ang) * 200;
-                    targetY = bot.y + Math.sin(ang) * 200;
-                    speed = 5; // Corre
-                } else if (nearestSmall) {
-                    // Perseguir
-                    targetX = nearestSmall.x;
-                    targetY = nearestSmall.y;
-                } else {
-                    // Vagar (Wander)
-                    if(dist(bot, bot.target) < 50) {
-                        bot.target = {x: rand(MAP_SIZE), y: rand(MAP_SIZE)};
-                    }
+                if(threat) {
+                    let ang = Math.atan2(bot.y - threat.y, bot.x - threat.x);
+                    targetX = bot.x + Math.cos(ang) * 500;
+                    targetY = bot.y + Math.sin(ang) * 500;
+                } else if(dist(bot, bot.target) < 50) {
+                    bot.target = {x: rand(MAP_SIZE), y: rand(MAP_SIZE)};
                 }
 
                 let ang = Math.atan2(targetY - bot.y, targetX - bot.x);
-                bot.x += Math.cos(ang) * speed;
-                bot.y += Math.sin(ang) * speed;
-                
-                // Limites
-                bot.x = Math.max(20, Math.min(MAP_SIZE-20, bot.x));
-                bot.y = Math.max(20, Math.min(MAP_SIZE-20, bot.y));
+                bot.x += Math.cos(ang) * 3;
+                bot.y += Math.sin(ang) * 3;
+                bot.x = Math.max(0, Math.min(MAP_SIZE, bot.x));
+                bot.y = Math.max(0, Math.min(MAP_SIZE, bot.y));
             });
 
-            // 3. Camera
+            // Camera update
             if(myCells.length > 0) {
-                cx /= myCells.length;
-                cy /= myCells.length;
-                // Zoom dinâmico
-                const idealZoom = 1 / Math.pow(totalMass/50, 0.4); 
-                cam.zoom += (Math.max(0.15, Math.min(1.5, idealZoom)) - cam.zoom) * 0.05;
+                let cx=0, cy=0;
+                myCells.forEach(c => { cx+=c.x; cy+=c.y; });
+                cx /= myCells.length; cy /= myCells.length;
+                
+                // Zoom suave
+                let targetZoom = 1 / Math.pow(totalMass/40, 0.4);
+                targetZoom = Math.max(0.05, Math.min(1.2, targetZoom));
+                cam.zoom += (targetZoom - cam.zoom) * 0.05;
                 cam.x = cx - (canvas.width/2)/cam.zoom;
                 cam.y = cy - (canvas.height/2)/cam.zoom;
                 
                 document.getElementById('massDisplay').innerText = totalMass;
-            } else {
-                // Game Over
-                alert("Você foi comido!");
-                location.reload();
             }
 
-            // Ejetados physics
-            ejected.forEach(e => {
-                e.x += e.vx; e.y += e.vy;
-                e.vx *= 0.9; e.vy *= 0.9;
-            });
-        }
-
-        function explode(idx) {
-            const cell = myCells[idx];
-            if(!cell) return;
-            
-            // Remove original
-            myCells.splice(idx, 1);
-            
-            // Cria pedaços
-            const pieces = 8;
-            const area = Math.PI*cell.r*cell.r;
-            const pieceArea = area / pieces;
-            const pieceR = Math.sqrt(pieceArea/Math.PI);
-
-            for(let i=0; i<pieces; i++) {
-                if(myCells.length >= 16) break;
-                const ang = (Math.PI*2/pieces)*i;
-                myCells.push({
-                    x: cell.x + Math.cos(ang)*cell.r,
-                    y: cell.y + Math.sin(ang)*cell.r,
-                    r: pieceR,
-                    vx: Math.cos(ang)*20,
-                    vy: Math.sin(ang)*20,
-                    color: cell.color,
-                    birth: Date.now()
-                });
+            // Sync Rede (Simplificado)
+            if(now % 200 < 20 && myUserId) {
+                 const simple = myCells.map(c => ({x:Math.round(c.x), y:Math.round(c.y), r:Math.round(c.r), c:c.c}));
+                 setDoc(doc(db, "players", myUserId), {
+                     n: myName, cells: simple, mass: totalMass, t: serverTimestamp()
+                 }, {merge:true}).catch(()=>{});
             }
         }
 
-        function drawGame() {
-            // Fundo
+        function checkGameOver() {
+            if(myCells.length === 0) {
+                gameRunning = false;
+                alert("VOCÊ FOI ELIMINADO! :(");
+                document.getElementById('hud').style.display = 'none';
+                document.getElementById('mainMenu').style.display = 'flex';
+                updateCoinsUI();
+                if(myUserId) deleteDoc(doc(db, "players", myUserId));
+            }
+        }
+
+        function draw() {
             ctx.fillStyle = '#0b0b14';
-            ctx.fillRect(0,0, canvas.width, canvas.height);
+            ctx.fillRect(0,0,canvas.width, canvas.height);
             
             ctx.save();
             ctx.scale(cam.zoom, cam.zoom);
             ctx.translate(-cam.x, -cam.y);
 
             // Grid
-            ctx.lineWidth = 1;
-            ctx.strokeStyle = '#1a1a2e';
-            const gs = 100;
-            const startX = Math.floor(cam.x/gs)*gs;
-            const startY = Math.floor(cam.y/gs)*gs;
-            const endX = startX + (canvas.width/cam.zoom) + gs;
-            const endY = startY + (canvas.height/cam.zoom) + gs;
-            
+            ctx.lineWidth = 2; ctx.strokeStyle = '#1a1a2e';
+            let gs = 200;
+            let sx = Math.floor(cam.x/gs)*gs, sy = Math.floor(cam.y/gs)*gs;
+            let ex = sx + (canvas.width/cam.zoom)+gs, ey = sy + (canvas.height/cam.zoom)+gs;
             ctx.beginPath();
-            for(let x=startX; x<endX; x+=gs) { ctx.moveTo(x,0); ctx.lineTo(x, MAP_SIZE); }
-            for(let y=startY; y<endY; y+=gs) { ctx.moveTo(0,y); ctx.lineTo(MAP_SIZE, y); }
+            for(let x=sx; x<ex; x+=gs) { ctx.moveTo(x,0); ctx.lineTo(x, MAP_SIZE); }
+            for(let y=sy; y<ey; y+=gs) { ctx.moveTo(0,y); ctx.lineTo(MAP_SIZE, y); }
             ctx.stroke();
 
             // Bordas
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 20;
-            ctx.strokeRect(0,0, MAP_SIZE, MAP_SIZE);
+            ctx.strokeStyle = '#333'; ctx.lineWidth = 50; ctx.strokeRect(0,0,MAP_SIZE,MAP_SIZE);
 
-            // Comida
+            // Itens
             foods.forEach(f => {
-                // Otimização: Só desenha se estiver na tela
-                if(f.x < cam.x - 50 || f.x > endX) return;
-                ctx.beginPath();
-                ctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
-                ctx.fillStyle = f.c;
-                ctx.fill();
+                if(f.x<sx || f.x>ex) return; // Culling
+                ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,Math.PI*2); ctx.fillStyle=f.c; ctx.fill();
             });
 
-            // Ejected
             ejected.forEach(e => {
-                ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI*2);
-                ctx.fillStyle = e.c; ctx.fill();
+                e.x+=e.vx; e.y+=e.vy; e.vx*=0.9; e.vy*=0.9;
+                ctx.beginPath(); ctx.arc(e.x,e.y,e.r,0,Math.PI*2); ctx.fillStyle=e.c; ctx.fill();
             });
 
-            // Virus
-            ctx.fillStyle = '#33ff33';
-            ctx.strokeStyle = '#228822';
-            ctx.lineWidth = 4;
             viruses.forEach(v => {
-                ctx.beginPath();
-                const spikes = 16;
+                ctx.beginPath(); ctx.fillStyle = '#33ff33';
+                let spikes = 20;
                 for(let i=0; i<spikes*2; i++) {
-                    const a = (Math.PI*2/(spikes*2))*i;
-                    const r = i%2===0 ? v.r : v.r-5;
-                    ctx.lineTo(v.x + Math.cos(a)*r, v.y + Math.sin(a)*r);
+                    let a = (Math.PI*2/(spikes*2))*i;
+                    let r = i%2==0 ? v.r : v.r-5;
+                    ctx.lineTo(v.x+Math.cos(a)*r, v.y+Math.sin(a)*r);
                 }
-                ctx.closePath();
                 ctx.fill(); ctx.stroke();
             });
 
-            // Desenhar Entidades (Ordenado por tamanho para z-index)
-            let allEntities = [
-                ...bots.map(b => ({...b, type:'bot'})),
-                ...myCells.map(c => ({...c, type:'me', name: myName})),
-                ...Object.values(otherPlayers).flatMap(p => (p.cells || []).map(c => ({...c, type:'other', name: p.n})))
+            // Players & Bots (Z-Index sort)
+            let renderList = [
+                ...bots.map(b=>({...b, type:'bot'})),
+                ...myCells.map(c=>({...c, name:myName, type:'me'})),
+                ...Object.values(otherPlayers).flatMap(p=>(p.cells||[]).map(c=>({...c, name:p.n, type:'other'})))
             ];
-            
-            allEntities.sort((a,b) => a.r - b.r);
+            renderList.sort((a,b)=>a.r - b.r);
 
-            allEntities.forEach(ent => {
-                ctx.beginPath();
-                ctx.arc(ent.x, ent.y, ent.r, 0, Math.PI*2);
-                ctx.fillStyle = ent.color || ent.c;
-                ctx.fill();
+            renderList.forEach(c => {
+                ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI*2);
+                ctx.fillStyle = c.c || c.color; ctx.fill();
+                ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.stroke();
                 
-                // Glow
-                ctx.shadowBlur = 10; ctx.shadowColor = ent.color || ent.c;
-                ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 2;
-                ctx.stroke();
-                ctx.shadowBlur = 0;
-
-                // Nome
-                if(ent.r > 15) {
-                    ctx.fillStyle = 'white';
-                    ctx.font = `bold ${Math.max(10, ent.r/2)}px Arial`;
-                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                    ctx.strokeStyle = 'black'; ctx.lineWidth = 2;
-                    ctx.strokeText(ent.name || "", ent.x, ent.y);
-                    ctx.fillText(ent.name || "", ent.x, ent.y);
+                if(c.r > 20) {
+                    ctx.fillStyle = 'white'; ctx.font = `bold ${c.r/2}px Arial`;
+                    ctx.textAlign = 'center'; ctx.textBaseline='middle';
+                    ctx.fillText(c.name || (c.type=='bot'?'Bot':''), c.x, c.y);
                 }
             });
 
             ctx.restore();
         }
 
-        // --- UTILITÁRIOS ---
-        function rand(max) { return Math.random() * max; }
-        function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
-        function getRandomColor() {
-            const colors = ['#FF0055', '#00FF55', '#5500FF', '#FFFF00', '#00FFFF', '#FF00FF', '#FF5500'];
-            return colors[Math.floor(Math.random() * colors.length)];
-        }
+        // Utils & Admin
+        function rand(m) { return Math.random()*m; }
+        function dist(a,b) { return Math.hypot(a.x-b.x, a.y-b.y); }
+        function getRandomColor() { return ['#F05','#0F5','#50F','#FF0','#0FF'].at(Math.floor(rand(5))); }
+        function spawnFood() { foods.push({x:rand(MAP_SIZE), y:rand(MAP_SIZE), r:rand(3)+3, c:getRandomColor()}); }
+        function spawnBot() { bots.push({x:rand(MAP_SIZE), y:rand(MAP_SIZE), r:rand(30)+30, c:getRandomColor(), target:{x:rand(MAP_SIZE),y:rand(MAP_SIZE)}}); }
 
-        // --- REDE (FIREBASE) ---
-        const playersRef = collection(db, "players");
-        
-        // Receber dados
-        onSnapshot(query(playersRef), (snap) => {
-            snap.docChanges().forEach(change => {
-                const pid = change.doc.id;
-                if(pid === myUserId) return;
-                
-                if(change.type === 'removed') delete otherPlayers[pid];
-                else otherPlayers[pid] = change.doc.data();
+        window.cheat = (type) => {
+            if(!isAdmin) return;
+            if(type=='mass') myCells.forEach(c => c.r += 20);
+            if(type=='speed') myCells.forEach(c => { c.vx=50; c.vy=50; });
+            if(type=='reset') myCells=[{x:rand(MAP_SIZE), y:rand(MAP_SIZE), r:50, c:'#fff', vx:0, vy:0, birth:Date.now()}];
+        };
+
+        // Rede Listener
+        onSnapshot(query(collection(db, "players")), s => {
+            s.docChanges().forEach(c => {
+                if(c.doc.id === myUserId) return;
+                if(c.type === 'removed') delete otherPlayers[c.doc.id];
+                else otherPlayers[c.doc.id] = c.doc.data();
             });
-            updateLeaderboard();
-        });
-
-        // Enviar dados
-        function syncNetwork() {
-            if(!myUserId) return;
-            const simpleCells = myCells.map(c => ({
-                x: Math.round(c.x), y: Math.round(c.y),
-                r: Math.round(c.r), c: c.color
-            }));
-            const total = myCells.reduce((a,b)=>a+b.r, 0);
-
-            setDoc(doc(db, "players", myUserId), {
-                n: myName,
-                cells: simpleCells,
-                mass: Math.floor(total),
-                t: serverTimestamp()
-            }, {merge:true}).catch(()=>{});
-        }
-
-        function updateLeaderboard() {
-            let list = [];
-            // Eu
-            const myMass = myCells.reduce((a,b)=>a+b.r, 0);
-            list.push({n: myName, s: Math.floor(myMass), me: true});
-            
-            // Outros
-            for(let id in otherPlayers) {
-                list.push({n: otherPlayers[id].n, s: otherPlayers[id].mass || 0});
-            }
-            // Bots fake highscore
-            list.push({n: "Bot Alpha", s: 450});
-
-            list.sort((a,b) => b.s - a.s);
-            
-            const html = list.slice(0, 5).map((p,i) => 
-                `<div style="color:${p.me ? '#00d2ff' : '#eee'}; display:flex; justify-content:space-between;">
-                    <span>${i+1}. ${p.n.substring(0,8)}</span><span>${p.s}</span>
-                </div>`
+            // Update Leaderboard
+            let list = [{n:myName, m:myCells.reduce((a,b)=>a+b.r,0), me:true}];
+            for(let id in otherPlayers) list.push({n:otherPlayers[id].n, m:otherPlayers[id].mass});
+            list.sort((a,b)=>b.m - a.m);
+            document.getElementById('lb-content').innerHTML = list.slice(0,5).map((p,i)=>
+                `<div style="display:flex; justify-content:space-between; color:${p.me?'#00d2ff':'white'}"><span>${i+1}.${p.n.substr(0,8)}</span><span>${Math.floor(p.m)}</span></div>`
             ).join('');
-            document.getElementById('lb-content').innerHTML = html;
-        }
-
-        // --- ADMIN WINDOW FUNCS ---
-        window.adminMass = () => { 
-            if(isAdmin) myCells.forEach(c => c.r += 20); 
-        };
-        window.adminReset = () => {
-            if(isAdmin) myCells = [{x:rand(MAP_SIZE), y:rand(MAP_SIZE), r:50, color:'#000', vx:0, vy:0, birth:Date.now()}];
-        };
-
-        // --- RADIO ---
-        let radioPlaying = false;
-        const audio = new Audio("https://stream.zeno.fm/0r0xa792kwzuv");
-        document.getElementById('radioBtn').onclick = () => {
-            if(radioPlaying) { audio.pause(); document.getElementById('radioBtn').innerText = "🎵 Lofi: OFF"; }
-            else { audio.play(); document.getElementById('radioBtn').innerText = "🎵 Lofi: ON"; }
-            radioPlaying = !radioPlaying;
-        }
+        });
 
     </script>
 </body>
